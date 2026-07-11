@@ -1,12 +1,11 @@
 // @cosmonaut/lexer
 
-// :::::: POLYFILLS
-
-if (!RegExp.escape) {
-  RegExp.escape = function (s) {
-    return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  };
-}
+import {
+  ensureArray,
+  escapedRegExp,
+  makeRulesFromOperators,
+  makeRulesFromPuncts,
+} from './utils.js';
 
 // :::::: UTILS
 
@@ -22,41 +21,14 @@ const TokenType = {
 };
 
 const defaultOptions = {
-  puncts         : '()[]{}?!.:,;',
+  comments       : [],
   keywords       : [], // ['const', 'let', 'var'],
   operators      : [],
+  puncts         : '()[]{}?!.:,;',
   rules          : [], // Array of { type, regex, value? })
   skipComments   : true,
   skipWhitespace : true,
-  comments       : [], // [{ type: 'line', start: '//' }, { type: 'block', start: '/*', end: '*/' }]
 };
-
-// :::::: HELPERS
-
-const ensureArray = value => {
-  return Array.isArray(value) ? value
-       : (typeof value === 'string') ? value.split('')
-       : Object.keys(value);
-};
-const escapedRegExp = (str, flags) => {
-  return new RegExp(RegExp.escape(str), flags);
-}
-
-function toRulesFromPuncts (puncts) {
-  return ensureArray(puncts).map(str => ({
-    type  : TokenType.PUNCT,
-    value : str,
-    regex : escapedRegExp(str, 'y'),
-  }));
-}
-
-function toRulesFromOperators (operators) {
-  return ensureArray(operators).map(str => ({
-    type  : TokenType.OPERATOR,
-    value : str,
-    regex : escapedRegExp(str, 'y'),
-  }));
-}
 
 // :::::: MAIN EXPORT
 
@@ -74,8 +46,8 @@ export default class Lexer {
 
   _buildRules () {
     const base = [
-      ...toRulesFromOperators (this.options.operators || []),
-      ...toRulesFromPuncts    (this.options.puncts    || []),
+      ...makeRulesFromOperators (this.options.operators || []),
+      ...makeRulesFromPuncts    (this.options.puncts    || []),
 
       // Strings (doppelt und einfach)
       { type: TokenType.STRING, regex: /"(?:\\.|[^"\\])*"/y },
