@@ -1,22 +1,18 @@
 // @cosmonaut/lexer
 
+// :::::: IMPORTS
+
 import { puncts, TokenType } from './presets.js';
+import { ensureArray, escapedRegExp, makeRulesFromOperators, makeRulesFromPuncts } from './utils.js';
 
-import {
-  ensureArray,
-  escapedRegExp,
-  makeRulesFromOperators,
-  makeRulesFromPuncts,
-} from './utils.js';
-
-// :::::: UTILS
+// :::::: CONFIG
 
 const defaultOptions = {
   comments       : [],
-  keywords       : [], // ['const', 'let', 'var'],
+  keywords       : [],
   operators      : [],
   puncts         : puncts,
-  rules          : [], // Array of { type, regex, value? })
+  rules          : [],
   skipComments   : true,
   skipWhitespace : true,
 };
