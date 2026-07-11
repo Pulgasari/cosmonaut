@@ -19,7 +19,7 @@ export const builtins = [
   'Symbol',
 ];
 
-export comments = cStyleComments;
+export const comments = cStyleComments;
 
 export const globals = [
   'clearInterval',
