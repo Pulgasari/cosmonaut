@@ -1,5 +1,7 @@
 // @cosmonaut/lexer
 
+import { puncts, TokenType } from './presets.js';
+
 import {
   ensureArray,
   escapedRegExp,
@@ -9,22 +11,11 @@ import {
 
 // :::::: UTILS
 
-const TokenType = {
-  COMMENT    : 'COMMENT',
-  EOF        : 'EOF',
-  IDENTIFIER : 'IDENTIFIER',
-  KEYWORD    : 'KEYWORD',
-  NUMBER     : 'NUMBER',
-  OPERATOR   : 'OPERATOR',
-  PUNCT      : 'PUNCT',
-  STRING     : 'STRING',
-};
-
 const defaultOptions = {
   comments       : [],
   keywords       : [], // ['const', 'let', 'var'],
   operators      : [],
-  puncts         : '()[]{}?!.:,;',
+  puncts         : puncts,
   rules          : [], // Array of { type, regex, value? })
   skipComments   : true,
   skipWhitespace : true,
