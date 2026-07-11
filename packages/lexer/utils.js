@@ -16,10 +16,9 @@ export const escapedRegExp = (str, flags = '') => {
 export const makeStickyRegex = (pattern, flags = '') => {
   // ensure 'y' sticky flag is present
   const f = flags.includes('y') ? flags : flags + 'y';
-  if (pattern instanceof RegExp) {
-    return new RegExp(pattern.source, Array.from(new Set((pattern.flags || '') + f)).join(''));
-  }
-  return new RegExp(pattern, f);
+  return (pattern instanceof RegExp)
+    ? new RegExp(pattern.source, Array.from(new Set((pattern.flags || '') + f)).join(''))
+    : new RegExp(pattern, f);
 };
 
 export const makeRulesFromPuncts = puncts => {
@@ -31,7 +30,6 @@ export const makeRulesFromPuncts = puncts => {
 };
 
 export const makeRulesFromOperators = operators => {
-  // NOTE: do not sort here by default; caller decides ordering
   return ensureArray(operators).map(op => ({
     type: 'OPERATOR',
     value: op,
@@ -68,20 +66,32 @@ export const buildCommentMatchers = comments => {
   return matchers;
 };
 
-// Merge user options with defaults in a predictable way
 export const mergeOptions = (user = {}, defaults = {}) => {
-  const out = { ...defaults, ...user };
+  const merged = { ...defaults, ...user };
   // normalize some fields
-  out.puncts    = user.puncts ?? defaults.puncts;
-  out.operators = user.operators ?? defaults.operators;
-  out.keywords  = Array.isArray(user.keywords) ? user.keywords : (defaults.keywords || []);
-  out.comments  = Array.isArray(user.comments) ? user.comments : (defaults.comments || []);
-  out.rules     = Array.isArray(user.rules)    ? user.rules    : (defaults.rules || []);
-  return out;
+  merged.puncts    = user.puncts    ?? defaults.puncts;
+  merged.operators = user.operators ?? defaults.operators;
+  merged.keywords  = Array.isArray(user.keywords) ? user.keywords : (defaults.keywords || []);
+  merged.comments  = Array.isArray(user.comments) ? user.comments : (defaults.comments || []);
+  merged.rules     = Array.isArray(user.rules)    ? user.rules    : (defaults.rules    || []);
+  return merged;
 };
 
-// Kleine Token-Fabrik falls du sie nutzen willst
-export const makeToken = ({ type, value, line, column }) => ({ type, value, line, column });
+export const makeToken = ({ column, line, type, value }) => ({ column, line, type, value });
+
+export function sortOperatorsByLength (operators) {
+  if (!operators) return [];
+  return Array.from(operators).slice().sort((a, b) => b.length - a.length);
+}
+
+export function isKeyword (keywords, value) {
+  if (!keywords) return false;
+  if (keywords instanceof Set) return keywords.has(value);
+  if (Array.isArray(keywords)) return keywords.includes(value);
+  // fallback: treat object keys as set
+  if (typeof keywords === 'object') return Object.prototype.hasOwnProperty.call(keywords, value);
+  return false;
+}
 
 // Polyfill für RegExp.escape falls nicht vorhanden
 if (!RegExp.escape) {
