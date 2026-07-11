@@ -12,3 +12,15 @@ export const   hashStyleComments = [{ type: 'line', start: '#' }];
 export const   dashStyleComments = [{ type: 'line', start: '--' }];
 export const pythonStyleComments = [{ type: 'line', start: '#' }, { type: 'block', start: "'''", end: "'''" }, { type: 'block', start: '"""', end: '"""' }];
 export const commonStyleComments = [{ type: 'line', start: '//' }, { type: 'line', start: '#' }, { type: 'block', start: '/*', end: '*/' }];
+
+export * as JavaScript from './presets/JavaScript.js';
+
+
+
+
+
+
+
+
+
+
