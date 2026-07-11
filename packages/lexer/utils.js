@@ -1,28 +1,4 @@
-// utils.js
-
-// :::::: EXPORTS
-export const CommentPresets = {
-  C_STYLE: [
-    { type: 'line',  start: '//'  },
-    { type: 'block', start: '/*', end: '*/' }
-  ],
-  HASH_STYLE: [
-    { type: 'line', start: '#' }
-  ],
-  DASH_STYLE: [
-    { type: 'line', start: '--' } // SQL / SQL-like
-  ],
-  PYTHON_STYLE: [
-    { type: 'line', start: '#' },
-    { type: 'block', start: "'''", end: "'''" },
-    { type: 'block', start: '"""', end: '"""' }
-  ],
-  COMMON: [
-    { type: 'line', start: '//' },
-    { type: 'line', start: '#' },
-    { type: 'block', start: '/*', end: '*/' }
-  ]
-};
+// @cosmonaut/lexer/utils.js
 
 // :::::: HELPERS
 
