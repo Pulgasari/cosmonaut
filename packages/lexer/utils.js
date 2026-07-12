@@ -1,101 +1,103 @@
 // @cosmonaut/lexer/utils.js
 
-// :::::: HELPERS
+import { ensureArray, makeStickyRegex } from '@cosmonaut/utils';
 
-export const ensureArray = value => {
-  if (Array.isArray(value)) return value;
-  if (typeof value === 'string') return value.split('');
-  if (value && typeof value === 'object') return Object.keys(value);
-  return [];
-};
+// :::::: TokenType
 
-export const escapedRegExp = (str, flags = '') => {
-  return new RegExp(RegExp.escape(String(str)), flags);
-};
+export const coreTokenTypes = ['EOF', 'IDENTIFIER', 'KEYWORD', 'NUMBER', 'OPERATOR', 'PUNCT', 'STRING'];
 
-export const makeStickyRegex = (pattern, flags = '') => {
-  // ensure 'y' sticky flag is present
-  const f = flags.includes('y') ? flags : flags + 'y';
-  return (pattern instanceof RegExp)
-    ? new RegExp(pattern.source, Array.from(new Set((pattern.flags || '') + f)).join(''))
-    : new RegExp(pattern, f);
-};
+export function buildTokenTypes (custom = []) {
+  const all = [...coreTokenTypes, ...custom];
+  return Object.freeze(Object.fromEntries(all.map(k => [k, k])));
+}
 
-export const makeRulesFromPuncts = puncts => {
+// :::::: Rules
+
+export function makeRulesFromPuncts (puncts, tokenTypes) {
   return ensureArray(puncts).map(ch => ({
-    type: 'PUNCT',
-    value: ch,
-    regex: makeStickyRegex(RegExp.escape(String(ch)))
+    id: `punct:${ch}`, type: tokenTypes.PUNCT, value: ch, regex: makeStickyRegex(RegExp.escape(String(ch))),
   }));
-};
+}
 
-export const makeRulesFromOperators = operators => {
+export function makeRulesFromOperators (operators, tokenTypes) {
   return ensureArray(operators).map(op => ({
-    type: 'OPERATOR',
-    value: op,
-    regex: makeStickyRegex(RegExp.escape(String(op)))
+    id: `operator:${op}`, type: tokenTypes.OPERATOR, value: op, regex: makeStickyRegex(RegExp.escape(String(op))),
   }));
-};
+}
 
-// Build comment matchers used by the lexer
-export const buildCommentMatchers = comments => {
-  const list = Array.isArray(comments) ? comments : [];
-  const matchers = list.map(c => {
-    if (c.type === 'line') {
-      // match from start to end of line (or EOF)
-      return {
-        kind: 'line',
-        start: c.start,
-        regex: makeStickyRegex(RegExp.escape(c.start) + '.*')
-      };
-    } else if (c.type === 'block') {
-      // non-greedy block match allowing newlines
-      return {
-        kind: 'block',
-        start: c.start,
-        end: c.end,
-        regex: makeStickyRegex(RegExp.escape(c.start) + '[\\s\\S]*?' + RegExp.escape(c.end))
-      };
-    } else {
-      throw new Error('Unknown comment matcher type: ' + c.type);
-    }
+// Löst { use, override, add } zu einer flachen, effektiven Rule-Liste auf.
+// - use:      explizite Positivliste aus Preset-Regeln (nichts passiert implizit)
+// - override: ersetzt eine Regel aus 'use' per id (id muss existieren -> laute Fehler statt stillem No-Op)
+// - add:      komplett neue, sprachspezifische Regeln, hinten angehängt
+export function resolveRules ({ use = [], override = {}, add = [] } = {}) {
+  const resolved = use.map(rule => {
+    if (override[rule.id]) return normalizeRule(override[rule.id]);
+    return normalizeRule(rule);
   });
 
-  // longer starts first so '///' matches before '//'
-  matchers.sort((a, b) => (b.start.length - a.start.length));
-  return matchers;
-};
+  for (const id of Object.keys(override)) {
+    if (!use.some(r => r.id === id)) {
+      throw new Error(`[Lexer] rules.override: Rule-id "${id}" is not a member of 'rules.use'.`);
+    }
+  }
 
-export const mergeOptions = (user = {}, defaults = {}) => {
-  const merged = { ...defaults, ...user };
-  // normalize some fields
-  merged.puncts    = user.puncts    ?? defaults.puncts;
-  merged.operators = user.operators ?? defaults.operators;
-  merged.keywords  = Array.isArray(user.keywords) ? user.keywords : (defaults.keywords || []);
-  merged.comments  = Array.isArray(user.comments) ? user.comments : (defaults.comments || []);
-  merged.rules     = Array.isArray(user.rules)    ? user.rules    : (defaults.rules    || []);
-  return merged;
-};
-
-export const makeToken = ({ column, line, type, value }) => ({ column, line, type, value });
-
-export function sortOperatorsByLength (operators) {
-  if (!operators) return [];
-  return Array.from(operators).slice().sort((a, b) => b.length - a.length);
+  return [...resolved, ...add.map(normalizeRule)];
 }
+
+function normalizeRule (rule) {
+  return rule.regex.sticky ? rule : { ...rule, regex: makeStickyRegex(rule.regex) }
+}
+
+// :::::: Scanners
+
+export function buildCommentScanners (comments) {
+  const list = Array.isArray(comments) ? comments : [];
+
+  const scanners = list.map(c => {
+    if (c.type === 'line') {
+      const regex = makeStickyRegex(RegExp.escape(c.start) + '.*');
+      return {
+        id: `comment:${c.start}`,
+        test: (source, i) => source.startsWith(c.start, i),
+        scan: (source, i) => { regex.lastIndex = i; const m = regex.exec(source); return { token: null, endCursor: i + m[0].length }; },
+        _sortKey: c.start,
+      };
+    }
+    if (c.type === 'block') {
+      const regex = makeStickyRegex(RegExp.escape(c.start) + '[\\s\\S]*?' + RegExp.escape(c.end));
+      return {
+        id: `comment:${c.start}...${c.end}`,
+        test: (source, i) => source.startsWith(c.start, i),
+        scan: (source, i) => { regex.lastIndex = i; const m = regex.exec(source); return { token: null, endCursor: i + m[0].length }; },
+        _sortKey: c.start,
+      };
+    }
+    throw new Error(`[Lexer] Unbekannter comment-Typ: "${c.type}"`);
+  });
+
+  // Längere Starts zuerst (z.B. '///' vor '//'), damit test() nicht am kürzeren hängenbleibt.
+  scanners.sort((a, b) => b._sortKey.length - a._sortKey.length);
+  return scanners;
+}
+
+export function buildWhitespaceScanner () {
+  return {
+    id: 'whitespace',
+    test: (source, i) => /\s/.test(source[i]),
+    scan: (source, i) => {
+      let end = i;
+      while (end < source.length && /\s/.test(source[end])) end++;
+      return { token: null, endCursor: end };
+    },
+  };
+}
+
+// :::::: Helpers
 
 export function isKeyword (keywords, value) {
-  if (!keywords) return false;
-  if (keywords instanceof Set) return keywords.has(value);
-  if (Array.isArray(keywords)) return keywords.includes(value);
-  // fallback: treat object keys as set
+  if (!keywords)                    return false;
+  if (keywords instanceof Set)      return keywords.has(value);
+  if (Array.isArray(keywords))      return keywords.includes(value);
   if (typeof keywords === 'object') return Object.prototype.hasOwnProperty.call(keywords, value);
   return false;
-}
-
-// Polyfill für RegExp.escape falls nicht vorhanden
-if (!RegExp.escape) {
-  RegExp.escape = function (s) {
-    return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  };
 }
