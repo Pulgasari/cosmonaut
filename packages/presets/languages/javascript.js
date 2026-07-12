@@ -3,26 +3,86 @@
 import { cStyleComments } from './../index.js';
 
 export const builtins = [
-  'Array', 'BigInt', 'Boolean', 'Date', 'Error', 'Function', 'Map', 'Number',
-  'Object', 'Promise', 'RegExp', 'Set', 'String', 'Symbol',
+  'Array',
+  'BigInt',
+  'Boolean',
+  'Date',
+  'Error',
+  'Function',
+  'Map',
+  'Number',
+  'Object',
+  'Promise',
+  'RegExp',
+  'Set',
+  'String',
+  'Symbol',
 ];
 
 export const comments = cStyleComments;
 
 export const globals = [
-  'clearInterval', 'clearTimeout', 'console', 'document', 'globalThis',
-  'process', 'setInterval', 'setTimeout', 'window',
+  'clearInterval',
+  'clearTimeout',
+  'console',
+  'document',
+  'globalThis',
+  'process',
+  'setInterval',
+  'setTimeout',
+  'window',
 ];
 
 export const keywords = [
-  'as', 'async', 'await', 'break', 'case', 'catch', 'class', 'cond', 'const',
-  'continue', 'default', 'delete', 'do', 'else', 'export', 'extends', 'finally',
-  'for', 'function', 'if', 'import', 'in', 'instanceof', 'is', 'let', 'match',
-  'new', 'of', 'return', 'static', 'super', 'switch', 'this', 'throw', 'try',
-  'typeof', 'use', 'var', 'void', 'while', 'yield',
+  'as',
+  'async',
+  'await',
+  'break',
+  'case',
+  'catch',
+  'class',
+  'const',
+  'continue',
+  'default',
+  'delete',
+  'do',
+  'else',
+  'export',
+  'extends',
+  'finally',
+  'for',
+  'function',
+  'if',
+  'import',
+  'in',
+  'instanceof',
+  'let',
+  'match',
+  'new',
+  'of',
+  'return',
+  'static',
+  'super',
+  'switch',
+  'this',
+  'throw',
+  'try',
+  'typeof',
+  'use',
+  'var',
+  'void',
+  'while',
+  'yield',
 ];
 
-export const literals = ['false', 'null', 'true', 'undefined', 'Infinity', 'NaN'];
+export const literals = [
+  'false',
+  'null',
+  'true',
+  'undefined',
+  'Infinity',
+  'NaN',
+];
 
 export const operators = {
   '='          : { precedence:  1, associativity: 'right' },
