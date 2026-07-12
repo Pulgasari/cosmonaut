@@ -1,5 +1,7 @@
 # Cosmonaut
 
+![Logo](./logo.png)
+
 **Cosmonaut** is a flexible toolkit library to construct a compiler written in JavaScript.
 
 - [lexer](packages/lexer) (tokenizer)
