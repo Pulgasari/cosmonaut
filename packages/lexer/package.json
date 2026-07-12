@@ -1,0 +1,9 @@
+{
+  "name": "@cosmonaut/lexer",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./index.js",
+  "dependencies": {
+    "@cosmonaut/utils": "*"
+  }
+}
