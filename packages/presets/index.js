@@ -32,3 +32,7 @@ export const baseRules = {
   number            : { id: 'number',            type: 'NUMBER',     regex: /\d+(?:\.\d+)?/            },
   identifier        : { id: 'identifier',        type: 'IDENTIFIER', regex: /[a-zA-Z_$][a-zA-Z0-9_$]*/ },
 };
+
+// :::::: Re-Export of Language Presets
+
+export { default as javascript } from './languages/javascript.js';
