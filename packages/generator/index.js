@@ -1,0 +1,1 @@
+// @cosmonaut/generator/index.js
