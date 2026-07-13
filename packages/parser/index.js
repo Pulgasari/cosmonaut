@@ -32,6 +32,7 @@ export class Parser {
     
     this.setTokens(tokens);
     this._buildDispatch();
+    this._installCustomMethods();
   }
 
   // navigate + match
@@ -130,14 +131,19 @@ export class Parser {
   }
 
   // Methods Registry
-  static _customMethods = {};
+  static _customMethods = [];
   static addMethod (methods) {
     if (!Array.isArray(methods)) methods = [methods];
     for (const fn of methods) {
       if (typeof fn !== 'function')                 continue;
       if (!fn.name || !fn.name.startsWith('parse')) continue;
       // override allowed
-      Parser._customMethods[fn.name] = fn;
+      Parser._customMethods.push(fn);
+    }
+  }
+  _installCustomMethods() {
+    for (const fn of Parser._customMethods) {
+      this[fn.name] = (...args) => fn (this, ...args);
     }
   }
   
