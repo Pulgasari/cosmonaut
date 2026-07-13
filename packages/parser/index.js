@@ -27,28 +27,26 @@ export class Parser {
   }
 
   // navigate + match
-  peek (offset = 0) { return this.tokens[this.cursor + offset]; }
-
-  check (tokenSpec, offset = 0) {
-    const { type, value } = resolveTokenSpec (tokenSpec);
-    const token = this.peek();
-    return token.type  === type
-        && token.value === value;
+  peek (offset = 0) { 
+    return this.tokens[this.cursor + offset];
   }
-  match (tokenSpec, offset = 0) {
-    return this.check(tokenSpec, offset)
-      ? (this.advance(), true)
-      : false;
+  check (spec, offset = 0) {
+    const { type, value } = resolveTokenSpec(spec, this._tokenMap);
+    const token = this.at(offset);
+    if (!token) return false;
+    return token.type === type && (value === undefined || token.value === value);
   }
-  consume (tokenSpec, message) {
-    const matched = this.match(tokenSpec);
-    if (matched) return matched;
-    if (!matched) {
-      const token = peek();
-      throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message || `Erwarte '${.value}'`} (Gefunden: '${token.value}')`);
-    }
+  match (spec) {
+    if (!this.check(spec)) return false;
+    this.advance();
+    return true;
   }
-  
+  consume (spec, extra) {
+    // 'extra' ist optional -> nur für zusätzlichen Kontext, ersetzt NICHT die Kernmeldung
+    // z.B. consume('as', "after 'alias'") -> "Expected 'as' but found ... (after 'alias')"
+    if (this.check(spec)) return this.advance();
+    throw this._unexpected(spec, extra);
+  }
   checkAny (...specs) {
     return specs.some(spec => this.check(spec));
   }
@@ -66,8 +64,6 @@ export class Parser {
     throw this._unexpected(specsList, message);
   }
   
-  
-
   // navigate extras for dx
   checkNext (typeOrValue, maybeValue) { return this.check(typeOrValue, maybeValue,  1); }
   checkPrev (typeOrValue, maybeValue) { return this.check(typeOrValue, maybeValue, -1); }
@@ -111,49 +107,24 @@ export class Parser {
 
   // internal
   _buildDispatch () { /* s.u. Punkt 4 */ }
-  
+
+  // :::::: error handling (implicit — builds full message from spec + current token)
+
+  _unexpected (specOrSpecs, extra) {
+    const t = this.peek();
+    const expected = Array.isArray(specOrSpecs)
+      ? `one of [${specOrSpecs.map(describeTokenSpec).join(', ')}]`
+      : describeTokenSpec(specOrSpecs);
+    const found = describeToken(t, this.options.tokenTypes);
+    const suffix = extra ? ` (${extra})` : '';
+    return new SyntaxError(`[Parser ${t.line}:${t.column}] Expected ${expected} but found ${found}${suffix}`);
+  }
+    
 }
 
 default export Parser;
 
 // :::::: HELPERS
-
-/ Spec-Normalisierung: ein Element ist entweder ein String (Wert/Typ, über TOKEN_MAP aufgelöst)
-// oder ein [type, value]-Paar für den expliziten Fall
-function normalizeSpec (spec) {
-  return Array.isArray(spec) ? spec : [spec, undefined];
-}
-
-function resolveTokenQuery (typeOrValue, maybeValue) {
-  return (maybeValue !== undefined)
-    ? { type: typeOrValue, value: maybeValue }
-    : TOKEN_MAP.get(typeOrValue) ?? null;
-}
-
-function resolveSpec (spec) {
-  if (Array.isArray(spec) {
-    let [type, value] = spec;
-    return { type, value };
-  }
-
-  else {
-    return TOKEN_MAP.get(spec) ?? null;
-  }
-}
-
-function resolveTokenSpec (spec) {
-  (typeof spec === 'object' && spec !== null)
-    ? { return spec; }
-    : Array.isArray(spec)
-      ? { let [type, value] = spec; return { type, value }; }
-      : { return TOKEN_MAP.get(spec) ?? null; }
-}
-
-
-
-
-
-// packages/parser/utils.js
 
 export function resolveTokenSpec (spec, tokenMap) {
   if (typeof spec === 'string') {
@@ -177,8 +148,8 @@ export function resolveTokenSpec (spec, tokenMap) {
 }
 
 export function describeTokenSpec (spec) {
-  if (typeof spec === 'string') return `'${spec}'`;
-  if (Array.isArray(spec))      return `'${spec[1] ?? spec[0]}'`;
+  if (typeof spec === 'string')  return `'${spec}'`;
+  if (Array.isArray(spec))       return `'${spec[1] ?? spec[0]}'`;
   if (spec?.value !== undefined) return `'${spec.value}'`;
   if (spec?.type  !== undefined) return spec.type;
   return JSON.stringify(spec);
