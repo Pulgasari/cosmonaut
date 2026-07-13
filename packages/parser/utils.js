@@ -91,6 +91,22 @@ export function resolveWrapper (wrapperMap, wrapper) {
   if (wrapperMap[wrapper])  return wrapperMap[wrapper];
   if (isString(wrapper, 2)) return [wrapper[0], wrapper[1]];
   throw new Error(`[Parser] Unknown Wrapper: "${wrapper}"`);
+
+  /*
+  if (wrapper is falsy)      return [null, null];
+  if (wrapper is Array)      return wrapper;
+  if (wrapper in wrapperMap) return wrapperMap[wrapper];
+  if (wrapper is String(2))  return [wrapper[0], wrapper[1]];
+  throw new Error(`[Parser] Unknown Wrapper: "${wrapper}"`);
+
+  return match (wrapper) {
+    is falsy      : [null, null];
+    is Array      : wrapper;
+    in wrapperMap : wrapperMap[wrapper];
+    is String (2) : [wrapper[0], wrapper[1]];
+    default       : throw new Error(`[Parser] Unknown Wrapper: "${wrapper}"`);
+  }
+  */
 }
 
 // :::::: Parsing Methods (need ctx-binding)
