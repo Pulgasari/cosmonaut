@@ -1,5 +1,8 @@
 {
   "name": "@cosmonaut/utils",
   "version": "1.0.0",
-  "exports": "./index.js"
+  "exports": {
+    ".": "./index.js",
+    "./internals": "./internals.js"
+  }
 }
