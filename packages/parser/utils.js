@@ -1,10 +1,11 @@
 // @cosmonaut/parser/utils.js
 
-// :::::: RE-EXPORTS
+// :::::: IMPORTS & RE-EXPORTS
+
+import * from '@cosmonaut/utils/internals';
 
 export * from '@cosmonaut/presets';
 export * from '@cosmonaut/utils';
-import * from '@cosmonaut/utils/internals';
 
 // ::::::
 
