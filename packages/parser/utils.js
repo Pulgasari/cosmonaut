@@ -1,5 +1,11 @@
 // @cosmonaut/parser/utils.js
 
+// :::::: Internals
+
+const arrayfied = sth => Array.isArray(sth) ? sth : [sth];
+
+// ::::::
+
 export function createNodeFactory (nodeDefs) {
   return new Proxy({}, {
     get (_, type) {
@@ -8,6 +14,19 @@ export function createNodeFactory (nodeDefs) {
       return (args = {}) => buildNode(def, args);
     }
   });
+}
+
+export function resolveElementSpec (spec) {
+  if (typeof spec === 'function') return p => spec(p);
+
+  // string ODER array of strings -> "konsumiere eines dieser Tokens (Typ oder Wert)"
+  const candidates = Array.isArray(spec) ? spec : [spec];
+  return p => {
+    for (const candidate of candidates) {
+      if (p.isToken(candidate)) return p.consumeToken(candidate).value;
+    }
+    throw p.error(`Erwarte eines von [${candidates.join(', ')}]`);
+  };
 }
 
 // :::::: Wrapper
@@ -29,7 +48,7 @@ export function resolveWrapper (wrapperMap, wrapper) {
   throw new Error(`[Parser] Unknown Wrapper: "${wrapper}"`);
 }
 
-// :::::: Parsing Methods
+// :::::: Parsing Methods (need ctx-binding)
 
 export function parseBinaryExpression (p, { operators, excluded = new Set(), parseOperand, buildNode }, minPrecedence = 0) {
   let left = parseOperand();
@@ -42,7 +61,8 @@ export function parseBinaryExpression (p, { operators, excluded = new Set(), par
   return left;
 }
 
-export function parseList (p, parseElement, options = {}) {
+export function parseList (p, elementSpec, options = {}) {
+  const parseElement = resolveElementSpec(elementSpec);
   const { wrapper = null, closeToken = null, separatorToken = ',', trailing = true } = options;
 
   const [openToken, wrapperClose] = resolveWrapper(p._wrappers, wrapper);
