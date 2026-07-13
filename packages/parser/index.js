@@ -11,6 +11,8 @@ const defaultOptions = {
 };
 
 export class Parser {
+
+  // init
   constructor (tokens = [], options = {}) {
     this.options = mergeOptions(options, defaultOptions);
     if (!this.options.nodeFactory) throw new Error('[Parser] options.nodeFactory fehlt.');
@@ -24,36 +26,66 @@ export class Parser {
     this._buildDispatch();
   }
 
-  // navigate
-  at (offset = 0) { return this.tokens[this.cursor + offset]; }
-  peek     () { return this.at( 0); }
-  peekNext () { return this.at( 1); }
-  peekPrev () { return this.at(-1); }
+  // navigate + match
+  peek (offset = 0) { return this.tokens[this.cursor + offset]; }
 
-  check   (typeOrValue, maybeValue, offset = 0) { /* wie isToken, aber mit offset */ }
-  match   (typeOrValue, maybeValue)             { if (this.check(typeOrValue, maybeValue)) { this.advance(); return true; } return false; }
-  consume (typeOrValue, maybeValue, message)    { /* wie bisher */ }
+  checkToken (type, value, offset = 0) {
+    const token = peek();
+    return token.type  === type
+        && token.value === value;
+  }
+
+  check (typeOrValue, maybeValue, offset = 0) {
+    const query = resolveTokenQuery(typeOrValue, maybeValue);
+    if (!query) return false;
+  
+    const token = peek();
+    return token.type  === query.type
+        && token.value === query.value;
+  }
+  consume (typeOrValue, maybeValue, message) {
+    if (check(typeOrValue, maybeValue)) return advance();
+    const token = peek();
+    const query = resolveTokenQuery(typeOrValue, maybeValue);
+    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message || `Erwarte '${query?.value}'`} (Gefunden: '${token.value}')`);
+  }
+  match (typeOrValue, maybeValue) {
+    if (this.check(typeOrValue, maybeValue)) { 
+      this.advance(); 
+      return true;
+    } 
+    return false; 
+  }
+  
 
   checkAny (...specs) {
-    return specs.some(spec => this.check(...normalizeSpec(spec)));
+    return specs.some(
+      spec => this.check(...normalizeSpec(spec))
+    );
   }
-  consumeAny (specs, message) {
-    if (this.checkAny(...specs)) return this.advance();
-    throw this.error(message ?? `Erwarte eines von [${specs.join(', ')}]`);
+  consumeAny (...specs) {
+    return this.checkAny(...specs)
+      ? this.advance()
+      : throw this.error(`Erwarte eines von [${specs.join(', ')}]`);
   }
   matchAny (...specs) {
-    if (this.checkAny(...specs)) return this.advance();
-    return false;
+    return this.checkAny(...specs)
+      ? this.advance()
+      : false;
   }
   
   
 
-  //
+  // navigate extras for dx
   checkNext (typeOrValue, maybeValue) { return this.check(typeOrValue, maybeValue,  1); }
   checkPrev (typeOrValue, maybeValue) { return this.check(typeOrValue, maybeValue, -1); }
   checkSequence (...specs) { return specs.every((spec, i) => this.check(...normalizeSpec(spec), i)); }
+  isEOF    () { return this.check('EOF'); }
+  peekNext () { return this.peek( 1); }
+  peekPrev () { return this.peek(-1); }
   
-  // aliases
+  // aliases for dx
+  at           = this.peek;
   consumeToken = this.consume;
   isToken      = this.check;
   matchToken   = this.match;
@@ -61,16 +93,9 @@ export class Parser {
 
   // navigation
   advance  () { if (!this.isEOF()) this.cursor++; return this.previous(); }
-  peek     () { return this.tokens[this.cursor]; }
-  peekNext () { return this.tokens[this.cursor + 1]; }
-  previous () { return this.tokens[this.cursor - 1]; }
-  isEOF    () { return this.isToken('EOF'); }
+  
 
-  // matching
-  isToken      (typeOrValue, maybeValue) { /* wie bisher, aber via this._tokenMap */ }
-  matchToken   (typeOrValue, maybeValue) { if (this.isToken(typeOrValue, maybeValue)) { this.advance(); return true; } return false; }
-  consumeToken (typeOrValue, maybeValue, message) { /* wie bisher, this.error(...) */ }
-
+  //
   error (message) {
     const t = this.peek();
     return new SyntaxError(`[Parser ${t.line}:${t.column}]: ${message} (Gefunden: '${t.value}')`);
