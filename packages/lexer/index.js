@@ -3,8 +3,13 @@
 // :::::: Export Lexer Utils
 
 export {
-  buildTokenTypes, makeRulesFromPuncts, makeRulesFromOperators,
-  resolveRules, buildWhitespaceScanner, buildCommentScanners, isKeyword,
+  buildCommentScanners,
+  buildTokenTypes,
+  buildWhitespaceScanner,
+  isKeyword,
+  makeRulesFromPuncts,
+  makeRulesFromOperators,
+  resolveRules,
 } from './utils.js';
 
 // :::::: Convenience Re-Exports
@@ -187,4 +192,4 @@ export class Lexer {
   
 }
 
-default export Lexer;
+export default Lexer;
