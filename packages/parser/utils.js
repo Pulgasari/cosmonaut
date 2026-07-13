@@ -85,6 +85,20 @@ export function parseList (p, elementSpec, options = {}) {
   return elements;
 }
 
+export function parseUnaryExpression (p, { operators, parseOperand, buildNode, specialCases = [] }) {
+  for (const special of specialCases) {
+    if (special.test(p)) return special.parse(p);
+  }
+  for (const [token, operator] of Object.entries(operators)) {
+    if (p.isToken(token)) {
+      p.advance();
+      const argument = parseUnaryExpression(p, { operators, parseOperand, buildNode, specialCases });
+      return buildNode(operator, argument);
+    }
+  }
+  return parseOperand();
+}
+
 export function parseUntil (p, parseElement, stopToken) {
   const elements = [];
   while (!p.isToken(stopToken) && !p.isEOF()) elements.push(parseElement());
