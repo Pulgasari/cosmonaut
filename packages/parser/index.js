@@ -128,7 +128,19 @@ export class Parser {
     const suffix = extra ? ` (${extra})` : '';
     return new SyntaxError(`[Parser ${t.line}:${t.column}] Expected ${expected} but found ${found}${suffix}`);
   }
-    
+
+  // Methods Registry
+  static _customMethods = {};
+  static addMethod (methods) {
+    if (!Array.isArray(methods)) methods = [methods];
+    for (const fn of methods) {
+      if (typeof fn !== 'function')                 continue;
+      if (!fn.name || !fn.name.startsWith('parse')) continue;
+      // override allowed
+      Parser._customMethods[fn.name] = fn;
+    }
+  }
+  
 }
 
 export default Parser;
