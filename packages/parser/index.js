@@ -1,6 +1,8 @@
 // @cosmonaut/parser
 
-// :::::: RE-EXPORTS
+// :::::: IMPORTS & RE-EXPORTS
+
+import * from '@cosmonaut/utils/internals';
 
 export * from './utils.js';
 export * from '@cosmonaut/presets';
@@ -81,9 +83,9 @@ export class Parser {
   checkNext     (spec)     { return this.check(spec,  1); }
   checkPrev     (spec)     { return this.check(spec, -1); }
   checkSequence (...specs) { return specs.every((spec, i) => this.check(...normalizeSpec(spec), i)); }
-  isEOF    () { return this.check('EOF'); }
-  peekNext () { return this.peek( 1); }
-  peekPrev () { return this.peek(-1); }
+  isEOF         ()         { return this.check('EOF'); }
+  peekNext      ()         { return this.peek( 1); }
+  peekPrev      ()         { return this.peek(-1); }
   
   // aliases for dx
   at           = this.peek;
@@ -125,7 +127,7 @@ export class Parser {
     const expected = Array.isArray(specOrSpecs)
       ? `one of [${specOrSpecs.map(describeTokenSpec).join(', ')}]`
       : describeTokenSpec(specOrSpecs);
-    const found = describeToken(t, this.options.tokenTypes);
+    const found  = describeToken(t, this.options.tokenTypes);
     const suffix = extra ? ` (${extra})` : '';
     return new SyntaxError(`[Parser ${t.line}:${t.column}] Expected ${expected} but found ${found}${suffix}`);
   }
@@ -133,9 +135,9 @@ export class Parser {
   // Methods Registry
   static _customMethods = [];
   static addMethod (methods) {
-    if (!Array.isArray(methods)) methods = [methods];
+    methods = isObject(methods) ? Object.entries(methods) : arrayfied(methods);
     for (const fn of methods) {
-      if (typeof fn !== 'function')                 continue;
+      if (!isFunction(fn)) continue;
       if (!fn.name || !fn.name.startsWith('parse')) continue;
       // override allowed
       Parser._customMethods.push(fn);
