@@ -1,5 +1,15 @@
 // @cosmonaut/parser
 
+import {
+  describeTokenSpec, 
+  resolveTokenSpec,
+  parseBinaryExpression,
+  parseList,
+  parseUntil,
+  parseWrapped,
+  parseUnaryExpression
+} from './utils;
+
 const defaultOptions = {
   grammar     : [],   // Module mit parseXxx-Regeln, s.u.
   keywords    : [],
@@ -104,6 +114,7 @@ export class Parser {
   parseWrapped          (...args) { return parseWrapped          (this, ...args); } // wrapper, fn
   parseUntil            (...args) { return parseUntil            (this, ...args); } // parseElement, stop
   parseBinaryExpression (...args) { return parseBinaryExpression (this, ...args); } // options, min
+  parseUnaryExpression  (...args) { return parseUnaryExpression  (this, ...args); }
 
   // internal
   _buildDispatch () { /* s.u. Punkt 4 */ }
@@ -122,35 +133,4 @@ export class Parser {
     
 }
 
-default export Parser;
-
-// :::::: HELPERS
-
-export function resolveTokenSpec (spec, tokenMap) {
-  if (typeof spec === 'string') {
-    const resolved = tokenMap.get(spec);
-    if (!resolved) throw new Error(`[Parser] Unknown token spec: "${spec}"`);
-    return resolved;
-  }
-
-  if (Array.isArray(spec)) {
-    const [type, value] = spec;
-    return { type, value };
-  }
-
-  if (spec && typeof spec === 'object') {
-    if ('type'  in spec && 'value' in spec) return { type: spec.type, value: spec.value };
-    if ('type'  in spec)                    return { type: spec.type, value: undefined };
-    if ('value' in spec)                    return resolveTokenSpec(spec.value, tokenMap);
-  }
-
-  throw new Error(`[Parser] Invalid token spec: ${JSON.stringify(spec)}`);
-}
-
-export function describeTokenSpec (spec) {
-  if (typeof spec === 'string')  return `'${spec}'`;
-  if (Array.isArray(spec))       return `'${spec[1] ?? spec[0]}'`;
-  if (spec?.value !== undefined) return `'${spec.value}'`;
-  if (spec?.type  !== undefined) return spec.type;
-  return JSON.stringify(spec);
-}
+export default Parser;
