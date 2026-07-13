@@ -1,5 +1,10 @@
 // @cosmonaut/parser/utils.js
 
+// :::::: RE-EXPORTS
+
+export * from '@cosmonaut/presets';
+export * from '@cosmonaut/utils';
+
 // :::::: Internals
 
 const arrayfied = sth => Array.isArray(sth) ? sth : [sth];
