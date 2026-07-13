@@ -16,17 +16,33 @@ export function createNodeFactory (nodeDefs) {
   });
 }
 
-export function resolveElementSpec (spec) {
-  if (typeof spec === 'function') return p => spec(p);
+export function describeTokenSpec (spec) {
+  if (typeof spec === 'string')  return `'${spec}'`;
+  if (Array.isArray(spec))       return `'${spec[1] ?? spec[0]}'`;
+  if (spec?.value !== undefined) return `'${spec.value}'`;
+  if (spec?.type  !== undefined) return spec.type;
+  return JSON.stringify(spec);
+}
 
-  // string ODER array of strings -> "konsumiere eines dieser Tokens (Typ oder Wert)"
-  const candidates = Array.isArray(spec) ? spec : [spec];
-  return p => {
-    for (const candidate of candidates) {
-      if (p.isToken(candidate)) return p.consumeToken(candidate).value;
-    }
-    throw p.error(`Erwarte eines von [${candidates.join(', ')}]`);
-  };
+export function resolveTokenSpec (spec, tokenMap) {
+  if (typeof spec === 'string') {
+    const resolved = tokenMap.get(spec);
+    if (!resolved) throw new Error(`[Parser] Unknown token spec: "${spec}"`);
+    return resolved;
+  }
+
+  if (Array.isArray(spec)) {
+    const [type, value] = spec;
+    return { type, value };
+  }
+
+  if (spec && typeof spec === 'object') {
+    if ('type'  in spec && 'value' in spec) return { type: spec.type, value: spec.value };
+    if ('type'  in spec)                    return { type: spec.type, value: undefined };
+    if ('value' in spec)                    return resolveTokenSpec(spec.value, tokenMap);
+  }
+
+  throw new Error(`[Parser] Invalid token spec: ${JSON.stringify(spec)}`);
 }
 
 // :::::: Wrapper
