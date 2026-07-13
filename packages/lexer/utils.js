@@ -1,13 +1,12 @@
 // @cosmonaut/lexer/utils.js
 
+import { commonTokens }                 from '@cosmonaut/presets';
 import { ensureArray, makeStickyRegex } from '@cosmonaut/utils';
 
 // :::::: TokenType
 
-export const coreTokenTypes = ['EOF', 'IDENTIFIER', 'KEYWORD', 'NUMBER', 'OPERATOR', 'PUNCT', 'STRING'];
-
 export function buildTokenTypes (custom = []) {
-  const all = [...coreTokenTypes, ...custom];
+  const all = [...commonTokens, ...custom];
   return Object.freeze(Object.fromEntries(all.map(k => [k, k])));
 }
 
@@ -54,29 +53,42 @@ export function buildCommentScanners (comments) {
   const list = Array.isArray(comments) ? comments : [];
 
   const scanners = list.map(c => {
+    // make scanner: single line comment
     if (c.type === 'line') {
       const regex = makeStickyRegex(RegExp.escape(c.start) + '.*');
       return {
-        id: `comment:${c.start}`,
-        test: (source, i) => source.startsWith(c.start, i),
-        scan: (source, i) => { regex.lastIndex = i; const m = regex.exec(source); return { token: null, endCursor: i + m[0].length }; },
-        _sortKey: c.start,
+        id   : `comment:${c.start}`,
+        test : (source, i) => source.startsWith(c.start, i),
+        scan : (source, i) => { 
+          regex.lastIndex = i;
+          const m = regex.exec(source);
+          return { token: null, endCursor: i + m[0].length };
+        },
+        _sortKey : c.start,
       };
     }
+    // make scanner: multi line (block) comment
     if (c.type === 'block') {
       const regex = makeStickyRegex(RegExp.escape(c.start) + '[\\s\\S]*?' + RegExp.escape(c.end));
       return {
         id: `comment:${c.start}...${c.end}`,
         test: (source, i) => source.startsWith(c.start, i),
-        scan: (source, i) => { regex.lastIndex = i; const m = regex.exec(source); return { token: null, endCursor: i + m[0].length }; },
+        scan: (source, i) => {
+          regex.lastIndex = i;
+          const m = regex.exec(source); 
+          return { token: null, endCursor: i + m[0].length };
+        },
         _sortKey: c.start,
       };
     }
-    throw new Error(`[Lexer] Unbekannter comment-Typ: "${c.type}"`);
+    // error: wrong type
+    throw new Error(`[Lexer] Unknown comment type: "${c.type}"`);
   });
 
-  // Längere Starts zuerst (z.B. '///' vor '//'), damit test() nicht am kürzeren hängenbleibt.
+  // sort scanners by length of start ('///' before '//')
   scanners.sort((a, b) => b._sortKey.length - a._sortKey.length);
+
+  // done!
   return scanners;
 }
 
