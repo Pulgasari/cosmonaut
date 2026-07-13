@@ -24,23 +24,17 @@ export function makeRulesFromOperators (operators, tokenTypes) {
   }));
 }
 
-// Löst { use, override, add } zu einer flachen, effektiven Rule-Liste auf.
-// - use:      explizite Positivliste aus Preset-Regeln (nichts passiert implizit)
-// - override: ersetzt eine Regel aus 'use' per id (id muss existieren -> laute Fehler statt stillem No-Op)
-// - add:      komplett neue, sprachspezifische Regeln, hinten angehängt
-export function resolveRules ({ use = [], override = {}, add = [] } = {}) {
-  const resolved = use.map(rule => {
-    if (override[rule.id]) return normalizeRule(override[rule.id]);
-    return normalizeRule(rule);
-  });
+// Resolves a flat list of rule objects into the effective rule set. 
+// Every rule needs a unique 'id' - if the same id shows up more than once, the last one wins. 
+export function resolveRules (rules = []) {
+  const byId = new Map();
 
-  for (const id of Object.keys(override)) {
-    if (!use.some(r => r.id === id)) {
-      throw new Error(`[Lexer] rules.override: Rule-id "${id}" is not a member of 'rules.use'.`);
-    }
+  for (const rule of rules) {
+    if (!rule.id) throw new Error('[Lexer] rule is missing an "id" (required so later rules can override earlier ones).');
+    byId.set(rule.id, normalizeRule(rule));
   }
 
-  return [...resolved, ...add.map(normalizeRule)];
+  return [...byId.values()];
 }
 
 function normalizeRule (rule) {
