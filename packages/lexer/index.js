@@ -22,11 +22,11 @@ export * from '@cosmonaut/utils';
 const defaultOptions = {
   comments       : [],
   keywords       : [],
-  puncts         : [],
   operators      : {},
+  puncts         : [],
   tokenTypes     : null,
   
-  rules          : { use: [], override: {}, add: [] },
+  rules          : [],
   scanners       : [],
   
   skipComments   : true,
