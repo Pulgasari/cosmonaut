@@ -4,26 +4,7 @@
 
 export * from '@cosmonaut/presets';
 export * from '@cosmonaut/utils';
-
-// :::::: Internals
-
-const arrayfied = sth => Array.isArray(sth) ? sth : [sth];
-
-const isArray     = sth => Array.isArray(sth);
-const isDefined   = sth => sth !== undefined;
-const isFalsy     = sth => !sth;
-const isFn        = sth => typeof sth === 'function';
-const isFunction  = sth => typeof sth === 'function';
-const isNullish   = sth => sth == null;
-const isObject    = sth => typeof sth === 'object' && typeof sth !== 'null';
-const isTruthy    = sth => !!sth;
-const isUndefined = sth => sth === undefined;
-
-const isString = (sth, length) => {
-  return length
-    ? typeof sth === 'string' && sth.length === length
-    : typeof sth === 'string';
-}
+import * from '@cosmonaut/utils/internals';
 
 // ::::::
 
