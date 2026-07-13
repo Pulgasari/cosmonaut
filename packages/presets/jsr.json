@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "exports": {
     ".": "./index.js",
-    "./languages/javascript": "./languages/JavaScript.js"
+    "./languages/javascript": "./languages/javascript.js"
   }
 }
