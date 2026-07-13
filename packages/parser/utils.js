@@ -4,13 +4,14 @@
 
 const arrayfied = sth => Array.isArray(sth) ? sth : [sth];
 
-const isArray   = sth => Array.isArray(sth);
-const isFalsy   = sth => !sth;
-const isNullish = sth => sth == null;
-const isObject  = sth => typeof sth === 'object' && typeof sth !== 'null';
-const isString  = sth => typeof sth === 'string';
-const isTruthy  = sth => !!sth;
-
+const isArray     = sth => Array.isArray(sth);
+const isDefined   = sth => sth !== undefined;
+const isFalsy     = sth => !sth;
+const isNullish   = sth => sth == null;
+const isObject    = sth => typeof sth === 'object' && typeof sth !== 'null';
+const isString    = sth => typeof sth === 'string';
+const isTruthy    = sth => !!sth;
+const isUndefined = sth => sth === undefined;
 
 // ::::::
 
