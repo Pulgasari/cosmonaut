@@ -29,68 +29,41 @@ export class Parser {
   // navigate + match
   peek (offset = 0) { return this.tokens[this.cursor + offset]; }
 
-  checkToken (type, value, offset = 0) {
+  check (tokenSpec, offset = 0) {
+    const { type, value } = resolveTokenSpec (tokenSpec);
     const token = this.peek();
     return token.type  === type
         && token.value === value;
   }
-  matchToken (type, value) {
-    return this.checkToken(type, value)
+  match (tokenSpec, offset = 0) {
+    return this.check(tokenSpec, offset)
       ? (this.advance(), true)
       : false;
   }
-  consumeToken (type, value, message) {
-    const matched = matchToken(type, value);
+  consume (tokenSpec, message) {
+    const matched = this.match(tokenSpec);
     if (matched) return matched;
     if (!matched) {
       const token = peek();
       throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message || `Erwarte '${.value}'`} (Gefunden: '${token.value}')`);
     }
   }
-
-  check (typeOrValue, offset = 0) {
-    const { type, value } = resolveTokenQuery (typeOrValue);
-    return checkToken (type, value, offset);
-  }
-  match (typeOrValue, offset = 0) {
-    const { type, value } = resolveTokenQuery (typeOrValue);
-    return matchToken (type, value, offset);
-  }
-  consume (typeOrValue, message) {
-    const { type, value } = resolveTokenQuery (typeOrValue);
-    return consumeToken (type, value, message);
-  }
-
   
-  consume (typeOrValue, maybeValue, message) {
-    if (check(typeOrValue, maybeValue)) return advance();
-    const token = peek();
-    const query = resolveTokenQuery(typeOrValue, maybeValue);
-    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message || `Erwarte '${query?.value}'`} (Gefunden: '${token.value}')`);
-  }
-  match (typeOrValue, maybeValue) {
-    if (this.check(typeOrValue, maybeValue)) { 
-      this.advance(); 
-      return true;
-    } 
-    return false; 
-  }
-  
-
   checkAny (...specs) {
-    return specs.some(
-      spec => this.check(...normalizeSpec(spec))
-    );
-  }
-  consumeAny (...specs) {
-    return this.checkAny(...specs)
-      ? this.advance()
-      : throw this.error(`Erwarte eines von [${specs.join(', ')}]`);
+    return specs.some(spec => this.check(spec));
   }
   matchAny (...specs) {
-    return this.checkAny(...specs)
-      ? this.advance()
-      : false;
+    if (!this.checkAny(...specs)) return false;
+    this.advance();
+    return true;
+  }
+  consumeAny (...specs) {
+    if (this.checkAny(...specs)) return this.advance();
+    throw this._unexpected(specs);
+  }
+  consumeAnyOrMessage (specsList, message) {
+    if (this.checkAny(...specsList)) return this.advance();
+    throw this._unexpected(specsList, message);
   }
   
   
@@ -168,10 +141,45 @@ function resolveSpec (spec) {
   }
 }
 
-function resolveSpec (spec) {
+function resolveTokenSpec (spec) {
   (typeof spec === 'object' && spec !== null)
     ? { return spec; }
     : Array.isArray(spec)
       ? { let [type, value] = spec; return { type, value }; }
       : { return TOKEN_MAP.get(spec) ?? null; }
+}
+
+
+
+
+
+// packages/parser/utils.js
+
+export function resolveTokenSpec (spec, tokenMap) {
+  if (typeof spec === 'string') {
+    const resolved = tokenMap.get(spec);
+    if (!resolved) throw new Error(`[Parser] Unknown token spec: "${spec}"`);
+    return resolved;
+  }
+
+  if (Array.isArray(spec)) {
+    const [type, value] = spec;
+    return { type, value };
+  }
+
+  if (spec && typeof spec === 'object') {
+    if ('type'  in spec && 'value' in spec) return { type: spec.type, value: spec.value };
+    if ('type'  in spec)                    return { type: spec.type, value: undefined };
+    if ('value' in spec)                    return resolveTokenSpec(spec.value, tokenMap);
+  }
+
+  throw new Error(`[Parser] Invalid token spec: ${JSON.stringify(spec)}`);
+}
+
+export function describeTokenSpec (spec) {
+  if (typeof spec === 'string') return `'${spec}'`;
+  if (Array.isArray(spec))      return `'${spec[1] ?? spec[0]}'`;
+  if (spec?.value !== undefined) return `'${spec.value}'`;
+  if (spec?.type  !== undefined) return spec.type;
+  return JSON.stringify(spec);
 }
