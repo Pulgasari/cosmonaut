@@ -30,19 +30,38 @@ export class Parser {
   peek (offset = 0) { return this.tokens[this.cursor + offset]; }
 
   checkToken (type, value, offset = 0) {
-    const token = peek();
+    const token = this.peek();
     return token.type  === type
         && token.value === value;
   }
-
-  check (typeOrValue, maybeValue, offset = 0) {
-    const query = resolveTokenQuery(typeOrValue, maybeValue);
-    if (!query) return false;
-  
-    const token = peek();
-    return token.type  === query.type
-        && token.value === query.value;
+  matchToken (type, value) {
+    return this.checkToken(type, value)
+      ? (this.advance(), true)
+      : false;
   }
+  consumeToken (type, value, message) {
+    const matched = matchToken(type, value);
+    if (matched) return matched;
+    if (!matched) {
+      const token = peek();
+      throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message || `Erwarte '${.value}'`} (Gefunden: '${token.value}')`);
+    }
+  }
+
+  check (typeOrValue, offset = 0) {
+    const { type, value } = resolveTokenQuery (typeOrValue);
+    return checkToken (type, value, offset);
+  }
+  match (typeOrValue, offset = 0) {
+    const { type, value } = resolveTokenQuery (typeOrValue);
+    return matchToken (type, value, offset);
+  }
+  consume (typeOrValue, message) {
+    const { type, value } = resolveTokenQuery (typeOrValue);
+    return consumeToken (type, value, message);
+  }
+
+  
   consume (typeOrValue, maybeValue, message) {
     if (check(typeOrValue, maybeValue)) return advance();
     const token = peek();
@@ -132,4 +151,27 @@ function normalizeSpec (spec) {
   return Array.isArray(spec) ? spec : [spec, undefined];
 }
 
+function resolveTokenQuery (typeOrValue, maybeValue) {
+  return (maybeValue !== undefined)
+    ? { type: typeOrValue, value: maybeValue }
+    : TOKEN_MAP.get(typeOrValue) ?? null;
+}
 
+function resolveSpec (spec) {
+  if (Array.isArray(spec) {
+    let [type, value] = spec;
+    return { type, value };
+  }
+
+  else {
+    return TOKEN_MAP.get(spec) ?? null;
+  }
+}
+
+function resolveSpec (spec) {
+  (typeof spec === 'object' && spec !== null)
+    ? { return spec; }
+    : Array.isArray(spec)
+      ? { let [type, value] = spec; return { type, value }; }
+      : { return TOKEN_MAP.get(spec) ?? null; }
+}
