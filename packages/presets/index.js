@@ -33,6 +33,19 @@ export const baseRules = {
   identifier        : { id: 'identifier',        type: 'IDENTIFIER', regex: /[a-zA-Z_$][a-zA-Z0-9_$]*/ },
 };
 
+// :::::: Common
+
+export const commonPuncts = '()[]{}?!.:,;';
+export const commonTokens = ['COMMENT','EOF','IDENTIFIER','KEYWORD','NUMBER','OPERATOR','PUNCT','STRING'];
+
 // :::::: Re-Export of Language Presets
 
 export { default as javascript } from './languages/javascript.js';
+
+
+
+/*
+export const TokenType     = Object.freeze(Object.fromEntries(tokens.map(k => [k,k])));
+export const TokenTypeList = Object.freeze(tokens);
+export const TokenTypeSet  = new Set(TokenTypeList);
+*/
