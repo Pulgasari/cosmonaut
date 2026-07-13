@@ -7,11 +7,18 @@ const arrayfied = sth => Array.isArray(sth) ? sth : [sth];
 const isArray     = sth => Array.isArray(sth);
 const isDefined   = sth => sth !== undefined;
 const isFalsy     = sth => !sth;
+const isFn        = sth => typeof sth === 'function';
+const isFunction  = sth => typeof sth === 'function';
 const isNullish   = sth => sth == null;
 const isObject    = sth => typeof sth === 'object' && typeof sth !== 'null';
-const isString    = sth => typeof sth === 'string';
 const isTruthy    = sth => !!sth;
 const isUndefined = sth => sth === undefined;
+
+const isString = (sth, length) => {
+  return length
+    ? typeof sth === 'string' && sth.length === length
+    : typeof sth === 'string';
+}
 
 // ::::::
 
@@ -26,18 +33,18 @@ export function createNodeFactory (nodeDefs) {
 }
 
 export function describeTokenSpec (spec) {
-  if (typeof spec === 'string')  return `'${spec}'`;
-  if (Array.isArray(spec))       return `'${spec[1] ?? spec[0]}'`;
-  if (spec?.value !== undefined) return `'${spec.value}'`;
-  if (spec?.type  !== undefined) return spec.type;
-  return JSON.stringify(spec);
+  return isString  (spec)        ? `'${spec}'`
+       : isArray   (spec)        ? `'${spec[1] ?? spec[0]}'`
+       : isDefined (spec?.value) ? `'${spec.value}'`
+       : isDefined (spec?.type)  ? spec.type
+       : JSON.stringify(spec);
 }
 
 function resolveElementSpec (spec) {
-  if (typeof spec === 'function') return p => spec(p);
+  if (isFunction(spec)) return p => spec(p);
 
   // tokenSpec | array of tokenSpec
-  const candidates = Array.isArray(spec) ? spec : [spec];
+  const candidates = arrayfied(spec);
   return p => {
     for (const candidate of candidates) {
       if (p.check(candidate)) return p.consume(candidate).value;
@@ -47,18 +54,18 @@ function resolveElementSpec (spec) {
 }
 
 export function resolveTokenSpec (spec, tokenMap) {
-  if (typeof spec === 'string') {
+  if (isString(spec)) {
     const resolved = tokenMap.get(spec);
     if (!resolved) throw new Error(`[Parser] Unknown token spec: "${spec}"`);
     return resolved;
   }
 
-  if (Array.isArray(spec)) {
+  if (isArray(spec)) {
     const [type, value] = spec;
     return { type, value };
   }
 
-  if (spec && typeof spec === 'object') {
+  if (spec && isObject(spec)) {
     if ('type'  in spec && 'value' in spec) return { type: spec.type, value: spec.value };
     if ('type'  in spec)                    return { type: spec.type, value: undefined };
     if ('value' in spec)                    return resolveTokenSpec(spec.value, tokenMap);
@@ -79,10 +86,10 @@ export function buildWrapperMap (custom = {}) {
 }
 
 export function resolveWrapper (wrapperMap, wrapper) {
-  if (!wrapper)               return [null, null];
-  if (Array.isArray(wrapper)) return wrapper;
-  if (wrapperMap[wrapper])    return wrapperMap[wrapper];
-  if (typeof wrapper === 'string' && wrapper.length === 2) return [wrapper[0], wrapper[1]];
+  if (!wrapper)             return [null, null];
+  if (isArray(wrapper))     return wrapper;
+  if (wrapperMap[wrapper])  return wrapperMap[wrapper];
+  if (isString(wrapper, 2)) return [wrapper[0], wrapper[1]];
   throw new Error(`[Parser] Unknown Wrapper: "${wrapper}"`);
 }
 
