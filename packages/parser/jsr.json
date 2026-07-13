@@ -1,0 +1,9 @@
+{
+  "name": "@cosmonaut/parser",
+  "version": "1.0.0",
+  "exports": "./index.js",
+  "dependencies": {
+    "@cosmonaut/presets",
+    "@cosmonaut/utils"
+  ]
+}
