@@ -4,6 +4,14 @@
 
 const arrayfied = sth => Array.isArray(sth) ? sth : [sth];
 
+const isArray   = sth => Array.isArray(sth);
+const isFalsy   = sth => !sth;
+const isNullish = sth => sth == null;
+const isObject  = sth => typeof sth === 'object' && typeof sth !== 'null';
+const isString  = sth => typeof sth === 'string';
+const isTruthy  = sth => !!sth;
+
+
 // ::::::
 
 export function createNodeFactory (nodeDefs) {
@@ -22,6 +30,19 @@ export function describeTokenSpec (spec) {
   if (spec?.value !== undefined) return `'${spec.value}'`;
   if (spec?.type  !== undefined) return spec.type;
   return JSON.stringify(spec);
+}
+
+function resolveElementSpec (spec) {
+  if (typeof spec === 'function') return p => spec(p);
+
+  // tokenSpec | array of tokenSpec
+  const candidates = Array.isArray(spec) ? spec : [spec];
+  return p => {
+    for (const candidate of candidates) {
+      if (p.check(candidate)) return p.consume(candidate).value;
+    }
+    throw p.error(`Erwarte eines von [${candidates.join(', ')}]`);
+  };
 }
 
 export function resolveTokenSpec (spec, tokenMap) {
@@ -66,65 +87,67 @@ export function resolveWrapper (wrapperMap, wrapper) {
 
 // :::::: Parsing Methods (need ctx-binding)
 
-export function parseBinaryExpression (p, { operators, excluded = new Set(), parseOperand, buildNode }, minPrecedence = 0) {
+export function parseBinaryExpression (ctx, { operators, excluded = new Set(), parseOperand, buildNode }, minPrecedence = 0) {
   let left = parseOperand();
   while (true) {
-    const match = matchOperator(p, operators, excluded, minPrecedence);
+    const match = matchOperator(ctx, operators, excluded, minPrecedence);
     if (!match) break;
-    const right = parseBinaryExpression(p, { operators, excluded, parseOperand, buildNode }, match.precedence + 1);
+    const right = parseBinaryExpression(ctx, { operators, excluded, parseOperand, buildNode }, match.precedence + 1);
     left = buildNode(match.operator, left, right);
   }
   return left;
 }
 
-export function parseList (p, elementSpec, options = {}) {
+export function parseList (ctx, elementSpec, options = {}) {
   const parseElement = resolveElementSpec(elementSpec);
   const { wrapper = null, closeToken = null, separatorToken = ',', trailing = true } = options;
 
-  const [openToken, wrapperClose] = resolveWrapper(p._wrappers, wrapper);
+  const [openToken, wrapperClose] = resolveWrapper(ctx._wrappers, wrapper);
   const actualClose = wrapperClose ?? closeToken;
   if (!actualClose) throw new Error('[Parser] parseList braucht "wrapper" oder "closeToken".');
 
-  if (openToken) p.consumeToken(openToken);
+  if (openToken) ctx.consumeToken(openToken);
 
   const elements = [];
-  if (!p.isToken(actualClose)) {
+  if (!ctx.check(actualClose)) {
     do {
-      if (p.isToken(actualClose)) break; // trailing comma erlaubt
+      if (ctx.check(actualClose)) break; // trailing comma erlaubt
       elements.push(parseElement());
-      if (!p.matchToken(separatorToken)) break;
-      if (!trailing && p.isToken(actualClose)) throw p.error('Trailing separator nicht erlaubt');
-    } while (!p.isToken(actualClose));
+      if (!ctx.match(separatorToken)) break;
+      if (!trailing && ctx.check(actualClose)) throw ctx.error('Trailing separator nicht erlaubt');
+    } while (!ctx.check(actualClose));
   }
 
-  if (openToken) p.consumeToken(wrapperClose);
+  if (openToken) ctx.consume(wrapperClose);
   return elements;
 }
 
-export function parseUnaryExpression (p, { operators, parseOperand, buildNode, specialCases = [] }) {
+export function parseUnaryExpression (ctx, { operators, parseOperand, buildNode, specialCases = [] }) {
   for (const special of specialCases) {
-    if (special.test(p)) return special.parse(p);
+    if (special.test(ctx)) return special.parse(ctx);
   }
   for (const [token, operator] of Object.entries(operators)) {
-    if (p.isToken(token)) {
-      p.advance();
-      const argument = parseUnaryExpression(p, { operators, parseOperand, buildNode, specialCases });
+    if (ctx.check(token)) {
+      ctx.advance();
+      const argument = parseUnaryExpression(ctx, { operators, parseOperand, buildNode, specialCases });
       return buildNode(operator, argument);
     }
   }
   return parseOperand();
 }
 
-export function parseUntil (p, parseElement, stopToken) {
-  const elements = [];
-  while (!p.isToken(stopToken) && !p.isEOF()) elements.push(parseElement());
+export function parseUntil (ctx, elementSpec, stopToken) {
+  const parseElement = resolveElementSpec(elementSpec);
+  const elements     = [];
+  while (!ctx.checkAny(stopToken, 'EOF')) elements.push(parseElement());
   return elements;
 }
 
-export function parseWrapped (p, wrapper, fn) {
-  const [open, close] = resolveWrapper(p._wrappers, wrapper);
-  p.consumeToken(open);
-  const result = fn();
-  p.consumeToken(close);
+export function parseWrapped (ctx, wrapper, elementSpec) {
+  const [open, close] = resolveWrapper(ctx._wrappers, wrapper);
+  const parseElement  = resolveElementSpec(elementSpec);
+  ctx.consume(open);
+  const result = parseElement();
+  ctx.consume(close);
   return result;
 }
