@@ -24,6 +24,26 @@ export class Parser {
     this._buildDispatch();
   }
 
+  // navigate
+  at (offset = 0) { return this.tokens[this.cursor + offset]; }
+  peek     () { return this.at( 0); }
+  peekNext () { return this.at( 1); }
+  peekPrev () { return this.at(-1); }
+
+  check   (typeOrValue, maybeValue, offset = 0) { /* wie isToken, aber mit offset */ }
+  match   (typeOrValue, maybeValue)             { if (this.check(typeOrValue, maybeValue)) { this.advance(); return true; } return false; }
+  consume (typeOrValue, maybeValue, message)    { /* wie bisher */ }
+
+  //
+  checkNext (typeOrValue, maybeValue) { return this.check(typeOrValue, maybeValue,  1); }
+  checkPrev (typeOrValue, maybeValue) { return this.check(typeOrValue, maybeValue, -1); }
+  
+  // aliases
+  consumeToken = this.consume;
+  isToken      = this.check;
+  matchToken   = this.match;
+  previous () { return this.at(-1); }
+
   // navigation
   advance  () { if (!this.isEOF()) this.cursor++; return this.previous(); }
   peek     () { return this.tokens[this.cursor]; }
