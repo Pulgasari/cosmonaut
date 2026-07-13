@@ -13,6 +13,7 @@ export * from '@cosmonaut/utils';
 const defaultOptions = {
   grammar     : [],   // Module mit parseXxx-Regeln, s.u.
   keywords    : [],
+  methods     : [],
   nodeFactory : null, // s.u. (ASTNode-Proxy)
   puncts      : [],
   operators   : {},
@@ -34,7 +35,9 @@ export class Parser {
     
     this.setTokens(tokens);
     this._buildDispatch();
-    this._installCustomMethods();
+
+    if (this.options.methods) Parser.addMethod(this.options.methods);
+    this._installMethods();
   }
 
   // navigate + match
@@ -111,14 +114,7 @@ export class Parser {
     try { return fn(); }
     finally { ({ tokens: this.tokens, cursor: this.cursor } = this._stack.pop()); }
   }
-
-  // from utils
-  parseList             (...args) { return parseList             (this, ...args); } // parseElement, options
-  parseWrapped          (...args) { return parseWrapped          (this, ...args); } // wrapper, fn
-  parseUntil            (...args) { return parseUntil            (this, ...args); } // parseElement, stop
-  parseBinaryExpression (...args) { return parseBinaryExpression (this, ...args); } // options, min
-  parseUnaryExpression  (...args) { return parseUnaryExpression  (this, ...args); }
-
+  
   // internal
   _buildDispatch () { /* s.u. Punkt 4 */ }
   _unexpected (specOrSpecs, extra) {
@@ -133,18 +129,24 @@ export class Parser {
   }
 
   // Methods Registry
-  static _customMethods = [];
+  static _methods = [
+    parseBinaryExpression, // options, min
+    parseList, // parseElement, options
+    parseUnaryExpression,
+    parseUntil, // parseElement, stop
+    parseWrapped, // wrapper, fn
+  ];
   static addMethod (methods) {
-    methods = isObject(methods) ? Object.entries(methods) : arrayfied(methods);
+    methods = isObject(methods) ? Object.values(methods) : arrayfied(methods);
     for (const fn of methods) {
       if (!isFunction(fn)) continue;
       if (!fn.name || !fn.name.startsWith('parse')) continue;
       // override allowed
-      Parser._customMethods.push(fn);
+      Parser._methods.push(fn);
     }
   }
-  _installCustomMethods() {
-    for (const fn of Parser._customMethods) {
+  _installMethods () {
+    for (const fn of Parser._methods) {
       this[fn.name] = (...args) => fn (this, ...args);
     }
   }
