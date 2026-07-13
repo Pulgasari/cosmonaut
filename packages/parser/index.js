@@ -37,6 +37,10 @@ export class Parser {
   }
 
   // navigate + match
+  advance  () { 
+    if (!this.isEOF()) this.cursor++; 
+    return this.previous(); 
+  }
   peek (offset = 0) { 
     return this.tokens[this.cursor + offset];
   }
@@ -75,8 +79,8 @@ export class Parser {
   }
   
   // navigate extras for dx
-  checkNext (typeOrValue, maybeValue) { return this.check(typeOrValue, maybeValue,  1); }
-  checkPrev (typeOrValue, maybeValue) { return this.check(typeOrValue, maybeValue, -1); }
+  checkNext     (spec)     { return this.check(spec,  1); }
+  checkPrev     (spec)     { return this.check(spec, -1); }
   checkSequence (...specs) { return specs.every((spec, i) => this.check(...normalizeSpec(spec), i)); }
   isEOF    () { return this.check('EOF'); }
   peekNext () { return this.peek( 1); }
@@ -87,11 +91,9 @@ export class Parser {
   consumeToken = this.consume;
   isToken      = this.check;
   matchToken   = this.match;
-  previous () { return this.at(-1); }
-
-  // navigation
-  advance  () { if (!this.isEOF()) this.cursor++; return this.previous(); }
-  
+  next         = this.peekNext;
+  prev         = this.peekPrev;
+  previous     = this.peekPrev;
 
   //
   error (message) {
@@ -118,10 +120,8 @@ export class Parser {
 
   // internal
   _buildDispatch () { /* s.u. Punkt 4 */ }
-
-  // :::::: error handling (implicit — builds full message from spec + current token)
-
   _unexpected (specOrSpecs, extra) {
+    // error handling (implicit — builds full message from spec + current token)
     const t = this.peek();
     const expected = Array.isArray(specOrSpecs)
       ? `one of [${specOrSpecs.map(describeTokenSpec).join(', ')}]`
