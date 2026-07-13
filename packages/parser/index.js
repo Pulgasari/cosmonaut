@@ -34,9 +34,24 @@ export class Parser {
   match   (typeOrValue, maybeValue)             { if (this.check(typeOrValue, maybeValue)) { this.advance(); return true; } return false; }
   consume (typeOrValue, maybeValue, message)    { /* wie bisher */ }
 
+  checkAny (...specs) {
+    return specs.some(spec => this.check(...normalizeSpec(spec)));
+  }
+  consumeAny (specs, message) {
+    if (this.checkAny(...specs)) return this.advance();
+    throw this.error(message ?? `Erwarte eines von [${specs.join(', ')}]`);
+  }
+  matchAny (...specs) {
+    if (this.checkAny(...specs)) return this.advance();
+    return false;
+  }
+  
+  
+
   //
   checkNext (typeOrValue, maybeValue) { return this.check(typeOrValue, maybeValue,  1); }
   checkPrev (typeOrValue, maybeValue) { return this.check(typeOrValue, maybeValue, -1); }
+  checkSequence (...specs) { return specs.every((spec, i) => this.check(...normalizeSpec(spec), i)); }
   
   // aliases
   consumeToken = this.consume;
@@ -83,4 +98,13 @@ export class Parser {
 }
 
 default export Parser;
+
+// :::::: HELPERS
+
+/ Spec-Normalisierung: ein Element ist entweder ein String (Wert/Typ, über TOKEN_MAP aufgelöst)
+// oder ein [type, value]-Paar für den expliziten Fall
+function normalizeSpec (spec) {
+  return Array.isArray(spec) ? spec : [spec, undefined];
+}
+
 
