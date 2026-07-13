@@ -5,6 +5,6 @@
   "main": "./index.js",
   "exports": {
     ".": "./index.js",
-    "./languages/javascript": "./languages/JavaScript.js"
+    "./languages/javascript": "./languages/javascript.js"
   }
 }
