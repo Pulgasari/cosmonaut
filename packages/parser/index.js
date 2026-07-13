@@ -1,14 +1,12 @@
 // @cosmonaut/parser
 
-import {
-  describeTokenSpec, 
-  resolveTokenSpec,
-  parseBinaryExpression,
-  parseList,
-  parseUntil,
-  parseWrapped,
-  parseUnaryExpression
-} from './utils;
+// :::::: RE-EXPORTS
+
+export * from './utils.js';
+export * from '@cosmonaut/presets';
+export * from '@cosmonaut/utils';
+
+// :::::: MAIN EXPORT
 
 const defaultOptions = {
   grammar     : [],   // Module mit parseXxx-Regeln, s.u.
