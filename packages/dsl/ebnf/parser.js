@@ -2,23 +2,22 @@
 
 import { EBNF_TOKEN_TYPES } from './meta.js';
 
-export function parseEBNF (tokens) {
+// :::::: toAST <> convert grammar tokens to AST
+
+export default function toAST (tokens) {
   let pos = 0;
 
-  function peek() { return tokens[pos] || { type: EBNF_TOKEN_TYPES.EOF }; }
-  function next() { return tokens[pos++]; }
-  function match(type) {
-    if (peek().type === type) return next();
-    return null;
-  }
-  function expect(type) {
+  function peek   ()     { return tokens[pos] || { type: EBNF_TOKEN_TYPES.EOF }; }
+  function next   ()     { return tokens[pos++]; }
+  function match  (type) { return (peek().type === type) ? next() : null; }
+  function expect (type) {
     const token = match(type);
     if (!token) throw new SyntaxError(`Expected ${type} at ${peek().line}:${peek().column}`);
     return token;
   }
 
   // Produktionen: identifier "::=" expression
-  function parseProduction() {
+  function parseProduction () {
     const name = expect(EBNF_TOKEN_TYPES.IDENTIFIER);
     expect(EBNF_TOKEN_TYPES.SYMBOL); // "::="
     const expr = parseExpression();
@@ -26,7 +25,7 @@ export function parseEBNF (tokens) {
   }
 
   // Expression: Alternativen (durch "|" getrennt)
-  function parseExpression() {
+  function parseExpression () {
     const terms = [parseTerm()];
     while (peek().value === '|') {
       next(); // '|' konsumieren
@@ -38,53 +37,30 @@ export function parseEBNF (tokens) {
   // Term: Sequenz von Faktoren (optional, Wiederholung, Gruppe, Literal, Identifier)
   function parseTerm() {
     const factors = [];
-    while (peek().type === EBNF_TOKEN_TYPES.SYMBOL ||
-           peek().type === EBNF_TOKEN_TYPES.STRING ||
+    while (peek().type === EBNF_TOKEN_TYPES.SYMBOL     ||
+           peek().type === EBNF_TOKEN_TYPES.STRING     ||
            peek().type === EBNF_TOKEN_TYPES.IDENTIFIER ||
-           peek().type === EBNF_TOKEN_TYPES.REGEX ||
-           peek().type === EBNF_TOKEN_TYPES.ELLIPSIS) {
+           peek().type === EBNF_TOKEN_TYPES.REGEX      ||
+           peek().type === EBNF_TOKEN_TYPES.ELLIPSIS   ){
       factors.push(parseFactor());
     }
     return factors.length === 1 ? factors[0] : { type: 'sequence', factors };
   }
 
   function parseFactor() {
-    // Option: [ ... ]
-    if (peek().value === '[') {
-      next(); // '['
-      const expr = parseExpression();
-      expect(EBNF_TOKEN_TYPES.SYMBOL); // ']'
-      return { type: 'optional', expr };
+    switch (peek().value) {
+      case '[' : next(); const expr = parseExpression(); expect(EBNF_TOKEN_TYPES.SYMBOL); return { expr, type: 'optional' };
+      case '{' : next(); const expr = parseExpression(); expect(EBNF_TOKEN_TYPES.SYMBOL); return { expr, type: 'repeat'   };
+      case '(' : next(); const expr = parseExpression(); expect(EBNF_TOKEN_TYPES.SYMBOL); return { expr, type: 'group'    };
     }
-    // Wiederholung: { ... }
-    if (peek().value === '{') {
-      next(); // '{'
-      const expr = parseExpression();
-      expect(EBNF_TOKEN_TYPES.SYMBOL); // '}'
-      return { type: 'repeat', expr };
+    
+    switch (peek().type) {
+      case EBNF_TOKEN_TYPES.ELLIPSIS   : return { value: token.value, type: 'ellipsis'    };
+      case EBNF_TOKEN_TYPES.IDENTIFIER : return { value: token.value, type: 'nonterminal' };
+      case EBNF_TOKEN_TYPES.REGEX      : return { value: token.value, type: 'regex'       };
+      case EBNF_TOKEN_TYPES.STRING     : return { value: token.value, type: 'literal'     };
     }
-    // Gruppe: ( ... ) – optional, kann für Alternativen oder Sequenzen sein
-    if (peek().value === '(') {
-      next(); // '('
-      const expr = parseExpression();
-      expect(EBNF_TOKEN_TYPES.SYMBOL); // ')'
-      return { type: 'group', expr };
-    }
-    // String-Literal
-    if (peek().type === EBNF_TOKEN_TYPES.STRING) {
-      const token = next();
-      return { type: 'literal', value: token.value };
-    }
-    // Regex-Block
-    if (peek().type === EBNF_TOKEN_TYPES.REGEX) {
-      const token = next();
-      return { type: 'regex', value: token.value };
-    }
-    // Ellipsis (für Zeichenklassen)
-    if (peek().type === EBNF_TOKEN_TYPES.ELLIPSIS) {
-      const token = next();
-      return { type: 'ellipsis', value: token.value };
-    }
+
     // Identifier (Nichtterminal)
     const token = expect(EBNF_TOKEN_TYPES.IDENTIFIER);
     return { type: 'nonterminal', name: token.value };
@@ -92,7 +68,7 @@ export function parseEBNF (tokens) {
 
   // Hauptschleife: alle Produktionen lesen
   const productions = [];
-  while (peek().type === EBNF_TOKEN_TYPES.IDENTIFIER) {
+  while (peek().type === EBNF_TOKEN_TYPES.ITIFIER) {
     productions.push(parseProduction());
     // optional: Kommentare ignorieren
   }
