@@ -41,95 +41,85 @@ export class Parser {
     this._installMethods();
     this._buildAliases();
   }
+  
+  // :::::: navigate + check / match / consume (base names)
 
-  // navigate + match
   advance  () { 
     if (!this.isEOF()) this.cursor++; 
     return this.previous(); 
   }
+  
   peek (offset = 0) { 
     return this.tokens[this.cursor + offset];
   }
-  check (spec, offset = 0) {
-    const { type, value } = resolveTokenSpec(spec, this._tokenMap);
-    const token = this.at(offset);
+
+  // shared matching core - check(), checkNext/checkPrev, and *Sequence() all go through
+  // this, so there's exactly one place that knows how a token compares against a spec.
+  _matches (token, spec) {
     if (!token) return false;
-    return token.type === type && (value === undefined || token.value === value);
-  }
-  match (spec) {
-    if (!this.check(spec)) return false;
-    this.advance();
+    const query = resolveTokenSpec(spec, this._tokenMap);
+    if (query.type  !== undefined && token.type  !== query.type)  return false;
+    if (query.value !== undefined && token.value !== query.value) return false;
     return true;
   }
+  
+  check (spec, offset = 0) {
+    return this._matches(this.peek(), spec); 
+  }
+
+  match (spec) {
+    if (this.check(spec)) { this.advance(); return true; }
+    return false;
+  }
+
   consume (spec, extra) {
-    // 'extra' ist optional -> nur für zusätzlichen Kontext, ersetzt NICHT die Kernmeldung
-    // z.B. consume('as', "after 'alias'") -> "Expected 'as' but found ... (after 'alias')"
     if (this.check(spec)) return this.advance();
     throw this._unexpected(spec, extra);
   }
+
+  // :::::: value-level alternatives at the current position (NOT type-level)
+
   checkAny (...specs) {
     return expandSpecs(specs).some(spec => this.check(spec));
   }
+
   matchAny (...specs) {
-    if (!this.checkAny(...specs)) return false;
-    this.advance();
-    return true;
-  }
-  consumeAny (...specs) {
-    if (this.checkAny(...specs)) return this.advance();
-    throw this._unexpected(specs);
-  }
-  consumeAnyOrMessage (specsList, message) {
-    if (this.checkAny(...specsList)) return this.advance();
-    throw this._unexpected(specsList, message);
+    if (this.checkAny(...specs)) { this.advance(); return true; }
+    return false;
   }
 
-  // sequence
-  checkSequence (...specs) { 
-    return expandSpecs(specs).every(
-      (spec, i) => this.check(...normalizeSpec(spec), i)
-    );
+  consumeAny (specs, message) {
+    const list = isString(specs) ? specs.trim().split(/\s+/) : specs;
+    if (this.checkAny(...list)) return this.advance();
+    throw this._unexpected(list, message);
   }
+  
+  // :::::: sequential lookahead (+ capture)
+
+  checkSequence (...specs) {
+    return expandSpecs(specs).every((spec, i) => this._matches(this.at(i), spec));
+  }
+
+  matchSequence (...specs) {
+    const list = expandSpecs(specs);
+    if (!this.checkSequence(...list)) return null; // falsy -> 'if (p.matchSequence(...))' just works
+    return makeSequenceResult(list.map(() => this.advance()));
+  }
+
   consumeSequence (...specs) {
-    if (!this.checkSequence(...specs)) throw this._unexpected(specs);
-    return specs.map(() => this.advance());
+    const list = expandSpecs(specs);
+    if (!this.checkSequence(...list)) throw this._unexpected(list);
+    return makeSequenceResult(list.map(() => this.advance()));
   }
-  matchSequence (...specs) {...}
-  sequenceResult () {
-    //
-    let tokens = [];
-    // let id = consumeSequence('IDENTIFIER', ':', 'STRING').value(0);
-    const type   = index => tokens[index].type;
-    const value  = index => tokens[index].value;
 
-    // let [id, str] = consumeSequence('IDENTIFIER', ':', 'STRING').values(); // all values as array
-    // let [id, str] = consumeSequence('IDENTIFIER', ':', 'STRING').values(0,2);
-    const types  = () => {};
-    const values = () => {};
+  // :::::: navigate extras
 
-    const bool;
-
-    return {
-      
-    }
-  }
-  // regulär verhalten sich checkSequence, matchSequence, consumeSequence
-  // analog zu check, match, consume
-  // zusätzlich kann man aber .value/values/type/types() anhängen 
-  // für derlei rückgabewerte DX
-  
-  // navigate extras for dx
-  checkNext (spec) { return this.check(spec,  1); }
-  checkPrev (spec) { return this.check(spec, -1); }
+  checkNext (spec) { return this._matches(this.next(), spec); }
+  checkPrev (spec) { return this._matches(this.prev(), spec); }
   isEOF     ()     { return this.check('EOF'); }
-  peekNext  ()     { return this.peek( 1); }
-  peekPrev  ()     { return this.peek(-1); }
+  next      ()     { return this.peek( 1); }
+  prev      ()     { return this.peek(-1); }
   
-  // aliases for dx
-  at   = this.peek;
-  next = this.peekNext;
-  prev = this.peekPrev;
-
   //
   error (message) {
     const t = this.peek();
