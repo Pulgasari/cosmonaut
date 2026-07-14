@@ -92,12 +92,20 @@ export class Parser {
   
   // aliases for dx
   at           = this.peek;
-  consumeToken = this.consume;
-  isToken      = this.check;
-  matchToken   = this.match;
   next         = this.peekNext;
   prev         = this.peekPrev;
   previous     = this.peekPrev;
+
+  // aliases: spec 1
+  consumeToken = this.consume;
+  isToken      = this.check;
+  matchToken   = this.match;
+
+  // aliases: spec 2
+  is       = this.check;
+  eat      = this.advance;
+  mustEat  = this.consume;
+  wouldEat = this.match;
 
   //
   error (message) {
