@@ -8,6 +8,7 @@
 
 #### Packages
 
+- [combinators](packages/combinators)
 - [lexer](packages/lexer) (tokenizer)
 - [parser](packages/parser)
 - [transformer](packages/transformer)
