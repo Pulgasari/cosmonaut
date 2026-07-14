@@ -11,6 +11,7 @@ export * from '@cosmonaut/utils';
 // :::::: MAIN EXPORT
 
 const defaultOptions = {
+  aliases     : [],
   grammar     : [],   // Module mit parseXxx-Regeln, s.u.
   keywords    : [],
   methods     : [],
@@ -118,31 +119,16 @@ export class Parser {
   // für derlei rückgabewerte DX
   
   // navigate extras for dx
-  checkNext     (spec)     { return this.check(spec,  1); }
-  checkPrev     (spec)     { return this.check(spec, -1); }
-  isEOF         ()         { return this.check('EOF'); }
-  peekNext      ()         { return this.peek( 1); }
-  peekPrev      ()         { return this.peek(-1); }
+  checkNext (spec) { return this.check(spec,  1); }
+  checkPrev (spec) { return this.check(spec, -1); }
+  isEOF     ()     { return this.check('EOF'); }
+  peekNext  ()     { return this.peek( 1); }
+  peekPrev  ()     { return this.peek(-1); }
   
   // aliases for dx
-  at           = this.peek;
-  next         = this.peekNext;
-  prev         = this.peekPrev;
-  previous     = this.peekPrev;
-
-  // aliases: spec 1
-  consumeToken = this.consume;
-  isToken      = this.check;
-  matchToken   = this.match;
-
-  // aliases: spec 2
-  is       = this.check;
-  eat      = this.advance;
-  mustEat  = this.consume;
-  wouldEat = this.match;
-
-  // aliases: spec 3
-  expect   = this.consume;
+  at   = this.peek;
+  next = this.peekNext;
+  prev = this.peekPrev;
 
   //
   error (message) {
@@ -244,3 +230,12 @@ function expandSpecs (specs) {
     : specs;
 }
 
+/*
+peek      at
+advance   eat      eat
+check     is       is
+match     match    wouldEat
+consume   expect   mustEat
+
+
+*/
