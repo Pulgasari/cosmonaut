@@ -1,15 +1,15 @@
-// EBNF/tokenizer
+// EBNF/tokenize.js
 
 import { EBNF_TOKEN_TYPES } from './meta.js';
 
-// :::::: Tokenizer
+// :::::: tokenize <> convert grammar definition into tokens
 
-export function tokenizeEBNF (source) {
+export function default tokenize (source) {
+  const len    = source.length;
   const tokens = [];
-  let pos = 0;
-  const len = source.length;
-  let line = 1;
-  let column = 1;
+  let   column = 1;
+  let   line   = 1;
+  let   pos    = 0;
 
   while (pos < len) {
     const ch = source[pos];
