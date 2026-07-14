@@ -81,12 +81,12 @@ export class Parser {
   // :::::: navigate: base
 
   advance  () { 
-    if (!this.isEOF()) this.cursor++; 
-    return this.previous(); 
+    if (!this.isEOF()) this._current++; 
+    return this.prev(); 
   }
   
   peek (offset = 0) { 
-    return this.tokens[this.cursor + offset];
+    return this._tokens[this._current + offset];
   }
 
   // :::::: navigate: check / match / consume
@@ -135,7 +135,7 @@ export class Parser {
   // :::::: navigate: sequential lookahead (+ capture)
 
   checkSequence (...specs) {
-    return expandSpecs(specs).every((spec, i) => this._matches(this.at(i), spec));
+    return expandSpecs(specs).every((spec, i) => this._matches(this.peek(i), spec));
   }
 
   matchSequence (...specs) {
