@@ -1,4 +1,4 @@
-// EBNF/parser
+// EBNF/toAST.js
 
 import { EBNF_TOKEN_TYPES } from './meta.js';
 
