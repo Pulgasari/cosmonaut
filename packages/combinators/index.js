@@ -1,45 +1,50 @@
-/**
- * @cosmonaut/combinators
- * Eine funktionale JavaScript-DSL zum Komponieren von Parsern.
- */
+// @cosmonaut/combinators
 
-// Hilfsfunktion: Führt einen Kombinator aus und setzt bei Fehlern/Exceptions den Index zurück.
-function runWithBacktrack(ctx, combinator) {
-  const startPos = ctx.index;
-  try {
-    const res = combinator(ctx);
-    if (res === null || res === undefined || ctx.failed) {
-      ctx.index = startPos;
-      return null;
-    }
-    return res;
-  } catch (err) {
-    ctx.index = startPos;
-    return null;
+// :::::: IMPORTS
+
+import { isFn } from '@cosmonaut/utils/internals';
+
+// ==========================================
+// Die beiden magischen Exports
+// ==========================================
+
+// 1. Das "rule" Proxy (ausschließlich für Property-Zugriffe)
+const rule = new Proxy({}, {
+  get(target, prop) {
+    if (typeof prop === 'symbol') return target[prop];
+    return createLazyRule(prop);
   }
-}
+});
 
-// Dekoriert eine nackte ParserFn mit den DSL-Methoden
-function decorateCombinator(fn) {
-  const combinator = function (ctx) {
-    return fn(ctx);
-  };
+// 2. Die "parse" Basis-Funktion für dynamische Direktaufrufe: parse('Expression', 4)
+const parseBase = (ruleName, ...args) => decorateCombinator((ctx) => {
+  if (typeof ctx[ruleName] === 'function') {
+    return ctx[ruleName](...args);
+  }
+  if (typeof ctx.parse === 'function') {
+    return ctx.parse(ruleName, ...args);
+  }
+  throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
+});
 
-  // Standard-Kombinatormethoden (Modifikatoren)
-  combinator.many     = ()      => many     (combinator);
-  combinator.many1    = ()      => many1    (combinator);
-  combinator.optional = ()      => optional (combinator);
-  combinator.repeat   = (n)     => repeat   (combinator, n);
-  combinator.map      = (mapFn) => map      (combinator, mapFn);
-  combinator.capture  = (name)  => capture  (combinator, name);
-  combinator.node     = (type)  => node     (combinator, type);
+// Das "parse" Proxy (erlaubt sowohl Direktaufruf als auch Property-Zugriff!)
+const parse = new Proxy (parseBase, {
+  get(target, prop) {
+    // JS-Standard-Methoden (bind, call, toString, etc.) normal durchlassen
+    if (prop in target || typeof prop === 'symbol') {
+      return target[prop];
+    }
+    // Für alle anderen Properties verhalten wir uns exakt wie "rule"!
+    return createLazyRule(prop);
+  }
+});
 
-  return combinator;
-}
+
 
 // ==========================================
 // Das magische "rule" Proxy (Referenzen auf Regeln)
 // ==========================================
+/*
 const rule = new Proxy({}, {
   get(target, prop) {
     // 1. Definition für parametrisierte Aufrufe: rule.MyRule(arg1, arg2)
@@ -76,6 +81,7 @@ const rule = new Proxy({}, {
     });
   }
 });
+*/
 
 // ==========================================
 // Primitiven
@@ -85,6 +91,7 @@ const consume = (value) => decorateCombinator((ctx) => ctx.consume(value));
 const match = (pattern) => decorateCombinator((ctx) => ctx.match(pattern));
 const check = (pattern) => decorateCombinator((ctx) => ctx.check(pattern) ? ctx.peek() : null);
 
+/*
 // Fallback für dynamische Strings: parse('Expression')
 const parse = (ruleName, ...args) => decorateCombinator((ctx) => {
   if (typeof ctx[ruleName] === 'function') {
@@ -95,6 +102,7 @@ const parse = (ruleName, ...args) => decorateCombinator((ctx) => {
   }
   throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
 });
+*/
 
 const call = (fn) => decorateCombinator((ctx) => fn(ctx));
 const custom = call;
@@ -370,30 +378,85 @@ const debug = (combinator, message = '') => decorateCombinator((ctx) => {
 // Exporte
 export {
   rule,
-  consume,
-  match,
-  check,
-  parse,
-  call,
-  custom,
-  seq,
-  choice,
+  call, capture, check, choice, consume, custom,
+  debug,
+  lazy, lookahead,
+  many, many1, map, match, memo,
+  named, node, not,
   optional,
+  parse, peek,
   repeat,
-  many,
-  many1,
-  whileLoop as while,
+  separated, seq,
   untilLoop as until,
-  not,
-  lookahead,
-  peek,
-  wrapped,
-  separated,
-  map,
-  capture,
-  node,
-  lazy,
-  memo,
-  named,
-  debug
+  whileLoop as while, wrapped,
 };
+
+// ==========================================
+// Gemeinsamer Helper für Lazy-Regeln
+// ==========================================
+
+// Erzeugt einen Kombinator, der sowohl direkt als ParserFn genutzt
+// als auch als Funktion mit Argumenten aufgerufen werden kann.
+function createLazyRule (ruleName) {
+  const defaultCombinator = decorateCombinator((ctx) => {
+    if (typeof ctx[ruleName] === 'function') {
+      return ctx[ruleName]();
+    }
+    if (typeof ctx.parse === 'function') {
+      return ctx.parse(ruleName);
+    }
+    throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
+  });
+
+  const ruleBuilder = (...args) => {
+    return decorateCombinator((ctx) => {
+      if (typeof ctx[ruleName] === 'function') {
+        return ctx[ruleName](...args);
+      }
+      if (typeof ctx.parse === 'function') {
+        return ctx.parse(ruleName, ...args);
+      }
+      throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
+    });
+  };
+
+  // Wir verpassen dem defaultCombinator einen apply-Trap.
+  // Dadurch wird er selbst "callable" und verhält sich wie ruleBuilder, wenn man Argumente übergibt.
+  return new Proxy(defaultCombinator, {
+    apply(target, thisArg, args) {
+      return ruleBuilder(...args);
+    }
+  });
+}
+
+// Hilfsfunktion: Führt einen Kombinator aus und setzt bei Fehlern/Exceptions den Index zurück.
+function runWithBacktrack (ctx, combinator) {
+  const startPos = ctx.index;
+  try {
+    const res = combinator(ctx);
+    if (res === null || res === undefined || ctx.failed) {
+      ctx.index = startPos;
+      return null;
+    }
+    return res;
+  } catch (err) {
+    ctx.index = startPos;
+    return null;
+  }
+}
+
+// Dekoriert eine nackte ParserFn mit den DSL-Methoden
+function decorateCombinator (fn) {
+  const combinator = function (ctx) { return fn(ctx); };
+
+  // Standard-Kombinatormethoden (Modifikatoren)
+  combinator.capture  = (name)  => capture  (combinator, name);
+  combinator.many     = ()      => many     (combinator);
+  combinator.many1    = ()      => many1    (combinator);
+  combinator.map      = (mapFn) => map      (combinator, mapFn);
+  combinator.node     = (type)  => node     (combinator, type);
+  combinator.optional = ()      => optional (combinator);
+  combinator.repeat   = (n)     => repeat   (combinator, n);
+
+  return combinator;
+}
