@@ -11,6 +11,7 @@ export const isNullish   = sth => sth == null;
 export const isObject    = sth => typeof sth === 'object' && typeof sth !== 'null';
 export const isTruthy    = sth => !!sth;
 export const isUndefined = sth => sth === undefined;
+export const isUpperCase = sth => sth === sth.toUpperCase();
 
 export const isString = (sth, length) => {
   return length
