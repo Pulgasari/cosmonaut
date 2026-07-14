@@ -61,3 +61,27 @@ until()
 lookahead()
 not()
 */
+
+// doWhile
+
+const traits = [];
+if (p.match('use')) do { traits.push(p.consume('IDENTIFIER').value); } while (p.match(','));
+
+const traits = $(p).match('use').doWhile(',').consume('IDENTIFIER');
+const traits = $(p).match('use').doWhileMatch(',').consume('IDENTIFIER');
+
+
+// while
+
+const members = [];
+while (p.match('|')) members.push(p.parse('Primary'));
+
+const members = $(p).while('|').parse('Primary');
+const members = $(p).while('|', 'Primary');
+const members = $(p).whileMatch('|').parse('Primary');
+const members = $(p).whileMatch('|', 'Primary');
+
+
+
+
+
