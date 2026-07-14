@@ -6,12 +6,14 @@
 
 ### Main Methods
 
-spec 0    | spec 1         | spec 2
-----------|----------------|-------
-`check`   | `checkToken`   | `is`
-`advance` | `advanceToken` | `eat`
-`match`   | `matchToken`   | `eatMaybe`
-`consume` | `consumeToken` | `eatOrDie`
+spec      | spec 0    | spec 1         | spec 2
+----------|-----------|----------------|-------
+`at`      |           |                |
+`move`    | `peek`    | `peek`         | `at`
+`is`      | `check`   | `checkToken`   | `is`
+`eat`     | `advance` | `advanceToken` | `eat`
+`match`   | `match`   | `matchToken`   | `eatMaybe`
+`expect`  | `consume` | `consumeToken` | `eatOrDie`
 
 ### Utility Parse Methods
 
@@ -23,7 +25,7 @@ name            | ...
 
 ### Control Flow
 
-name     | ...
----------|----
-`switch` | ...
-`when`   | ...
+name       | ...
+-----------|----
+`dispatch` | ...
+`when`     | ...
