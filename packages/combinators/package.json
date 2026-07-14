@@ -1,6 +1,20 @@
 {
   "name": "@cosmonaut/combinators",
   "version": "1.0.0",
+  "description": "Composable parser combinators for the Cosmonaut compiler toolkit.",
   "type": "module",
-  "exports": "./index.js"
+  "exports": {
+    ".": "./index.js"
+  },
+  "keywords": [
+    "compiler",
+    "parser",
+    "parser-combinators",
+    "ast",
+    "lexer",
+    "generator",
+    "transformer",
+    "cosmonaut"
+  ],
+  "license": "MIT"
 }
