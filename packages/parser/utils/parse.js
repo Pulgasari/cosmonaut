@@ -44,6 +44,20 @@ export function parseList (ctx, elementSpec, options = {}) {
   return elements;
 }
 
+// :::::: parseListWhen
+// like parseList, but for the common "optional keyword, then a bare comma-separated
+// list with no wrapper and no fixed end token" shape (e.g. 'use A, B'). parseList can't
+// express this - it always needs a wrapper or a closeToken to know where to stop; here
+// the only stop condition is "no more commas".
+
+export function parseListWhen (p, spec, elementSpec) {
+  if (!p.matchAny(spec)) return [];
+  const parseElement = resolveElementSpec(elementSpec);
+  const elements = [parseElement(p)];
+  while (p.match(',')) elements.push(parseElement(p));
+  return elements;
+}
+
 export function parseUnaryExpr (ctx, { operators, parseOperand, buildNode, specialCases = [] }) {
   for (const special of specialCases) {
     if (special.test(ctx)) return special.parse(ctx);
