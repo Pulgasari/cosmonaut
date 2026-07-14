@@ -127,13 +127,13 @@ export class Parser {
   }
 
   match (...specs) {
-    if (this._checkAny(...specs)) { this.advance(); return true; }
+    if (this.check(...specs)) { this.advance(); return true; }
     return false;
   }
 
   consume (...specs) {
     const list  = expandSpecs(specs);
-    if (this._checkAny(...list)) return this.advance();
+    if (this.check(...list)) return this.advance();
     throw this._unexpected(list, extra);
   }
   
