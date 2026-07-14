@@ -10,7 +10,19 @@ spec 0    | spec 1         | spec 2
 ----------|----------------|-------
 `check`   | `checkToken`   | `is`
 `advance` | `advanceToken` | `eat`
-`match`   | `matchToken`   | `wouldEat`
-`consume` | `consumeToken` | `mustEat`
+`match`   | `matchToken`   | `eatMaybe`
+`consume` | `consumeToken` | `eatOrDie`
 
 ### Utility Parse Methods
+
+name           | ...
+---------------|----
+`parseList`    | ...
+`parseWrapped` | ...
+
+### Control Flow
+
+name     | ...
+---------|----
+`switch` | ...
+`when`   | ...
