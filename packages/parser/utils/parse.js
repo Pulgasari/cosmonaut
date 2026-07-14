@@ -1,12 +1,20 @@
-// @cosmonaut/parser/utils/parse.js
-// :::::: Parsing Methods (need ctx-binding)
+// @cosmonaut/parser/utils/parse.js ::: Parsing Methods (need ctx-binding)
 
-export function parseBinaryExpression (ctx, { operators, excluded = new Set(), parseOperand, buildNode }, minPrecedence = 0) {
+import * from '@cosmonaut/utils/internals';
+
+import {
+  resolveElementSpec,
+  resolveWrapper,
+} from './index.js';
+
+// ::::::
+
+export function parseBinaryExpr (ctx, { operators, excluded = new Set(), parseOperand, buildNode }, minPrecedence = 0) {
   let left = parseOperand();
   while (true) {
     const match = matchOperator(ctx, operators, excluded, minPrecedence);
     if (!match) break;
-    const right = parseBinaryExpression(ctx, { operators, excluded, parseOperand, buildNode }, match.precedence + 1);
+    const right = parseBinaryExpr(ctx, { operators, excluded, parseOperand, buildNode }, match.precedence + 1);
     left = buildNode(match.operator, left, right);
   }
   return left;
@@ -36,14 +44,14 @@ export function parseList (ctx, elementSpec, options = {}) {
   return elements;
 }
 
-export function parseUnaryExpression (ctx, { operators, parseOperand, buildNode, specialCases = [] }) {
+export function parseUnaryExpr (ctx, { operators, parseOperand, buildNode, specialCases = [] }) {
   for (const special of specialCases) {
     if (special.test(ctx)) return special.parse(ctx);
   }
   for (const [token, operator] of Object.entries(operators)) {
     if (ctx.check(token)) {
       ctx.advance();
-      const argument = parseUnaryExpression(ctx, { operators, parseOperand, buildNode, specialCases });
+      const argument = parseUnaryExpr(ctx, { operators, parseOperand, buildNode, specialCases });
       return buildNode(operator, argument);
     }
   }
