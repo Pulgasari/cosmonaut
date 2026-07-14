@@ -107,6 +107,9 @@ export class Parser {
   mustEat  = this.consume;
   wouldEat = this.match;
 
+  // aliases: spec 3
+  expect   = this.consume;
+
   //
   error (message) {
     const t = this.peek();
