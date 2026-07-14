@@ -161,6 +161,23 @@ export class Parser {
       this[fn.name] = (...args) => fn (this, ...args);
     }
   }
+
+  // control flow
+  switch (cases, defaultTarget) {
+    const entries = isArray(cases)
+      ? cases
+      : Object.entries(cases).map(([specStr, target]) => [specStr.trim().split(/\s+/), target]);
+  
+    for (const [specs, target] of entries) {
+      if (this.checkAny(...specs)) return this.parse(target);
+    }
+  
+    return defaultTarget !== undefined ? this.parse(defaultTarget) : null;
+  }
+  when (spec, target) {
+    if (!this.matchAny(spec)) return null;
+    return isString(target) ? this.parse(target) : target(this);
+  }
   
 }
 
