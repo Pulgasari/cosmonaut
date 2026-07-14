@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "exports": {
     ".": "./index.js",
-    "./chain": ".utils/chain.js",
-    "./utils": ".utils/index.js"
+    "./chain": "./utils/chain.js",
+    "./utils": "./utils/index.js"
   },
   "dependencies": {
     "@cosmonaut/presets",
