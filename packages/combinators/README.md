@@ -10,14 +10,14 @@ import { seq, consume, rule, wrapped } from '@cosmonaut/combinators';
 // Einfache Regeln referenzieren
 const IfStatement = seq(
   consume('if'),
-  rule.Expression.capture('condition'),
-  rule.Block.capture('thenBranch')
+  parse('Expression').capture('condition'),
+  parse('Block').capture('thenBranch')
 ).node('IfStatement');
 
 // Blöcke parsen mit sauberer Schachtelung
 const Block = wrapped(
   consume('{'),
-  rule.Statement.many(),
+  parse('Statement').many(),
   consume('}')
 );
 ```
