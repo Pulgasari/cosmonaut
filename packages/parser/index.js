@@ -89,7 +89,7 @@ export class Parser {
     return this._tokens[this._current + offset];
   }
 
-  // :::::: navigate: check / match / consume
+  // :::::: navigate: internal helpers
 
   // shared matching core - check(), checkNext/checkPrev, and *Sequence() all go through
   // this, so there's exactly one place that knows how a token compares against a spec.
@@ -101,35 +101,40 @@ export class Parser {
     return true;
   }
   
-  check (spec, offset = 0) {
-    return this._matches(this.peek(), spec); 
+  _check (spec, offset = 0) {
+    return this._matches(this.peek(offset), spec); 
   }
 
-  match (spec) {
+  _match (spec) {
     if (this.check(spec)) { this.advance(); return true; }
     return false;
   }
 
-  consume (spec, extra) {
+  _consume (spec, extra) {
     if (this.check(spec)) return this.advance();
     throw this._unexpected(spec, extra);
   }
 
-  // :::::: navigate: value-level alternatives at the current position (NOT type-level)
+  // :::::: navigate: check / match / consume
+  // now 'check', 'match', 'consume' can handle any
+  // old/regular behaviour if one provides only one spec
+  // because of token resolver and mapping explicite and implicite syntaxes work
+  // single checks: (['KEYWORD', 'const']) / ('const')
+  //    any checks: ('let const : {') / ('let', 'const', ['PUNCT', ':'], '{') 
 
-  checkAny (...specs) {
-    return expandSpecs(specs).some(spec => this.check(spec));
+  check (...specs) {
+    return expandSpecs(specs).some(spec => this._check(spec));
   }
 
-  matchAny (...specs) {
-    if (this.checkAny(...specs)) { this.advance(); return true; }
+  match (...specs) {
+    if (this._checkAny(...specs)) { this.advance(); return true; }
     return false;
   }
 
-  consumeAny (specs, message) {
-    const list = isString(specs) ? specs.trim().split(/\s+/) : specs;
-    if (this.checkAny(...list)) return this.advance();
-    throw this._unexpected(list, message);
+  consume (...specs) {
+    const list  = expandSpecs(specs);
+    if (this._checkAny(...list)) return this.advance();
+    throw this._unexpected(list, extra);
   }
   
   // :::::: navigate: sequential lookahead (+ capture)
@@ -210,8 +215,9 @@ export class Parser {
     const expected = isArray(specOrSpecs) && specOrSpecs.length > 1
       ? `one of [${specOrSpecs.map(describeTokenSpec).join(', ')}]`
       : describeTokenSpec(isArray(specOrSpecs) ? specOrSpecs[0] : specOrSpecs);
-    const found  = describeToken(t, this.options.tokenTypes);
-    const suffix = extra ? ` (${extra})` : '';
+    const found     = describeToken(t, this.options.tokenTypes);
+    const extraText = isFunction(extra) ? extra() : extra;
+    const suffix    = extraText ? ` (${extraText})` : '';
     return new SyntaxError(`[Parser ${t.line}:${t.column}]: Expected ${expected} but found ${found}${suffix}`);
   }
 
