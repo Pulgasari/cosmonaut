@@ -81,11 +81,44 @@ export class Parser {
     if (this.checkAny(...specsList)) return this.advance();
     throw this._unexpected(specsList, message);
   }
+
+  // sequence
+  checkSequence (...specs) { 
+    return expandSpecs(specs).every(
+      (spec, i) => this.check(...normalizeSpec(spec), i)
+    );
+  }
+  consumeSequence (...specs) {
+    if (!this.checkSequence(...specs)) throw this._unexpected(specs);
+    return specs.map(() => this.advance());
+  }
+  matchSequence (...specs) {...}
+  sequenceResult () {
+    //
+    let tokens = [];
+    // let id = consumeSequence('IDENTIFIER', ':', 'STRING').value(0);
+    const type   = index => tokens[index].type;
+    const value  = index => tokens[index].value;
+
+    // let [id, str] = consumeSequence('IDENTIFIER', ':', 'STRING').values(); // all values as array
+    // let [id, str] = consumeSequence('IDENTIFIER', ':', 'STRING').values(0,2);
+    const types  = () => {};
+    const values = () => {};
+
+    const bool;
+
+    return {
+      
+    }
+  }
+  // regulär verhalten sich checkSequence, matchSequence, consumeSequence
+  // analog zu check, match, consume
+  // zusätzlich kann man aber .value/values/type/types() anhängen 
+  // für derlei rückgabewerte DX
   
   // navigate extras for dx
   checkNext     (spec)     { return this.check(spec,  1); }
   checkPrev     (spec)     { return this.check(spec, -1); }
-  checkSequence (...specs) { return expandSpecs(specs).every((spec, i) => this.check(...normalizeSpec(spec), i)); }
   isEOF         ()         { return this.check('EOF'); }
   peekNext      ()         { return this.peek( 1); }
   peekPrev      ()         { return this.peek(-1); }
