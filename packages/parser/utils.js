@@ -34,6 +34,9 @@ function resolveElementSpec (spec) {
   const candidates = arrayfied(spec);
   return p => {
     for (const candidate of candidates) {
+      if (isString(candidate) && !isUpperCase(candidate)) {
+        return p.parse(candidate);
+      }
       if (p.check(candidate)) return p.consume(candidate).value;
     }
     throw p.error(`Erwarte eines von [${candidates.join(', ')}]`);
