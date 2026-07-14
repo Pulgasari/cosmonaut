@@ -11,5 +11,6 @@
 
 Useful utility blocks for building compiler.
 
+- [combinators](packages/combinators) = composable methods to build parsing methods
 - [presets](packages/presets) = presets for commons and languages
 - [utils](packages/utils) = these are re-exported in every core-package as well
