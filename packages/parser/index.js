@@ -66,7 +66,7 @@ export class Parser {
     throw this._unexpected(spec, extra);
   }
   checkAny (...specs) {
-    return specs.some(spec => this.check(spec));
+    return expandSpecs(specs).some(spec => this.check(spec));
   }
   matchAny (...specs) {
     if (!this.checkAny(...specs)) return false;
@@ -85,7 +85,7 @@ export class Parser {
   // navigate extras for dx
   checkNext     (spec)     { return this.check(spec,  1); }
   checkPrev     (spec)     { return this.check(spec, -1); }
-  checkSequence (...specs) { return specs.every((spec, i) => this.check(...normalizeSpec(spec), i)); }
+  checkSequence (...specs) { return expandSpecs(specs).every((spec, i) => this.check(...normalizeSpec(spec), i)); }
   isEOF         ()         { return this.check('EOF'); }
   peekNext      ()         { return this.peek( 1); }
   peekPrev      ()         { return this.peek(-1); }
@@ -182,3 +182,14 @@ export class Parser {
 }
 
 export default Parser;
+
+// :::::: INTERNAL HELPERS
+
+function expandSpecs (specs) {
+  // 'checkAny("{ | )")' statt 'checkAny("{", "|", ")")' -> ein einzelner String-Arg wird
+  // an Whitespace aufgesplittet. Mehrere Args (oder Arrays als Specs) bleiben unangetastet.
+  return (specs.length === 1 && isString(specs[0]))
+    ? specs[0].trim().split(/\s+/)
+    : specs;
+}
+
