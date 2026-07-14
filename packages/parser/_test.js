@@ -81,7 +81,28 @@ const members = $(p).while('|', 'Primary');
 const members = $(p).whileMatch('|').parse('Primary');
 const members = $(p).whileMatch('|', 'Primary');
 
+////////// NOT A CHAIN BUT OPTIONAL POSTFIX METHODS TO PARSE METHODS
 
+// while
+
+const members = [];
+while (p.match('|')) members.push(p.parse('Primary'));
+
+const members = parse('Primary').while('|');
+
+// do while
+
+const traits = [];
+do { traits.push(p.consume('IDENTIFIER').value); } while (p.match(','));
+
+const traits = p.consume('IDENTIFIER').doWhile(',').values();
+
+// consume, match, consumeSequence and matchSequence
+// get a mini chain
+// - while, doWhile
+// - value, values, type, types
+
+expect, expectSequence, expectWhile
 
 ////////// PATTERNS
 
