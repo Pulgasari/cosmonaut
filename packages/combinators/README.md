@@ -1,6 +1,14 @@
 # @cosmonaut/combinators
 
-## Example
+## About
+
+## Install
+
+```
+deno install jsr:@cosmonaut/combinators
+```
+
+## Examples
 
 ### Example: Hierarchische Statements
 
