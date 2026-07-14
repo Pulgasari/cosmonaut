@@ -43,8 +43,14 @@ function resolveElementSpec (spec) {
   };
 }
 
+const TYPE_NAME_RE = /^[A-Z_][A-Z0-9_]*$/;
 export function resolveTokenSpec (spec, tokenMap) {
   if (isString(spec)) {
+    const eq = spec.indexOf('=');
+    if (eq > 0 && TYPE_NAME_RE.test(spec.slice(0, eq))) {
+      return { type: spec.slice(0, eq), value: spec.slice(eq + 1) };
+    }
+
     const resolved = tokenMap.get(spec);
     if (!resolved) throw new Error(`[Parser] Unknown token spec: "${spec}"`);
     return resolved;
