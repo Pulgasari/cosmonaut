@@ -48,3 +48,40 @@ Identifier
 #### member
 
 ## Operators
+
+
+
+---
+
+```
+Statement
+ |
+ +-- Declaration
+ |
+ +-- ControlFlow
+ |
+ +-- ExpressionStatement
+
+
+Expression
+ |
+ +-- Assignment
+ |
+ +-- Binary
+ |
+ +-- Unary
+ |
+ +-- Call
+ |
+ +-- Member
+ |
+ +-- Literal
+ |
+ +-- Identifier
+ |
+ +-- Function
+ |
+ +-- Object
+ |
+ +-- Array
+```
