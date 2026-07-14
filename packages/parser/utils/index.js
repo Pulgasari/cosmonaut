@@ -29,6 +29,31 @@ export function describeTokenSpec (spec) {
        : JSON.stringify(spec);
 }
 
+/*
+export function describeTokenSpec (spec) {
+  if (isString(spec)) return `'${spec}'`;
+  if (isArray(spec))  return spec[1] !== undefined ? `${spec[0]} '${spec[1]}'` : spec[0];
+  if (isObject(spec)) return spec.value !== undefined ? `${spec.type} '${spec.value}'` : spec.type;
+  return String(spec);
+}
+
+export function describeToken (token, tokenTypes) {
+  if (!token || token.type === tokenTypes?.EOF) return 'end of input';
+  return `${token.type} '${token.value}'`;
+}
+*/
+
+// :::::: Sequence Result
+// wraps the tokens consumed by consumeSequence()/matchSequence() with index-based
+// accessors, so grammar code doesn't have to destructure raw token objects by hand.
+export function makeSequenceResult (tokens) {
+  const type   = i => tokens[i]?.type;
+  const value  = i => tokens[i]?.value;
+  const types  = (...idx) => idx.length ? idx.map(type)  : tokens.map(t => t.type);
+  const values = (...idx) => idx.length ? idx.map(value) : tokens.map(t => t.value);
+  return { tokens, type, value, types, values };
+}
+
 function resolveElementSpec (spec) {
   if (isFunction(spec)) return p => spec(p);
 
