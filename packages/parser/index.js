@@ -38,6 +38,7 @@ export class Parser {
 
     if (this.options.methods) Parser.addMethod(this.options.methods);
     this._installMethods();
+    this._buildAliases();
   }
 
   // navigate + match
@@ -160,6 +161,20 @@ export class Parser {
   }
   
   // internal
+  // options.aliases = { consume: 'expect', check: 'is', peekPrev: 'prev toString' }
+  // canonical -> comma/whitespace-separated alias name(s). Additive only - never overrides
+  // an existing method/property, whether that's a built-in one or another alias.
+  _buildAliases () {
+    for (const [canonical, aliasSpec] of Object.entries(this.options.aliases || {})) {
+      if (typeof this[canonical] !== 'function') throw new Error(`[Parser] options.aliases: "${canonical}" is not a known method.`);
+      for (const aliasName of aliasSpec.trim().split(/[\s,]+/).filter(Boolean)) {
+        if (this[aliasName] !== undefined) throw new Error(`[Parser] options.aliases: "${aliasName}" would override an existing method/property.`);
+        // indirection through 'this[canonical]' (not a direct .bind()) so aliasing still
+        // works even if 'canonical' itself gets reassigned later (e.g. Parser.addMethod()).
+        this[aliasName] = (...args) => this[canonical](...args);
+      }
+    }
+  }
   _buildDispatch () { /* s.u. Punkt 4 */ }
   _unexpected (specOrSpecs, extra) {
     // error handling (implicit — builds full message from spec + current token)
@@ -199,7 +214,7 @@ export class Parser {
   }
 
   // control flow
-  switch (cases, defaultTarget) {
+  dispatch (cases, defaultTarget) {
     const entries = isArray(cases)
       ? cases
       : Object.entries(cases).map(([specStr, target]) => [specStr.trim().split(/\s+/), target]);
