@@ -129,6 +129,9 @@ export class Parser {
   }
 
   // Methods Registry
+  parse (name, ...args) {
+    return this['parse' + name]?.(...args) ?? null;
+  }
   static _methods = [
     parseBinaryExpression, // options, min
     parseList, // parseElement, options
