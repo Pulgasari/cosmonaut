@@ -83,5 +83,22 @@ const members = $(p).whileMatch('|', 'Primary');
 
 
 
+////////// PATTERNS
+
+// parse patterns
+
+  <statement>; <statement>; <statement>;
+{ <statement>; <statement>; <statement>; }
+
+   value   value   value       seq
+   value , value , value       seq sep
+ ( value , value , value )     seq sep wrap   
+
+// logic patterns
+
+do <block> while <expr>
+while <expr> <block>
+
+
 
 
