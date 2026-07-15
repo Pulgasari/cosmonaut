@@ -1,4 +1,4 @@
-# cosmonaut/packages
+# @cosmonaut
 
 ### Core Skeletons
 
