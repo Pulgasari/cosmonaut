@@ -9,6 +9,7 @@ export const isFn        = sth => typeof sth === 'function';
 export const isFunction  = sth => typeof sth === 'function';
 export const isNullish   = sth => sth == null;
 export const isObject    = sth => typeof sth === 'object' && typeof sth !== 'null';
+export const isSymbol    = sth => typeof sth === 'symbol';
 export const isTruthy    = sth => !!sth;
 export const isUndefined = sth => sth === undefined;
 export const isUpperCase = sth => sth === sth.toUpperCase();
