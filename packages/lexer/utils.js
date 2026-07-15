@@ -12,6 +12,12 @@ export function buildTokenTypes (custom = []) {
 
 // :::::: Rules
 
+export function makeRulesFromStringList (stringList, tokenType) {
+  return ensureArray(stringList).map(
+    value => ({ id: `punct:${value}`, type: tokenType, value, regex: makeStickyRegex(RegExp.escape(String(value))) })
+  );
+}
+
 export function makeRulesFromPuncts (puncts, tokenTypes) {
   return ensureArray(puncts).map(ch => ({
     id: `punct:${ch}`, type: tokenTypes.PUNCT, value: ch, regex: makeStickyRegex(RegExp.escape(String(ch))),
@@ -19,8 +25,8 @@ export function makeRulesFromPuncts (puncts, tokenTypes) {
 }
 
 export function makeRulesFromOperators (operators, tokenTypes) {
-  return ensureArray(operators).map(op => ({
-    id: `operator:${op}`, type: tokenTypes.OPERATOR, value: op, regex: makeStickyRegex(RegExp.escape(String(op))),
+  return ensureArray(operators).map(ch => ({
+    id: `operator:${ch}`, type: tokenTypes.OPERATOR, value: ch, regex: makeStickyRegex(RegExp.escape(String(ch))),
   }));
 }
 
