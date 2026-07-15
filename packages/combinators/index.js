@@ -244,34 +244,35 @@ const lazy = (fn) => decorateCombinator((ctx) => {
   return resolved(ctx);
 });
 
-const memo = (combinator) => {
-  const memoCache = new WeakMap();
-  return decorateCombinator((ctx) => {
-    if (!memoCache.has(ctx)) {
-      memoCache.set(ctx, new Map());
-    }
-    const instanceCache = memoCache.get(ctx);
-    const index         = ctx.index;
+const memo = (combinator) => decorateCombinator((ctx) => {
+  ctx.memoCache ??= new Map;
+  
+  let ruleCache = ctx.memoCache.get(combinator);
+  if (!ruleCache) {
+    ruleCache = new Map;
+    ctx.memoCache.set(combinator, ruleCache);
+  }
 
-    if (instanceCache.has(index)) {
-      const entry = instanceCache.get(index);
-      if (entry.success) {
-        ctx.index = entry.endPos;
-        return entry.result;
-      }
-      return null;
+  const index = ctx.index;
+  const entry = ruleCache.get(index);
+  
+  if (entry !== undefined) {
+    if (entry.success) {
+      ctx.index = entry.endPos;
+      return entry.result;
     }
+    return null;
+  }
 
-    const res = runWithBacktrack(ctx, combinator);
-    if (!isNullish(res)) {
-      instanceCache.set(index, { success: true, result: res, endPos: ctx.index });
-      return res;
-    } else {
-      instanceCache.set(index, { success: false });
-      return null;
-    }
-  });
-};
+  const res = runWithBacktrack(ctx, combinator);
+  if (!isNullish(res)) {
+    ruleCache.set(index, { success: true, result: res, endPos: ctx.index });
+    return res;
+  } else {
+    ruleCache.set(index, { success: false });
+    return null;
+  }
+});
 
 const named = (combinator, name) => {
   const namedComb = decorateCombinator((ctx) => combinator(ctx));
