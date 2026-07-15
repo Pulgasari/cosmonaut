@@ -32,29 +32,34 @@ const custom  = call;
 
 // ::: Flow
 
-const seq = (...combinators) => decorateCombinator((ctx) => {
-  const flat    = combinators.flat();
-  const start   = ctx.index;
-  const results = [];
-  for (const combinator of flat) {
-    const res = combinator(ctx);
-    if (res === null || res === undefined || ctx.failed) {
-      ctx.index = start;
-      return null;
-    }
-    results.push(res);
-  }
-  return results;
-});
-
-const choice = (...combinators) => decorateCombinator((ctx) => {
+const choice = (...combinators) => {
   const flat = combinators.flat();
-  for (const combinator of flat) {
-    const res = runWithBacktrack(ctx, combinator);
-    if (!isNullish(res)) return res;
-  }
-  return null;
-});
+  decorateCombinator((ctx) => {
+    for (const combinator of flat) {
+      const res = runWithBacktrack(ctx, combinator);
+      if (!isNullish(res)) return res;
+    }
+    return null;
+  });
+};
+
+const seq = (...combinators) => {
+  const flat = combinators.flat();
+  return decorateCombinator((ctx) => {
+    const start = ctx.index;
+    const results = [];
+    const len = flat.length;
+    for (let i = 0; i < len; i++) { // Klassischer Loop ist schneller als for...of
+      const res = flat[i](ctx);
+      if (res === null || res === undefined || ctx.failed) {
+        ctx.index = start;
+        return null;
+      }
+      results.push(res);
+    }
+    return results;
+  });
+};
 
 const optional = (combinator) => decorateCombinator((ctx) => {
   return runWithBacktrack(ctx, combinator) ?? null;
