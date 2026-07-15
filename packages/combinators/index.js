@@ -2,7 +2,7 @@
 
 // :::::: IMPORTS
 
-import { isFn, isSymbol } from '@cosmonaut/utils/internals';
+import { isFn, isNullish, isSymbol } from '@cosmonaut/utils/internals';
 
 // :::::: MAGIC EXPORTS
 
@@ -11,9 +11,9 @@ const rule = new Proxy({}, {
 });
 
 // 2. Die "parse" Basis-Funktion für dynamische Direktaufrufe: parse('Expression', 4)
-const parseBase = (ruleName, ...args) => decorateCombinator((ctx) => {
-  if (isFn(ctx[ruleName])) return ctx[ruleName](...args);
-  if (isFn(ctx.parse))     return ctx.parse(ruleName, ...args);
+const parseBase = (ruleName, ...args) => decorateCombinator((p) => {
+  if (isFn(p[ruleName])) return p[ruleName](...args);
+  if (isFn(p.parse))     return p.parse(ruleName, ...args);
   throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
 });
 
@@ -24,20 +24,19 @@ const parse = new Proxy (parseBase, {
 
 // ::: Primitives
 
-const consume = (value)   => decorateCombinator((ctx) => ctx.consume(value));
-const match   = (pattern) => decorateCombinator((ctx) => ctx.match(pattern));
-const check   = (pattern) => decorateCombinator((ctx) => ctx.check(pattern) ? ctx.peek() : null);
-const call    = (fn)      => decorateCombinator((ctx) => fn(ctx));
-const custom  = call;
+const call    = (fn)      => decorateCombinator((p) => fn(p));
+const check   = (pattern) => decorateCombinator((p) => p.check(pattern) ? p.peek() : null);
+const consume = (value)   => decorateCombinator((p) => p.consume(value));
+const match   = (pattern) => decorateCombinator((p) => p.match(pattern));
 
 // ::: Flow
 
 const choice = (...combinators) => {
   const flat = combinators.flat();
-  decorateCombinator((ctx) => {
+  decorateCombinator((p) => {
     for (const combinator of flat) {
-      const res = runWithBacktrack(ctx, combinator);
-      if (!isNullish(res)) return res;
+      const result = runWithBacktrack(p, combinator);
+      if (!isNullish(res)) return result;
     }
     return null;
   });
@@ -51,7 +50,7 @@ const seq = (...combinators) => {
     const len = flat.length;
     for (let i = 0; i < len; i++) { // Klassischer Loop ist schneller als for...of
       const res = flat[i](ctx);
-      if (res === null || res === undefined || ctx.failed) {
+      if (isNullsih(res) || ctx.failed) {
         ctx.index = start;
         return null;
       }
@@ -140,19 +139,18 @@ const untilLoop = (cond) => decorateCombinator((ctx) => {
   return results;
 });
 
-const not = (combinator) => decorateCombinator((ctx) => {
-  const res = runWithBacktrack(ctx, combinator);
+const not = (combinator) => decorateCombinator((p) => {
+  const res = runWithBacktrack(p, combinator);
   return res === null ? true : null;
 });
 
-const lookahead = (combinator) => decorateCombinator((ctx) => {
-  const start = ctx.index;
-  const res   = runWithBacktrack(ctx, combinator);
-  ctx.index = start;
-  return res !== null ? res : null;
+const lookahead = (combinator) => decorateCombinator((p) => {
+  const start = p.index;
+  const res   = runWithBacktrack(p, combinator);
+  p.index = start;
+  return res ?? null;
 });
 
-const peek = lookahead;
 
 // ::: Parser Helpers
 
@@ -209,11 +207,7 @@ const node = (combinator, type) => decorateCombinator((ctx) => {
   const res   = combinator(ctx);
   if (isNullish(res)) return null;
 
-  const nodeObj = {
-    type,
-    start,
-    end: ctx.index
-  };
+  const nodeObj = { type, start, end: ctx.index };
 
   if (isArray(res)) {
     let hasObjects = false;
@@ -229,46 +223,44 @@ const node = (combinator, type) => decorateCombinator((ctx) => {
     } else {
       nodeObj.children = res;
     }
-  } else if (res && typeof res === 'object') {
-    Object.assign(nodeObj, res);
-  } else {
-    nodeObj.value = res;
-  }
+  } 
+  else if (isObject(res)) Object.assign(nodeObj, res);
+  else                    nodeObj.value = res;
 
   return nodeObj;
 });
 
 // ::: Utilities
 
-const lazy = (fn) => decorateCombinator((ctx) => {
+const lazy = (fn) => decorateCombinator((p) => {
   const resolved = fn();
-  return resolved(ctx);
+  return resolved(p);
 });
 
-const memo = (combinator) => decorateCombinator((ctx) => {
-  ctx.memoCache ??= new Map;
+const memo = (combinator) => decorateCombinator((p) => {
+  p.memoCache ??= new Map;
   
-  let ruleCache = ctx.memoCache.get(combinator);
+  let ruleCache = p.memoCache.get(combinator);
   if (!ruleCache) {
     ruleCache = new Map;
-    ctx.memoCache.set(combinator, ruleCache);
+    p.memoCache.set(combinator, ruleCache);
   }
 
-  const index = ctx.index;
+  const index = p.index;
   const entry = ruleCache.get(index);
   
   if (entry !== undefined) {
     if (entry.success) {
-      ctx.index = entry.endPos;
+      p.index = entry.endPos;
       return entry.result;
     }
     return null;
   }
 
-  const res = runWithBacktrack(ctx, combinator);
-  if (!isNullish(res)) {
-    ruleCache.set(index, { success: true, result: res, endPos: ctx.index });
-    return res;
+  const result = runWithBacktrack(p, combinator);
+  if (!isNullish(result)) {
+    ruleCache.set(index, { success: true, result, endPos: p.index });
+    return result;
   } else {
     ruleCache.set(index, { success: false });
     return null;
@@ -276,7 +268,7 @@ const memo = (combinator) => decorateCombinator((ctx) => {
 });
 
 const named = (combinator, name) => {
-  const namedComb = decorateCombinator((ctx) => combinator(ctx));
+  const namedComb = decorateCombinator((p) => combinator(p));
   namedComb.displayName = name;
   return namedComb;
 };
@@ -291,10 +283,20 @@ const debug = (combinator, message = '') => decorateCombinator((ctx) => {
   return res;
 });
 
-// Exporte
+// ::: Aliases
+
+const custom = call;
+const expect = match;
+const is     = check;
+const peek   = lookahead;
+
+// ::: Exports
+
 export {
   call, capture, check, choice, consume, custom,
   debug,
+  expect,
+  is,
   lazy, lookahead,
   many, many1, map, match, memo,
   named, node, not,
@@ -310,15 +312,15 @@ export {
 
 // Erzeugt einen Kombinator, der sowohl direkt als ParserFn genutzt
 // als auch als Funktion mit Argumenten aufgerufen werden kann.
-function createLazyRule (ruleName) {
-  const runRule = (ctx, args = []) => {
-    if (typeof ctx[ruleName] === 'function') return ctx[ruleName](...args);
-    if (typeof ctx.parse === 'function')     return ctx.parse(ruleName, ...args);
-    throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
+function createLazyRule (name) {
+  const runRule = (p, args = []) => {
+    if (isFn(p[name])) return p[name](...args);
+    if (isFn(p.parse)) return p.parse(name, ...args);
+    throw new Error(`Regel "${name}" existiert nicht auf dem Parser-Kontext.`);
   };
 
-  const defaultCombinator =              decorateCombinator((ctx) => runRule(ctx));
-  const ruleBuilder       = (...args) => decorateCombinator((ctx) => runRule(ctx, args));
+  const defaultCombinator =              decorateCombinator((p) => runRule(p));
+  const ruleBuilder       = (...args) => decorateCombinator((p) => runRule(p, args));
 
   return new Proxy (defaultCombinator, {
     apply: (target, thisArg, args) => ruleBuilder(...args)
@@ -326,14 +328,14 @@ function createLazyRule (ruleName) {
 }
 
 // Hilfsfunktion: Führt einen Kombinator aus und setzt bei Fehlern/Exceptions den Index zurück.
-function runWithBacktrack (ctx, combinator) {
-  const startPos = ctx.index;
-  const res      = combinator(ctx);
-  if (isNullish(res) || ctx.failed) {
-    ctx.index = startPos;
+function runWithBacktrack (p, combinator) {
+  const startPos = p.index;
+  const result   = combinator(p);
+  if (isNullish(result) || p.failed) {
+    p.index = startPos;
     return null;
   }
-  return res;
+  return result;
 }
 
 const combinatorPrototype = {
