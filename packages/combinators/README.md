@@ -1,8 +1,6 @@
 # @cosmonaut/combinators
 
-## About
-
-### Architecture and Design
+## Architecture and Design
 
 The toolkit is designed around several core architectural principles:
 
@@ -116,4 +114,3 @@ const IfStatement = seq(
 | lazy | lazy(fn) | Combinator | Defers evaluation of a combinator function until parsing execution time (useful for recursion). |
 | memo | memo(combinator) | Combinator | Memorizes parser results at specific context indexes (Packrat parsing style) to ensure O(n) parsing. |
 | named | named(combinator, name) | Combinator | Attaches a display name to a combinator for cleaner debug logs and error messages. |
-| """ |  |  |  |
