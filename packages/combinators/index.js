@@ -331,17 +331,12 @@ function createLazyRule (ruleName) {
 // Hilfsfunktion: Führt einen Kombinator aus und setzt bei Fehlern/Exceptions den Index zurück.
 function runWithBacktrack (ctx, combinator) {
   const startPos = ctx.index;
-  try {
-    const res = combinator(ctx);
-    if (isNullish(res) || ctx.failed) {
-      ctx.index = startPos;
-      return null;
-    }
-    return res;
-  } catch (err) {
+  const res      = combinator(ctx);
+  if (isNullish(res) || ctx.failed) {
     ctx.index = startPos;
     return null;
   }
+  return res;
 }
 
 // Dekoriert eine nackte ParserFn mit den DSL-Methoden
