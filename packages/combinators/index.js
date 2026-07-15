@@ -293,7 +293,6 @@ const debug = (combinator, message = '') => decorateCombinator((ctx) => {
 
 // Exporte
 export {
-  rule,
   call, capture, check, choice, consume, custom,
   debug,
   lazy, lookahead,
@@ -301,7 +300,7 @@ export {
   named, node, not,
   optional,
   parse, peek,
-  repeat,
+  repeat, rule,
   separated, seq,
   untilLoop as until,
   whileLoop as while, wrapped,
