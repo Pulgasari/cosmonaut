@@ -5,7 +5,7 @@ export toAST     from './toAST.js';
 export toMethods from './toMethods.js';
 
 export function convert ({ from, to, input }) {
-  if (!from || !to || input) return '';
+  if (!from || !to || !input) return '';
   if (from === 'grammar' && to === 'tokens')  tokenize(input);
   if (from === 'grammar' && to === 'ast')     toAST(tokenize(input));
   if (from === 'grammar' && to === 'methods') toMethods(toAST(tokenize(input)));
