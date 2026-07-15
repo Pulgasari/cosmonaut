@@ -5,15 +5,16 @@ export toAST     from './toAST.js';
 export toMethods from './toMethods.js';
 
 export function convert ({ from, to, input }) {
-  if (from === 'grammar' && to === 'tokens')
-  if (from === 'grammar' && to === 'ast)
-  if (from === 'grammar' && to === 'methods)
-  if (from === 'tokens'  && to === 'ast)
-  if (from === 'tokens'  && to === 'methods)
-  if (from === 'ast'     && to === 'methods)
+  if (!from || !to || input) return '';
+  if (from === 'grammar' && to === 'tokens')  tokenize(input);
+  if (from === 'grammar' && to === 'ast')     toAST(tokenize(input));
+  if (from === 'grammar' && to === 'methods') toMethods(toAST(tokenize(input)));
+  if (from === 'tokens'  && to === 'ast')     toAST(input);
+  if (from === 'tokens'  && to === 'methods') toMethods(toAST(input));
+  if (from === 'ast'     && to === 'methods') toMethods(input);
 }
 
-const EBNF = { tokenize, toAST, toMethods };
+const EBNF = { convert, tokenize, toAST, toMethods };
 export default EBNF;
 
 // :::::: TOKEN TYPES
