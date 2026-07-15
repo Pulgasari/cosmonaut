@@ -344,18 +344,18 @@ function runWithBacktrack (ctx, combinator) {
   return res;
 }
 
-// Dekoriert eine nackte ParserFn mit den DSL-Methoden
+const combinatorPrototype = {
+  capture  (name)  { return capture  (this, name);  },
+  many     ()      { return many     (this);        },
+  many1    ()      { return many1    (this);        },
+  map      (mapFn) { return map      (this, mapFn); },
+  node     (type)  { return node     (this, type);  },
+  optional ()      { return optional (this);        },
+  repeat   (n)     { return repeat   (this, n);     },
+};
+
 function decorateCombinator (fn) {
-  const combinator = function (ctx) { return fn(ctx); };
-
-  // Standard-Kombinatormethoden (Modifikatoren)
-  combinator.capture  = (name)  => capture  (combinator, name);
-  combinator.many     = ()      => many     (combinator);
-  combinator.many1    = ()      => many1    (combinator);
-  combinator.map      = (mapFn) => map      (combinator, mapFn);
-  combinator.node     = (type)  => node     (combinator, type);
-  combinator.optional = ()      => optional (combinator);
-  combinator.repeat   = (n)     => repeat   (combinator, n);
-
-  return combinator;
+  Object.setPrototypeOf(fn, combinatorPrototype);
+  return fn;
 }
+
