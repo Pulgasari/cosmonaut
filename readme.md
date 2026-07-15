@@ -2,28 +2,23 @@
 
 ![Logo](./logo.png)
 
-# About
+## About
 
 **Cosmonaut** is a flexible toolkit library to construct a compiler written in JavaScript.
 
-#### Packages
+## Packages
 
-- [combinators](packages/combinators)
-- [lexer](packages/lexer) (tokenizer)
-- [parser](packages/parser)
-- [transformer](packages/transformer)
-- [generator](packages/generator)
-- [presets](packages/presets)
-- [utils](packages/utils)
+#### Core Skeletons
 
-# Installation
+1. [lexer](packages/lexer) (tokenizer) - convert code to tokens
+2. [parser](packages/parser) - convert tokens to AST
+3. [transformer](packages/transformer) - pre-process AST
+4. [generator](packages/generator) - convert AST to final code
 
-# Examples
+#### Utility Blocks
 
-## Lexer
+Useful utility blocks for building compiler.
 
-## Parser
-
-## Transformer
-
-## Generator
+- [combinators](packages/combinators) = composable methods to build parsing methods
+- [presets](packages/presets) = presets for commons and languages
+- [utils](packages/utils) = these are re-exported in every core-package as well
