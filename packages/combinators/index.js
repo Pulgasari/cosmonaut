@@ -4,119 +4,42 @@
 
 import { isFn } from '@cosmonaut/utils/internals';
 
-// ==========================================
-// Die beiden magischen Exports
-// ==========================================
+// :::::: MAGIC EXPORTS
 
-// 1. Das "rule" Proxy (ausschließlich für Property-Zugriffe)
 const rule = new Proxy({}, {
-  get(target, prop) {
-    if (typeof prop === 'symbol') return target[prop];
-    return createLazyRule(prop);
-  }
+  get: (target, prop) => isSymbol(prop) ? target[prop] : createLazyRule(prop)
 });
 
 // 2. Die "parse" Basis-Funktion für dynamische Direktaufrufe: parse('Expression', 4)
 const parseBase = (ruleName, ...args) => decorateCombinator((ctx) => {
-  if (typeof ctx[ruleName] === 'function') {
-    return ctx[ruleName](...args);
-  }
-  if (typeof ctx.parse === 'function') {
-    return ctx.parse(ruleName, ...args);
-  }
+  if (isFn(ctx[ruleName])) return ctx[ruleName](...args);
+  if (isFn(ctx.parse))     return ctx.parse(ruleName, ...args);
   throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
 });
 
 // Das "parse" Proxy (erlaubt sowohl Direktaufruf als auch Property-Zugriff!)
 const parse = new Proxy (parseBase, {
-  get(target, prop) {
-    // JS-Standard-Methoden (bind, call, toString, etc.) normal durchlassen
-    if (prop in target || typeof prop === 'symbol') {
-      return target[prop];
-    }
-    // Für alle anderen Properties verhalten wir uns exakt wie "rule"!
-    return createLazyRule(prop);
-  }
+  get: (target, prop) => (prop in target || isSymbol(prop)) ? target[prop] : createLazyRule(prop)
 });
-
-
-
-// ==========================================
-// Das magische "rule" Proxy (Referenzen auf Regeln)
-// ==========================================
-/*
-const rule = new Proxy({}, {
-  get(target, prop) {
-    // 1. Definition für parametrisierte Aufrufe: rule.MyRule(arg1, arg2)
-    const ruleBuilder = (...args) => {
-      return decorateCombinator((ctx) => {
-        if (typeof ctx[prop] === 'function') {
-          return ctx[prop](...args);
-        }
-        if (typeof ctx.parse === 'function') {
-          return ctx.parse(prop, ...args);
-        }
-        throw new Error(`Regel "${prop}" existiert nicht auf dem Parser-Kontext.`);
-      });
-    };
-
-    // 2. Definition für direkte Verwendung: rule.MyRule
-    const defaultCombinator = decorateCombinator((ctx) => {
-      if (typeof ctx[prop] === 'function') {
-        return ctx[prop]();
-      }
-      if (typeof ctx.parse === 'function') {
-        return ctx.parse(prop);
-      }
-      throw new Error(`Regel "${prop}" existiert nicht auf dem Parser-Kontext.`);
-    });
-
-    // Wir machen den defaultCombinator selbst callable via Proxy,
-    // damit rule.Expression sowohl direkt als Kombinator als auch als Funktion
-    // rule.Expression(arg) genutzt werden kann!
-    return new Proxy(defaultCombinator, {
-      apply(target, thisArg, args) {
-        return ruleBuilder(...args);
-      }
-    });
-  }
-});
-*/
 
 // ==========================================
 // Primitiven
 // ==========================================
 
-const consume = (value) => decorateCombinator((ctx) => ctx.consume(value));
-const match = (pattern) => decorateCombinator((ctx) => ctx.match(pattern));
-const check = (pattern) => decorateCombinator((ctx) => ctx.check(pattern) ? ctx.peek() : null);
+const consume = (value)   => decorateCombinator((ctx) => ctx.consume(value));
+const match   = (pattern) => decorateCombinator((ctx) => ctx.match(pattern));
+const check   = (pattern) => decorateCombinator((ctx) => ctx.check(pattern) ? ctx.peek() : null);
+const call    = (fn)      => decorateCombinator((ctx) => fn(ctx));
+const custom  = call;
 
-/*
-// Fallback für dynamische Strings: parse('Expression')
-const parse = (ruleName, ...args) => decorateCombinator((ctx) => {
-  if (typeof ctx[ruleName] === 'function') {
-    return ctx[ruleName](...args);
-  }
-  if (typeof ctx.parse === 'function') {
-    return ctx.parse(ruleName, ...args);
-  }
-  throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
-});
-*/
-
-const call = (fn) => decorateCombinator((ctx) => fn(ctx));
-const custom = call;
-
-// ==========================================
-// Flusssteuerung (Flow)
-// ==========================================
+// ::: Flow
 
 const seq = (...combinators) => decorateCombinator((ctx) => {
-  const flat = combinators.flat();
-  const start = ctx.index;
+  const flat    = combinators.flat();
+  const start   = ctx.index;
   const results = [];
-  for (const c of flat) {
-    const res = c(ctx);
+  for (const combinator of flat) {
+    const res = combinator(ctx);
     if (res === null || res === undefined || ctx.failed) {
       ctx.index = start;
       return null;
@@ -128,26 +51,23 @@ const seq = (...combinators) => decorateCombinator((ctx) => {
 
 const choice = (...combinators) => decorateCombinator((ctx) => {
   const flat = combinators.flat();
-  for (const c of flat) {
-    const res = runWithBacktrack(ctx, c);
-    if (res !== null && res !== undefined) {
-      return res;
-    }
+  for (const combinator of flat) {
+    const res = runWithBacktrack(ctx, combinator);
+    if (!isNullish(res)) return res;
   }
   return null;
 });
 
 const optional = (combinator) => decorateCombinator((ctx) => {
-  const res = runWithBacktrack(ctx, combinator);
-  return res !== null ? res : null;
+  return runWithBacktrack(ctx, combinator) ?? null;
 });
 
 const repeat = (combinator, n) => decorateCombinator((ctx) => {
-  const start = ctx.index;
+  const start   = ctx.index;
   const results = [];
   for (let i = 0; i < n; i++) {
     const res = combinator(ctx);
-    if (res === null || res === undefined || ctx.failed) {
+    if (isNullish(res) || ctx.failed) {
       ctx.index = start;
       return null;
     }
@@ -160,7 +80,7 @@ const many = (combinator) => decorateCombinator((ctx) => {
   const results = [];
   while (true) {
     const res = runWithBacktrack(ctx, combinator);
-    if (res === null || res === undefined) break;
+    if (isNullish(res)) break;
     results.push(res);
   }
   return results;
@@ -169,14 +89,14 @@ const many = (combinator) => decorateCombinator((ctx) => {
 const many1 = (combinator) => decorateCombinator((ctx) => {
   const start = ctx.index;
   const first = combinator(ctx);
-  if (first === null || first === undefined || ctx.failed) {
+  if (isNullish(first) || ctx.failed) {
     ctx.index = start;
     return null;
   }
   const results = [first];
   while (true) {
     const res = runWithBacktrack(ctx, combinator);
-    if (res === null || res === undefined) break;
+    if (isNullish(res)) break;
     results.push(res);
   }
   return results;
@@ -184,14 +104,14 @@ const many1 = (combinator) => decorateCombinator((ctx) => {
 
 const whileLoop = (cond) => decorateCombinator((ctx) => {
   const results = [];
-  const isPlainFn = typeof cond === 'function' && !cond.many;
+  const isPlainFn = isFn(cond) && !cond.many;
   while (true) {
     if (isPlainFn) {
       if (!cond(ctx)) break;
       results.push(ctx.next());
     } else {
       const res = runWithBacktrack(ctx, cond);
-      if (res === null || res === undefined) break;
+      if (isNullish(res)) break;
       results.push(res);
     }
   }
@@ -200,14 +120,14 @@ const whileLoop = (cond) => decorateCombinator((ctx) => {
 
 const untilLoop = (cond) => decorateCombinator((ctx) => {
   const results = [];
-  const isPlainFn = typeof cond === 'function' && !cond.many;
+  const isPlainFn = isFn(cond) && !cond.many;
   while (true) {
     if (isPlainFn) {
       if (cond(ctx)) break;
       results.push(ctx.next());
     } else {
       const res = runWithBacktrack(ctx, cond);
-      if (res !== null && res !== undefined) break;
+      if (!isNullish(res)) break;
       results.push(ctx.next());
     }
   }
@@ -221,16 +141,14 @@ const not = (combinator) => decorateCombinator((ctx) => {
 
 const lookahead = (combinator) => decorateCombinator((ctx) => {
   const start = ctx.index;
-  const res = runWithBacktrack(ctx, combinator);
+  const res   = runWithBacktrack(ctx, combinator);
   ctx.index = start;
   return res !== null ? res : null;
 });
 
 const peek = lookahead;
 
-// ==========================================
-// Parser-Helfer
-// ==========================================
+// ::: Parser Helpers
 
 const wrapped = (open, inner, close) => decorateCombinator((ctx) => {
   const start = ctx.index;
@@ -250,11 +168,11 @@ const wrapped = (open, inner, close) => decorateCombinator((ctx) => {
 const separated = (inner, separator) => decorateCombinator((ctx) => {
   const results = [];
   const first = runWithBacktrack(ctx, inner);
-  if (first === null || first === undefined) return results;
+  if (isNullish(first)) return results;
   results.push(first);
 
   while (true) {
-    const start = ctx.index;
+    const start  = ctx.index;
     const sepRes = runWithBacktrack(ctx, separator);
     if (sepRes === null) break;
 
@@ -268,26 +186,22 @@ const separated = (inner, separator) => decorateCombinator((ctx) => {
   return results;
 });
 
-// ==========================================
-// Transformation
-// ==========================================
+// ::: Transformation
 
 const map = (combinator, fn) => decorateCombinator((ctx) => {
   const res = combinator(ctx);
-  if (res === null || res === undefined) return null;
-  return fn(res, ctx);
+  return isNullish(res) ? null : fn(res, ctx);
 });
 
 const capture = (combinator, name) => decorateCombinator((ctx) => {
   const res = combinator(ctx);
-  if (res === null || res === undefined) return null;
-  return { [name]: res };
+  return isNullish(res) ? null : { [name]: res };
 });
 
 const node = (combinator, type) => decorateCombinator((ctx) => {
   const start = ctx.index;
-  const res = combinator(ctx);
-  if (res === null || res === undefined) return null;
+  const res   = combinator(ctx);
+  if (isNullish(res)) return null;
 
   const nodeObj = {
     type,
@@ -295,9 +209,9 @@ const node = (combinator, type) => decorateCombinator((ctx) => {
     end: ctx.index
   };
 
-  if (Array.isArray(res)) {
+  if (isArray(res)) {
     let hasObjects = false;
-    const merged = {};
+    let merged     = {};
     for (const item of res) {
       if (item && typeof item === 'object' && !Array.isArray(item)) {
         Object.assign(merged, item);
@@ -318,9 +232,7 @@ const node = (combinator, type) => decorateCombinator((ctx) => {
   return nodeObj;
 });
 
-// ==========================================
-// Utilities
-// ==========================================
+// ::: Utilities
 
 const lazy = (fn) => decorateCombinator((ctx) => {
   const resolved = fn();
@@ -334,7 +246,7 @@ const memo = (combinator) => {
       memoCache.set(ctx, new Map());
     }
     const instanceCache = memoCache.get(ctx);
-    const index = ctx.index;
+    const index         = ctx.index;
 
     if (instanceCache.has(index)) {
       const entry = instanceCache.get(index);
@@ -346,7 +258,7 @@ const memo = (combinator) => {
     }
 
     const res = runWithBacktrack(ctx, combinator);
-    if (res !== null && res !== undefined) {
+    if (!isNullish(res)) {
       instanceCache.set(index, { success: true, result: res, endPos: ctx.index });
       return res;
     } else {
@@ -366,12 +278,9 @@ const debug = (combinator, message = '') => decorateCombinator((ctx) => {
   const name = message || combinator.displayName || 'unnamed';
   console.log(`[DEBUG] → Enter: "${name}" bei Index ${ctx.index}`);
   const start = ctx.index;
-  const res = combinator(ctx);
-  if (res !== null && res !== undefined) {
-    console.log(`[DEBUG] ✓ Success: "${name}" von ${start} bis ${ctx.index}. Ergebnis:`, res);
-  } else {
-    console.log(`[DEBUG] ✗ Failed: "${name}" bei Index ${start}`);
-  }
+  const res   = combinator(ctx);
+  !isNullish(res) ? console.log(`[DEBUG] ✓ Success: "${name}" von ${start} bis ${ctx.index}. Ergebnis:`, res)
+                    console.log(`[DEBUG] ✗ Failed: "${name}" bei Index ${start}`);
   return res;
 });
 
@@ -399,23 +308,15 @@ export {
 // als auch als Funktion mit Argumenten aufgerufen werden kann.
 function createLazyRule (ruleName) {
   const defaultCombinator = decorateCombinator((ctx) => {
-    if (typeof ctx[ruleName] === 'function') {
-      return ctx[ruleName]();
-    }
-    if (typeof ctx.parse === 'function') {
-      return ctx.parse(ruleName);
-    }
+    if (isFn(ctx[ruleName])) return ctx[ruleName]();
+    if (isFn(ctx.parse))     return ctx.parse(ruleName);
     throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
   });
 
   const ruleBuilder = (...args) => {
     return decorateCombinator((ctx) => {
-      if (typeof ctx[ruleName] === 'function') {
-        return ctx[ruleName](...args);
-      }
-      if (typeof ctx.parse === 'function') {
-        return ctx.parse(ruleName, ...args);
-      }
+      if (isFn(ctx[ruleName])) return ctx[ruleName](...args);
+      if (isFn(ctx.parse))     return ctx.parse(ruleName, ...args);
       throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
     });
   };
@@ -423,9 +324,7 @@ function createLazyRule (ruleName) {
   // Wir verpassen dem defaultCombinator einen apply-Trap.
   // Dadurch wird er selbst "callable" und verhält sich wie ruleBuilder, wenn man Argumente übergibt.
   return new Proxy(defaultCombinator, {
-    apply(target, thisArg, args) {
-      return ruleBuilder(...args);
-    }
+    apply: (target, thisArg, args) => ruleBuilder(...args)
   });
 }
 
@@ -434,7 +333,7 @@ function runWithBacktrack (ctx, combinator) {
   const startPos = ctx.index;
   try {
     const res = combinator(ctx);
-    if (res === null || res === undefined || ctx.failed) {
+    if (isNullish(res) || ctx.failed) {
       ctx.index = startPos;
       return null;
     }
