@@ -125,17 +125,18 @@ const whileLoop = (cond) => decorateCombinator((ctx) => {
 
 const untilLoop = (cond) => decorateCombinator((ctx) => {
   const results = [];
-  const isPlainFn = isFn(cond) && !cond.many;
-  while (true) {
-    if (isPlainFn) {
-      if (cond(ctx)) break;
-      results.push(ctx.next());
-    } else {
-      const res = runWithBacktrack(ctx, cond);
-      if (!isNullish(res)) break;
-      results.push(ctx.next());
-    }
+  
+  if (isFn(cond) && !cond.many) {
+    while (!cond(ctx)) results.push(ctx.next());
+    return results;
   }
+
+  while (true) {
+    const res = runWithBacktrack(ctx, cond);
+    if (!isNullish(res)) break;
+    results.push(ctx.next());
+  }
+  
   return results;
 });
 
@@ -286,7 +287,7 @@ const debug = (combinator, message = '') => decorateCombinator((ctx) => {
   const start = ctx.index;
   const res   = combinator(ctx);
   !isNullish(res) ? console.log(`[DEBUG] ✓ Success: "${name}" von ${start} bis ${ctx.index}. Ergebnis:`, res)
-                    console.log(`[DEBUG] ✗ Failed: "${name}" bei Index ${start}`);
+                  : console.log(`[DEBUG] ✗ Failed: "${name}" bei Index ${start}`);
   return res;
 });
 
@@ -306,30 +307,21 @@ export {
   whileLoop as while, wrapped,
 };
 
-// ==========================================
-// Gemeinsamer Helper für Lazy-Regeln
-// ==========================================
+// ::: Helpers for Lazy Rules
 
 // Erzeugt einen Kombinator, der sowohl direkt als ParserFn genutzt
 // als auch als Funktion mit Argumenten aufgerufen werden kann.
 function createLazyRule (ruleName) {
-  const defaultCombinator = decorateCombinator((ctx) => {
-    if (isFn(ctx[ruleName])) return ctx[ruleName]();
-    if (isFn(ctx.parse))     return ctx.parse(ruleName);
+  const runRule = (ctx, args = []) => {
+    if (typeof ctx[ruleName] === 'function') return ctx[ruleName](...args);
+    if (typeof ctx.parse === 'function')     return ctx.parse(ruleName, ...args);
     throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
-  });
-
-  const ruleBuilder = (...args) => {
-    return decorateCombinator((ctx) => {
-      if (isFn(ctx[ruleName])) return ctx[ruleName](...args);
-      if (isFn(ctx.parse))     return ctx.parse(ruleName, ...args);
-      throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
-    });
   };
 
-  // Wir verpassen dem defaultCombinator einen apply-Trap.
-  // Dadurch wird er selbst "callable" und verhält sich wie ruleBuilder, wenn man Argumente übergibt.
-  return new Proxy(defaultCombinator, {
+  const defaultCombinator =              decorateCombinator((ctx) => runRule(ctx));
+  const ruleBuilder       = (...args) => decorateCombinator((ctx) => runRule(ctx, args));
+
+  return new Proxy (defaultCombinator, {
     apply: (target, thisArg, args) => ruleBuilder(...args)
   });
 }
