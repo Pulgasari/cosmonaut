@@ -2,7 +2,7 @@
 
 // :::::: IMPORTS
 
-import { isFn } from '@cosmonaut/utils/internals';
+import { isFn, isSymbol } from '@cosmonaut/utils/internals';
 
 // :::::: MAGIC EXPORTS
 
