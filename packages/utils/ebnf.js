@@ -16,8 +16,8 @@ export function convert ({ from, to, input }) {
   if (from === 'ast'     && to === 'methods') toMethods(input);
 }
 
-const EBNF = { convert, tokenize, toAST, toMethods };
-export default EBNF;
+export const ebnf = { convert, tokenize, toAST, toMethods };
+export default ebnf;
 
 // :::::: TOKEN TYPES
 
