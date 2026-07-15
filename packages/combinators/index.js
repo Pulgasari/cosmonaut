@@ -22,9 +22,7 @@ const parse = new Proxy (parseBase, {
   get: (target, prop) => (prop in target || isSymbol(prop)) ? target[prop] : createLazyRule(prop)
 });
 
-// ==========================================
-// Primitiven
-// ==========================================
+// ::: Primitives
 
 const consume = (value)   => decorateCombinator((ctx) => ctx.consume(value));
 const match   = (pattern) => decorateCombinator((ctx) => ctx.match(pattern));
@@ -89,10 +87,12 @@ const many = (combinator) => decorateCombinator((ctx) => {
 const many1 = (combinator) => decorateCombinator((ctx) => {
   const start = ctx.index;
   const first = combinator(ctx);
+  
   if (isNullish(first) || ctx.failed) {
     ctx.index = start;
     return null;
   }
+
   const results = [first];
   while (true) {
     const res = runWithBacktrack(ctx, combinator);
@@ -104,16 +104,16 @@ const many1 = (combinator) => decorateCombinator((ctx) => {
 
 const whileLoop = (cond) => decorateCombinator((ctx) => {
   const results = [];
-  const isPlainFn = isFn(cond) && !cond.many;
+  // Schneller Pfad für einfache Prädikat-Funktionen
+  if (isFn(cond) && !cond.many) {
+    while (cond(ctx)) results.push(ctx.next());
+    return results;
+  }
+  // Pfad für vollwertige Kombinatoren mit Backtracking
   while (true) {
-    if (isPlainFn) {
-      if (!cond(ctx)) break;
-      results.push(ctx.next());
-    } else {
-      const res = runWithBacktrack(ctx, cond);
-      if (isNullish(res)) break;
-      results.push(res);
-    }
+    const res = runWithBacktrack(ctx, cond);
+    if (isNullish(res)) break;
+    results.push(res);
   }
   return results;
 });
