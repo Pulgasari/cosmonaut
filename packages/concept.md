@@ -6,10 +6,12 @@ Die schöne Erkenntnis für deine Architektur:
 · Ein Transformer ist ein Tree-Walker, der den Baum verändert.
 · Ein Generator ist ein Tree-Walker, der den Baum in eine flache Sequenz (Text) zurückwandelt.
 
+```
 walk > flat > tokenize   # create list of tokens from stream
 walk > flat > parse      # create tree of nodes  from stream
 walk > tree > transform  # create ast from ast (= transform)
 walk > tree > generate   # create code from ast
+```
 
 ```
 ├── core
