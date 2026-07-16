@@ -1,4 +1,6 @@
 
+lexer / tokenizer / scanner
+
 Die schöne Erkenntnis für deine Architektur:
 
 · Ein Lexer ist ein Flat-Walker, der eine Sequenz in eine andere Sequenz umwandelt (Zeichen → Tokens).
