@@ -1,4 +1,27 @@
 
+```
+├── core
+│   ├── climb
+│   ├── walk-stream
+│   ├── walk-tree
+│
+├── lexer
+│
+├── lexer
+│
+├── presets
+├── utils
+```
+
+```
+├── core/
+│   ├── cursor (stream)
+│   ├── stack
+│   ├── walk (ast)
+```
+
+
+```
 climb
   - core
     - stack-machine
@@ -20,7 +43,7 @@ presets
   - javascript.ebnf
   - json.ebnf
   - ratscript.peg
-
+```
 
 
 ```text
