@@ -1,5 +1,6 @@
 
 lexer / tokenizer / scanner
+- 1st stage: scan
 
 Die schöne Erkenntnis für deine Architektur:
 
