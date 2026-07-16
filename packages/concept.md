@@ -1,4 +1,16 @@
 
+Die schöne Erkenntnis für deine Architektur:
+
+· Ein Lexer ist ein Flat-Walker, der eine Sequenz in eine andere Sequenz umwandelt (Zeichen → Tokens).
+· Ein Parser (egal ob TD oder BU) ist ein Flat-Walker (über Tokens), der eine Tree-Struktur baut.
+· Ein Transformer ist ein Tree-Walker, der den Baum verändert.
+· Ein Generator ist ein Tree-Walker, der den Baum in eine flache Sequenz (Text) zurückwandelt.
+
+walk > flat > tokenize   # create list of tokens from stream
+walk > flat > parse      # create tree of nodes  from stream
+walk > tree > transform  # create ast from ast (= transform)
+walk > tree > generate   # create code from ast
+
 ```
 ├── core
 │   ├── climb         (stack-machine)
