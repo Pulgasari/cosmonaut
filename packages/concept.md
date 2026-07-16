@@ -1,16 +1,21 @@
 
 ```
 ├── core
-│   ├── climb
-│   ├── walk-stream
-│   ├── walk-tree
+│   ├── climb         (stack-machine)
+│   ├── walk-stream   (sequencer: chars or tokens)
+│   ├── walk-tree     (traverse)
 │
 ├── lexer
 │
-├── lexer
+├── parser
+│   ├── combinators
+│   ├── pratt
 │
 ├── presets
+│   ├── grammars
+│
 ├── utils
+│   ├── internals
 ```
 
 ```
@@ -20,6 +25,12 @@
 │   ├── walk (ast)
 ```
 
+```
+├── generators | interpreters
+│   ├── ebnf-lr
+│   ├── ebnf-td
+│   ├── peg-td
+```
 
 ```
 climb
@@ -48,29 +59,29 @@ presets
 
 ```text
 packages/
-├── core/                      # Die puren Mechaniken (kein Sprachwissen)
-│   ├── streamer.js            # Cursor für Sequenzen (Zeichen ODER Tokens)
+├── core/           # Die puren Mechaniken (kein Sprachwissen)
+│   ├── streamer.js # Cursor für Sequenzen (Zeichen ODER Tokens)
 │   ├── traverser.js           # Baum-Traversal (für AST)
 │   └── stack-machine.js       # Stack-Automat (für Bottom-Up)
 │
-├── lexer/                     # TOP-LEVEL: Wandelt Zeichen → Tokens
+├── lexer/    # TOP-LEVEL: Wandelt Zeichen → Tokens
 │   └── (nutzt core/streamer.js)
 │
-├── (Familie A: Top-Down / Recursive Descent)
-│   ├── parser/                # Kern-Klasse für TD (nutzt core/streamer.js auf Token-Ebene)
-│   ├── combinators/           # Deklarative DSL für TD
-│   └── pratt/                 # Präzedenz-Climbing für TD
+├── Top-Down / Recursive Descent
+│   ├── parser/       # class-td TD core/streamer.js for tokens
+│   ├── combinators/  # Deklarative DSL für TD
+│   └── pratt/        # Präzedenz-Climbing für TD
 │
-├── (Familie B: Bottom-Up / Shift-Reduce)
-│   └── lr-parser/             # Kern-Klasse für LR/LALR (nutzt core/stack-machine.js)
+├── Bottom-Up / Shift-Reduce
+│   └── lr-parser/   # classLR/LALR via core/stack-machine
 │
-├── grammar/                   # <-- HIER GEHÖRT ES HIN (GANZ OBEN, UNABHÄNGIG)
-│   ├── ebnf/                  # Parser für EBNF-Syntax
-│   ├── peg/                   # Parser für PEG-Syntax (ist inhärent TD)
+├── grammar/  
+│   ├── ebnf/         # Parser für EBNF-Syntax
+│   ├── peg/          # Parser für PEG-Syntax (ist inhärent TD)
 │   ├── backends/
-│   │   ├── td-generator/      # Übersetzt Grammatik in parser/combinators-Code
-│   │   └── lr-generator/      # Übersetzt Grammatik in lr-parser-Tabellen
-│   └── index.js               # Orchestriert: "Welches Backend willst du?"
+│   │   ├── td-generator/    # grammar to combinator code
+│   │   └── lr-generator/    # grammar to in lr-parser-Tabellen
+│   └── index.js  # Orchestriert: "Welches Backend willst du?"
 │
 └── presets/                   # Daten (Keywords, Token-Typen) für ALLE
 ```
@@ -79,9 +90,9 @@ packages/
 ```text
 packages/
 ├── core/
-│   ├── streamer.js          # GENERISCH: Cursor über SEQUENZEN (beliebige Items)
-│   ├── traverser.js         # GENERISCH: Baum-Traversal
-│   └── stack-machine.js     # GENERISCH: Stack-Automat (für Bottom-Up)
+│   ├── streamer.js      # GENERISCH: Cursor über SEQUENZEN
+│   ├── traverser.js     # GENERISCH: Baum-Traversal
+│   └── stack-machine.js # GENERISCH: Stack-Automat (für BU)
 │
 ├── lexer/                   # <-- HIER GEHÖRT ER HIN (Top-Level, unabhängig)
 │   ├── index.js             # Nutzt core/streamer.js auf Zeichen-Ebene
