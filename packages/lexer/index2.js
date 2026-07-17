@@ -41,7 +41,7 @@ export const Tokenizer {
   }
 
   //
-  next () { this.tokens.pop(); }
+  next () { return this.tokens.pop() ?? 'EOF' }
   peek () {  }
 }
 
