@@ -4,11 +4,13 @@
 
 ====== META INFO ============================================
 
-META LIST symbols  = 0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z a b c d e f g h i j k l m n o p q r s t u v w x y z 
 META LIST builtins = ( Identifier is String ) Array BigInt Boolean Date Error Function Map Number Object Promise RegExp Set String Symbol
+META LIST comments =
+META LIST keywords = as break continue catch do fn for if in new pkg pnt prop ref return static switch until use while yield
 META LIST globals  = ( Identifier is String ) clearInterval clearTimeout console document globalThis process setInterval setTimeout window
 META LIST literals = ( Identifier is String ) false null true undefined
 META LIST puncts   = ( Identifier is String ) { } ( ) [ ] , ; . : ?
+META LIST symbols  = 0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z a b c d e f g h i j k l m n o p q r s t u v w x y z 
 META LIST tokens   = ( Key is String ) IDENTIFIER KEYWORD NUMBER PUNCT STRING TEMPLATE_STRING JSX_TEMPLATE
 
 META LIST operators = (
@@ -103,14 +105,6 @@ literal-str-template-expr = "${" expr "}" ;
 
 block = "{" { Statement } "}" ;
 
-(* ===== EXPRESSIONS ===== *)
-
-
-
-(* ===== STATEMENTS ===== *)
-
-
-
 statement-decl-prop = "prop" ( id | id-const ) op-assign expr ";" ;
 statement-decl-temp =        id-temp           op-assign expr ";" ;
 statement-decl-var  = decl-prop | decl-temp ;
@@ -118,13 +112,9 @@ statement-decl-var  = decl-prop | decl-temp ;
 statement-jump   = ( "break" | "continue" ) [ literal-int | id-label ] ";" ;
 statement-return = "return" [ expr ] ";" ;
 
-
-         
 (* ===== 2. LITERALE ===== *)
 (* 2.1 Escapes für Strings *)
 EscapeSequence     = "\\" ( "n" | "t" | "\\" | "'" | '"' | "`" ) ;
-
-
 
 (* ===== 3. FUNKTIONEN ===== *)
 decl-fn-args = [ id { "," id } ] ;   (* () oder (a) oder (a,b) *)
@@ -174,12 +164,7 @@ loop-while  = "while" "(" spec-cond ")" Block [ ";" ] ;
 
 statement-loop-inline
 
-
-
-
-
 (* ===== 8. IMPORTS ===== *)
-
 
 ImportLikeStatement = UseStatement | PntStatement | RefStatement ;
 
@@ -206,90 +191,4 @@ Program = { Statement } ;
 
 (* ===== 10. PLATZHALTER (noch zu definieren) ===== *)
 (* ObjectBody = ... ;   (* für prop <identifier> = <objectBody> *) *)
-
-
-
-// @cosmonaut/presets/languages/javascript.js
-
-import { cStyleComments } from './../index.js';
-
-
-export const comments = cStyleComments;
-
-
-export const keywords = [
-  'as',
-  'async',
-  'await',
-  'break',
-  'case',
-  'catch',
-  'class',
-  'const',
-  'continue',
-  'default',
-  'delete',
-  'do',
-  'else',
-  'export',
-  'extends',
-  'finally',
-  'for',
-  'function',
-  'if',
-  'import',
-  'in',
-  'instanceof',
-  'let',
-  'match',
-  'new',
-  'of',
-  'return',
-  'static',
-  'super',
-  'switch',
-  'this',
-  'throw',
-  'try',
-  'typeof',
-  'use',
-  'var',
-  'void',
-  'while',
-  'yield',
-];
-
-
-
-
-
-
-default export {
-  comments,
-  keywords,
-}
-
-
-RULE Expression = (
-  | atom      is char
-  | operation is Array (char, Expression)
-){
-  cn::dispatch
-  | operation ('-',
-     operation ('*',
-      atom('a'),
-      atom('b'),
-     ),
-     operation ('/',
-      atom('1'),
-      atom('a'),
-     ),
-}
-
-(- (* a b) (/ 1 a))
-
-## prefixed notation
-
-1 + 2 * 3                  (+ 1(* 2 3))
-
 
