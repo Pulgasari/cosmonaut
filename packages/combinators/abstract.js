@@ -77,6 +77,32 @@ const DataDefinition = named(
 
 export { DataDefinition };
 
+// Variante A: Unverändert mit dem listen-Komfort-Kombinator
+const SignatureList = named(
+  list(
+    parse('Parameter'), 
+    {
+      separator : consume(','),
+      open      : consume('('),
+      close     : consume(')'),
+    }
+  ),
+  'SignatureList'
+);
+
+// Variante B: So sieht die Schachtelung ohne die list-Abstraktion aus
+const SignatureListExplicit = named(
+  wrapped(
+    consume('('),
+    separated(
+      parse('Parameter'), 
+      consume(',')
+    ),
+    consume(')')
+  ),
+  'SignatureList'
+);
+
 // ===== TOKENFRESSER =====
 // an experimental class using combinators
 // to create a higher abstraction of often used patterns
