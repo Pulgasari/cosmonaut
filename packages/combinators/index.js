@@ -24,10 +24,10 @@ const parse = new Proxy (parseBase, {
 
 // ::: Primitives
 
-const call    = (fn)      => decorateCombinator((p) => fn(p));
-const check   = (pattern) => decorateCombinator((p) => p.check(pattern) ? p.peek() : null);
-const consume = (value)   => decorateCombinator((p) => p.consume(value));
-const match   = (pattern) => decorateCombinator((p) => p.match(pattern));
+const call    = (fn)      => decorateCombinator(p => fn(p));
+const check   = (pattern) => decorateCombinator(p => p.check(pattern) ? p.peek() : null);
+const consume = (value)   => decorateCombinator(p => p.consume(value));
+const match   = (pattern) => decorateCombinator(p => p.match(pattern));
 
 // ::: Flow
 
@@ -45,9 +45,9 @@ const choice = (...combinators) => {
 const seq = (...combinators) => {
   const flat = combinators.flat();
   return decorateCombinator((ctx) => {
-    const start = ctx.index;
+    const start   = ctx.index;
     const results = [];
-    const len = flat.length;
+    const len     = flat.length;
     for (let i = 0; i < len; i++) { // Klassischer Loop ist schneller als for...of
       const res = flat[i](ctx);
       if (isNullsih(res) || ctx.failed) {
@@ -197,23 +197,23 @@ const map = (combinator, fn) => decorateCombinator((ctx) => {
   return isNullish(res) ? null : fn(res, ctx);
 });
 
-const capture = (combinator, name) => decorateCombinator((ctx) => {
-  const res = combinator(ctx);
+const capture = (combinator, name) => decorateCombinator(p => {
+  const res = combinator(p);
   return isNullish(res) ? null : { [name]: res };
 });
 
-const node = (combinator, type) => decorateCombinator((ctx) => {
-  const start = ctx.index;
+const node = (combinator, type) => decorateCombinator(p => {
+  const start = p.index;
   const res   = combinator(ctx);
   if (isNullish(res)) return null;
 
-  const nodeObj = { type, start, end: ctx.index };
+  const nodeObj = { type, start, end: p.index };
 
   if (isArray(res)) {
     let hasObjects = false;
     let merged     = {};
     for (const item of res) {
-      if (item && typeof item === 'object' && !Array.isArray(item)) {
+      if (item && isObjectitem)) {
         Object.assign(merged, item);
         hasObjects = true;
       }
@@ -268,9 +268,9 @@ const memo = (combinator) => decorateCombinator((p) => {
 });
 
 const named = (combinator, name) => {
-  const namedComb = decorateCombinator((p) => combinator(p));
-  namedComb.displayName = name;
-  return namedComb;
+  const named = decorateCombinator(p => combinator(p));
+  named.displayName = name;
+  return named;
 };
 
 const debug = (combinator, message = '') => decorateCombinator((ctx) => {
@@ -352,4 +352,82 @@ function decorateCombinator (fn) {
   Object.setPrototypeOf(fn, combinatorPrototype);
   return fn;
 }
+
+
+
+
+
+
+
+
+
+
+
+import { call } from '@cosmonaut/combinators';
+
+function listLoop (inner, separator, closeToken, trailing) {
+  return call((p) => {
+    const elements = [];
+
+    if (p.is(closeToken)) return elements;
+    
+
+    do {
+      if (p.check(closeToken)) break; // trailing comma erlaubt
+
+      const element = inner(p);
+      if (element === null || p.failed) return null;
+
+      elements.push(element);
+
+      if (!p.match(separator)) break;
+
+      if (!trailing && p.check(closeToken)) throw new Error('Trailing separator nicht erlaubt');
+    } while (!p.check(closeToken));
+
+    return elements;
+  });
+}
+
+function resolveWrapper (ctx, wrapper) {
+  if (!wrapper) return [null, null];
+  const pair = p._wrappers?.[wrapper];
+  if (!pair) throw new Error(`Wrapper "${wrapper}" nicht gefunden.`);
+  return pair; // [openToken, closeToken]
+}
+
+import { seq, optional, consume } from '@cosmonaut/combinators';
+
+function listWithWrapper (inner, wrapper, closeToken, separator, trailing) {
+  return call(p => {
+    const [open, close] = resolveWrapper(p, wrapper);
+    const actualClose = close ?? closeToken;
+
+    if (!actualClose) throw new Error('Kein schließendes Token definiert');
+
+    // 1. Optionales öffnendes Token
+    if (open) p.consume(open);
+
+    // 2. Liste parsen
+    const elements = listLoop(inner, separator, actualClose, trailing)(ctx);
+    if (elements === null) return null;
+
+    // 3. Schließendes Token konsumieren
+    if (open) p.consume(close); // close ist hier definiert, weil open gesetzt war
+    // (oder wenn closeToken, dann konsumiere das)
+
+    return elements;
+  });
+}
+
+
+
+
+// for implementatio.
+
+export function parseList (inner, options = {}) {
+  const { wrapper = null, closeToken = null, separatorToken = ',', trailing = true } = options;
+  return listWithWrapper (inner, wrapper, closeToken, separatorToken, trailing);
+}
+
 
