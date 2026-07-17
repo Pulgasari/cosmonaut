@@ -103,6 +103,9 @@ const repeat = (combinator, n) => decorateCombinator(p => {
   return results;
 });
 
+const many  = combinator => repeat (combinator, 0);
+const many1 = combinator => repeat (combinator, 1);
+
 const many = (combinator) => decorateCombinator((p) => {
   const results = [];
   while (true) {
