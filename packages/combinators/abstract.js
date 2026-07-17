@@ -69,10 +69,12 @@ const DataDefinition = named(
 
 export { DataDefinition };
 
-
+// ===== TOKENFRESSER =====
 // an experimental class using combinators
-// to create a much more higher abstraction
-// of often used patterns
+// to create a higher abstraction of often used patterns
+
+import { isString } from '@cosmonaut/utils/internals';
+import { choice, consume, list, match, named, rule } from '@cosmonaut/combinators';
 
 // helpers
 
@@ -113,29 +115,39 @@ function resolvePattern (name, input) {
   return obj;
 }
 
-const parseList = (xxx, config = {}) => {
-  
-  if (isString(config)) {
-    const { separator, wrapper } = config;
+class Tokenfresser () {
+
+  parseList (xxx, config = {}) {
+    
+    if (isString(config)) {
+      const { separator, wrapper } = config;
+      const [open, close] = resolveWrapper(wrapper);
+    } else {
+      const { separator, wrapper } = resolvePattern(config);
+    }
+    
+    const { separator, wrapper } = isString(config) ? config : resolvePattern('listConfigPattern', config); 
     const [open, close] = resolveWrapper(wrapper);
-  } else {
-    const { separator, wrapper } = resolvePattern(config);
+    
+    return list (
+      xxx, 
+      consume(separator), 
+      {open: consume(open), close: consume(close)}
+    );
   }
-  
-  const { separator, wrapper } = isString(config) ? config : resolvePattern('listConfigPattern', config); 
-  const [open, close] = resolveWrapper(wrapper);
-  
-  return list (
-    rule.Parameter, 
-    consume(separator), 
-    {open: consume(open), close: consume(close)}
-  );
+
 }
+
+const TF = new Tokenfresser;
 
 // 2. Die komplette Signatur-Liste: "(precedence: int, associativity: string)"
 const SignatureList = named(
-  parseList ('Parameter', ', ()')
-  parseList ('Parameter', { sep: ',', wrapper: '()' })
-  list(rule.Parameter, consume(','), { open: consume('('), close: consume(')') }),
+  TF.parseList (rule.Parameter, ', ()'),
+  TF.parseList (rule.Parameter, { separator: ',', wrapper: '()' }),
   'SignatureList'
+);
+
+const DataObject = named(
+  TF.parseList (rule.PropertyAssignment, ', {}'),
+  'DataObject'
 );
