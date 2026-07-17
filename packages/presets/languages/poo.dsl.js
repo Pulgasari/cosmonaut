@@ -4,6 +4,7 @@
 
 ====== META INFO ============================================
 
+META LIST symbols  = 0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z a b c d e f g h i j k l m n o p q r s t u v w x y z 
 META LIST builtins = ( Identifier is String ) Array BigInt Boolean Date Error Function Map Number Object Promise RegExp Set String Symbol
 META LIST globals  = ( Identifier is String ) clearInterval clearTimeout console document globalThis process setInterval setTimeout window
 META LIST literals = ( Identifier is String ) false null true undefined
@@ -37,49 +38,46 @@ RULE PropDeclStatement => Node = prop Identifier `=` Expr <> !!!!
 
 ====== HIGHLIGHTING RULES ===================================
 
-HL literal        = ...meta:literals... | literal-num | literal-range
+HL literal        = ...meta:literals... OR <literal-num> OR <literal-range>
 
-HL literal-int    = [ "-" ] ( ? Digit ? { ? Digit ? | "_" } )
-HL literal-float  = [ "-" ] ( ? Digit ? { ? Digit ? | "_" } "." ? Digit ? { ? Digit ? } )
-HL literal-num    = literal-float | literal-int
-HL literal-range  = ( literal-num ) ".." ( literal-num )
+HL d_             = <d> OR _
+HL literal-int    = - <d> ?( <d_> )? <> ?!?
+HL literal-float  = - <d> {{ <d_> }} . <d> {{ <d> }}
+HL literal-num    = <literal-float> OR <literal-int>
+HL literal-range  = <literal-num> .. <literal-num> <> !!!
 
-HL literal-array  =  [ list-of-vals ] <> !?!
-HL literal-list   = #[ list-of-vals ] <> !?!
-HL literal-tuple  = #( list-of-vals ) <> !?!
-HL literal-record = #{ list-of-args } <> !?!
+HL literal-array  =  [ <list-of-vals> ] <> !?!
+HL literal-list   = #[ <list-of-vals> ] <> !?!
+HL literal-tuple  = #( <list-of-vals> ) <> !?!
+HL literal-record = #{ <list-of-args> } <> !?!
 
-HL list-of-args = arg  ?( , arg  )? , <> ???
-HL list-of-vals = expr ?( , expr )? , <> ???
+HL list-of-args = TRAILING LIST OF <arg>  WITH SEPARATOR ,
+HL list-of-vals = TRAILING LIST OF <expr> WITH SEPARATOR ,
 
+HL arg     = pair-kv OR id
+HL pair-kv = id : expr <> !!!
 
-HL arg     = pair-kv | id
-HL pair-kv = id : expr <> ?.. !!! ...
-
-HL id           = L { L D _ }
+HL id           = L AND MAYBE L D _
 HL id-const     = #<id>
 HL id-label     = $<id>
 HL id-pointer   = &<id>
 HL id-temp      = @<id>
 HL id-qualified = id :: id <> !!!
 
+
+
+
+   
+HL list-of-args = arg  ?( , arg  )? , <> ???
+HL list-of-vals = expr ?( , expr )? , <> ???
+
+HL list-of-args = ... , :arg: <> ?! ... , <> !?
+HL list-of-vals = Sequence of <vals> with trailing `,`
+
+
+
+
 (* ===== IDENTIFIER ===== *)
-
-
-
-(* ===== LITERALS ===== *)
-
-literal-bool    = "true" | "false" ;
-literal-nullish = "null" | "undefined" ;
-
-literal-int   = [ "-" ] ( ? Digit ? { ? Digit ? | "_" } ) ;
-literal-float = [ "-" ] ( ? Digit ? { ? Digit ? | "_" } "." ? Ziffer ? { ? Ziffer ? } ) ;
-literal-range = ( Digit | Float ) ".." ( Digit | Float ) ;
-
-literal-array  =  "[" [ expr { "," expr } [ "," ] ] "]" ;
-literal-list   = "#[" [ expr { "," expr } [ "," ] ] "]" ;  (* no nesting *)
-literal-tuple  = "#(" [ expr { "," expr } [ "," ] ] ")" ;  (* no nesting *)
-literal-record = "#{" [ id ":" expr { "," id ":" expr } [ "," ] ] "}" ;
 
 literal-str-single-char = ? beliebiges Zeichen außer "'" und "\\" ? | EscapeSequence ;
 literal-str-single      = "'" { SingleStringChar } "'" ;
