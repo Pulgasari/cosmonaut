@@ -437,6 +437,15 @@ function doWhile(body, condition) {
   });
 }
 
+const withOptionalWrapper = (inner, wrapperName) => call(p => {
+  const [open, close] = p._wrappers?.[wrapperName] ?? [null, null];
+  if (open) p.consume(open);
+  const result = inner(p);
+  if (result === null || ctx.failed) return null;
+  if (open) p.consume(close);
+  return result;
+});
+
 
 // for implementatio.
 
