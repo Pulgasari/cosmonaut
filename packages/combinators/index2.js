@@ -17,6 +17,20 @@ function runWithBacktrack (p, combinator) {
   return result;
 }
 
+const run = (p, c) => {
+  const start = p.index;
+  const res = c(p);
+  if (isNullish(res) || p.failed) {
+    p.index = start;
+    return null;
+  }
+  return res;
+};
+
+// Dann überall ersetzen:
+const not = c => decorate(p => run(p, c) == null ? true : null);
+const optional = c => decorate(p => run(p, c) ?? null);
+
 // ==================================
 // LAYER 1: CORE PRIMITIVES ("ATOMS")
 // ==================================
@@ -97,14 +111,24 @@ const repeat = (c,n) => decorate(p => {
   return results;
 });
 
-const many  = c => repeat (c, 0);
-const many1 = c => repeat (c, 1);
-
-const many = c => decorate((p) => {
+const many = c => decorate(p => {
   const results = [];
-  while (true) {
-    const res = runWithBacktrack(p,c);
-    if (isNullish(res)) break;
+  let res;
+  while ((res = run(p,c)) !== null) {
+    results.push(res);
+  }
+  return results;
+});
+
+const many1 = c => decorate(p => {
+  const first = c(p);           // kein backtrack beim ersten!
+  if (isNullish(first) || p.failed) {
+    p.index = /* start */; // oder explizit speichern
+    return null;
+  }
+  const results = [first];
+  let res;
+  while ((res = run(p, c)) !== null) {
     results.push(res);
   }
   return results;
