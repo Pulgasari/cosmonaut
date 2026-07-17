@@ -420,7 +420,22 @@ function listWithWrapper (inner, wrapper, closeToken, separator, trailing) {
   });
 }
 
+import { call } from '@cosmonaut/combinators';
 
+function doWhile(body, condition) {
+  return call(p => {
+    const results = [];
+    let keepGoing;
+    do {
+      const res = body(ctx);
+      if (res === null || ctx.failed) return null;
+      results.push(res);
+      // condition ist ein Kombinator, der true zurückgibt, wenn die Schleife weiterlaufen soll
+      keepGoing = condition(ctx) === true;
+    } while (keepGoing);
+    return results;
+  });
+}
 
 
 // for implementatio.
