@@ -32,6 +32,13 @@ META LIST operators = (
 
 ====== TOKENIZER RULES ======================================
 
+TKN OPERATOR   = ...( operators => /@/y )...
+TKN PUNCT      = ...( puncts    => /@/y )...
+TKN STRING     = /"(?:\\.|[^"\\])*"/y
+TKN STRING     = /'(?:\\.|[^'\\])*'/y
+TKN NUMBER     = /0[xX][0-9a-fA-F](?:_?[0-9a-fA-F])*|0[bB][01](?:_?[01])*|0[oO][0-7](?:_?[0-7])*|(?:\d(?:_?\d)*)?\.\d(?:_?\d)*(?:[eE][+-]?\d+)?|\d(?:_?\d)*\.(?!\.)(?:[eE][+-]?\d+)?|\d(?:_?\d)*(?:[eE][+-]?\d+)?/y 
+TKN IDENTIFIER = /[a-zA-Z_$][a-zA-Z0-9_$]*/y
+
 ====== PARSER RULES =========================================
 
 NODE PropDeclStatement = { identifier, mode, expr <> !!! }
