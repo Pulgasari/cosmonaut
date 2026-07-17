@@ -168,17 +168,17 @@ const capture = (combinator, name) => decorateCombinator(p => {
 });
 
 const node = (combinator, type) => decorateCombinator(p => {
-  const start = p.index;
-  const res   = combinator(ctx);
-  if (isNullish(res)) return null;
+  const start  = p.index;
+  const result = combinator(p);
+  if (isNullish(result)) return null;
 
   const nodeObj = { type, start, end: p.index };
 
-  if (isArray(res)) {
+  if (isArray(result)) {
     let hasObjects = false;
     let merged     = {};
-    for (const item of res) {
-      if (item && isObjectitem)) {
+    for (const item of result) {
+      if (item && isObject(item)) {
         Object.assign(merged, item);
         hasObjects = true;
       }
@@ -186,11 +186,11 @@ const node = (combinator, type) => decorateCombinator(p => {
     if (hasObjects) {
       Object.assign(nodeObj, merged);
     } else {
-      nodeObj.children = res;
+      nodeObj.children = result;
     }
   } 
-  else if (isObject(res)) Object.assign(nodeObj, res);
-  else                    nodeObj.value = res;
+  else if (isObject(res)) Object.assign(nodeObj, result);
+  else                    nodeObj.value = result;
 
   return nodeObj;
 });
