@@ -37,28 +37,35 @@ RULE PropDeclStatement => Node = prop Identifier `=` Expr <> !!!!
 
 ====== HIGHLIGHTING RULES ===================================
 
-HL literal = ...meta:literals...
+HL literal        = ...meta:literals... | literal-num | literal-range
+
+HL literal-int    = [ "-" ] ( ? Digit ? { ? Digit ? | "_" } )
+HL literal-float  = [ "-" ] ( ? Digit ? { ? Digit ? | "_" } "." ? Digit ? { ? Digit ? } )
+HL literal-num    = literal-float | literal-int
+HL literal-range  = ( literal-num ) ".." ( literal-num )
+
+HL literal-array  =  [ list-of-vals ] <> !?!
+HL literal-list   = #[ list-of-vals ] <> !?!
+HL literal-tuple  = #( list-of-vals ) <> !?!
+HL literal-record = #{ list-of-args } <> !?!
+
+HL list-of-args = arg  ?( , arg  )? , <> ???
+HL list-of-vals = expr ?( , expr )? , <> ???
 
 
-literal-int   = [ "-" ] ( ? Digit ? { ? Digit ? | "_" } ) ;
-literal-float = [ "-" ] ( ? Digit ? { ? Digit ? | "_" } "." ? Ziffer ? { ? Ziffer ? } ) ;
-literal-range = ( Digit | Float ) ".." ( Digit | Float ) ;
+HL arg     = pair-kv | id
+HL pair-kv = id : expr <> ?.. !!! ...
 
-literal-array  =  "[" [ expr { "," expr } [ "," ] ] "]" ;
-literal-list   = "#[" [ expr { "," expr } [ "," ] ] "]" ;  (* no nesting *)
-literal-tuple  = "#(" [ expr { "," expr } [ "," ] ] ")" ;  (* no nesting *)
-literal-record = "#{" [ id ":" expr { "," id ":" expr } [ "," ] ] "}" ;
-
-
+HL id           = L { L D _ }
+HL id-const     = #<id>
+HL id-label     = $<id>
+HL id-pointer   = &<id>
+HL id-temp      = @<id>
+HL id-qualified = id :: id <> !!!
 
 (* ===== IDENTIFIER ===== *)
 
-id           = ? Letter { Letter | Digit | "_" } ? ;
-id-const     = "#" id ;
-id-label     = "$" id ;
-id-pointer   = "&" id ;
-id-temp      = "@" id ;
-id-qualified = id { "::" id } ;
+
 
 (* ===== LITERALS ===== *)
 
