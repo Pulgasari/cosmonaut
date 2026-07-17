@@ -64,9 +64,18 @@ HL id-pointer   = &<id>
 HL id-temp      = @<id>
 HL id-qualified = id :: id <> !!!
 
+HL statement-pnt = !!! <> pnt <ImportList> ;
+HL statement-ref = !!! <> ref <ImportList> ;
+HL statement-use = !!! <> use <ImportList> ;
+
+HL expr-as      = id OR as id 
+HL expr-as-list = TRAILING LIST OF <expr-as> WITH SEPARATOR , 
 
 
 
+
+
+   
    
 HL list-of-args = arg  ?( , arg  )? , <> ???
 HL list-of-vals = expr ?( , expr )? , <> ???
@@ -96,14 +105,11 @@ block = "{" { Statement } "}" ;
 
 (* ===== EXPRESSIONS ===== *)
 
-expr-as      = id [ "as" id ] ;
-expr-as-list = expr-as { "," expr-as } ;
+
 
 (* ===== STATEMENTS ===== *)
 
-statement-use = "use" ImportList ";" ;
-statement-pnt = "pnt" ImportList ";" ;
-statement-ref = "ref" ImportList ";" ;
+
 
 statement-decl-prop = "prop" ( id | id-const ) op-assign expr ";" ;
 statement-decl-temp =        id-temp           op-assign expr ";" ;
