@@ -2,9 +2,9 @@
 
 // :::::: HELPERS
 
-const isNullish = (v) => v === null || v === undefined;
-const isFn      = (v) => typeof v === 'function';
 const isArray   = Array.isArray;
+const isFn      = (v) => typeof v === 'function';
+const isNullish = (v) => v === null || v === undefined;
 const isObject  = (v) => v !== null && typeof v === 'object';
 
 function runWithBacktrack (p, combinator) {
@@ -17,16 +17,15 @@ function runWithBacktrack (p, combinator) {
   return result;
 }
 
-/****************
-c = combinator(s)
-p = parser
-*****************/
-
 // ==================================
 // LAYER 1: CORE PRIMITIVES ("ATOMS")
 // ==================================
 
-const consume = (expected) => decorateCombinator(p => {
+const call     = c => decorate(c);
+const not      = c => decorate(p => runWithBacktrack(p,c) == null ? true : null);
+const optional = c => decorate(p => runWithBacktrack(p,c) ?? null);
+
+const consume = (expected) => decorate(p => {
   if (isFn(p.consume)) return p.consume(expected);
   // fallback for simple stream
   const token = p.peek?.();
@@ -34,24 +33,22 @@ const consume = (expected) => decorateCombinator(p => {
   return null;
 });
 
-const match = (expected) => decorateCombinator(p => {
+const match = (expected) => decorate(p => {
   if (isFn(p.match)) return p.match(expected);
   // fallback for simple stream
   const token = p.peek?.();
   return token && (token.type === expected || token.value === expected) ? token : null;
 });
 
-const check = (expected) => decorateCombinator(p => {
+const check = (expected) => decorate(p => {
   if (isFn(p.is)) return p.is(expected);
   const token = p.peek?.();
   return !!(token && (token.type === expected || token.value === expected));
 });
 
-const call = (combinator) => decorateCombinator(p => combinator(p));
-
 const choice = (...combinators) => {
   const flat = combinators.flat();
-  return decorateCombinator(p => {
+  return decorate (p => {
     for (const combinator of flat) {
       const result = runWithBacktrack(p, combinator);
       if (!isNullish(result)) return result;
@@ -62,7 +59,7 @@ const choice = (...combinators) => {
 
 const seq = (...combinators) => {
   const flat = combinators.flat();
-  return decorateCombinator(p => {
+  return decorate(p => {
     const start   = p.index;
     const results = [];
     for (const combinator of flat) {
@@ -77,31 +74,20 @@ const seq = (...combinators) => {
   });
 };
 
-const optional = (combinator) => decorateCombinator(p => {
-  return runWithBacktrack(p, combinator) ?? null;
-});
-
-const not = (combinator) => decorateCombinator(p => {
-  const res = runWithBacktrack(p, combinator);
-  return res === null ? true : null;
-});
-
-const lookahead = (combinator) => decorateCombinator(p => {
-  const start = p.index;
-  const res   = runWithBacktrack(p, combinator);
+const lookahead = c => decorate(p => {
+  const start  = p.index;
+  const result = runWithBacktrack(p,c);
   p.index = start;
-  return res ?? null;
+  return result ?? null;
 });
 
-// ==========================================
-// SCHICHT 2: ITERATION & FLOW (Die Schleifen)
-// ==========================================
+// :::::: FLOW & LOOPS
 
-const repeat = (combinator, n) => decorateCombinator(p => {
+const repeat = (c,n) => decorate(p => {
   const start   = p.index;
   const results = [];
   for (let i = 0; i < n; i++) {
-    const result = combinator(p);
+    const result = c(p);
     if (isNullish(result) || p.failed) {
       p.index = start;
       return null;
@@ -111,36 +97,36 @@ const repeat = (combinator, n) => decorateCombinator(p => {
   return results;
 });
 
-const many  = combinator => repeat (combinator, 0);
-const many1 = combinator => repeat (combinator, 1);
+const many  = c => repeat (c, 0);
+const many1 = c => repeat (c, 1);
 
-const many = (combinator) => decorateCombinator((p) => {
+const many = c => decorate((p) => {
   const results = [];
   while (true) {
-    const res = runWithBacktrack(p, combinator);
+    const res = runWithBacktrack(p,c);
     if (isNullish(res)) break;
     results.push(res);
   }
   return results;
 });
 
-const many1 = (combinator) => decorateCombinator((p) => {
+const many1 = c => decorate((p) => {
   const start = p.index;
-  const first = combinator(p);
+  const first = c(p);
   if (isNullish(first) || p.failed) {
     p.index = start;
     return null;
   }
   const results = [first];
   while (true) {
-    const res = runWithBacktrack(p, combinator);
-    if (isNullish(res)) break;
-    results.push(res);
+    const result = runWithBacktrack(p,c);
+    if (isNullish(result)) break;
+    results.push(result);
   }
   return results;
 });
 
-const doWhile = (body, condition) => decorateCombinator(p => {
+const doWhile = (body, condition) => decorate(p => {
   const results = [];
   while (true) {
     const result = body(p);
@@ -151,7 +137,7 @@ const doWhile = (body, condition) => decorateCombinator(p => {
   return results;
 });
 
-const untilLoop = (cond) => decorateCombinator(p => {
+const untilLoop = (cond) => decorate(p => {
   const results = [];
   if (isFn(cond) && !cond.many) { // Schneller Pfad für Prädikate
     while (!cond(p)) results.push(p.next());
@@ -165,7 +151,7 @@ const untilLoop = (cond) => decorateCombinator(p => {
   return results;
 });
 
-const whileLoop = (cond) => decorateCombinator((p) => {
+const whileLoop = (cond) => decorate(p => {
   const results = [];
   if (isFn(cond) && !cond.many) {
     while (cond(p)) results.push(p.next());
@@ -183,7 +169,7 @@ const whileLoop = (cond) => decorateCombinator((p) => {
 // SCHICHT 3: HIGH-LEVEL (Der Komfort)
 // ==========================================
 
-const wrapped = (open, inner, close) => decorateCombinator(p => {
+const wrapped = (open, inner, close) => decorate(p => {
   const start = p.index;
   if (open(p) === null || p.failed) return null;
   const result = inner(p);
@@ -192,7 +178,7 @@ const wrapped = (open, inner, close) => decorateCombinator(p => {
   return result;
 });
 
-const separated = (inner, separator) => decorateCombinator(p => {
+const separated = (inner, separator) => decorate(p => {
   const results = [];
   const first   = runWithBacktrack(p, inner);
   if (isNullish(first)) return results;
@@ -216,10 +202,10 @@ const separated = (inner, separator) => decorateCombinator(p => {
  * Der ultimative, universelle List-Kombinator.
  * Ersetzt listLoop, listWithWrapper und parseList komplett und arbeitet rein deklarativ!
  */
-const list = (inner, separator, options = {}) => {
-  const { open = null, close = null, trailing = true, allowEmpty = true } = options;
+const list = (inner, options = {}) => {
+  const { open = null, close = null, separator = ',', trailing = true, allowEmpty = true } = options;
 
-  const listBody = decorateCombinator(p => {
+  const listBody = decorate(p => {
     const results = [];
     
     // Falls leerer Inhalt erlaubt ist und wir direkt das Schließ-Token sehen
@@ -237,10 +223,7 @@ const list = (inner, separator, options = {}) => {
 
       // Check auf Trailing Separator direkt vor dem Schließen
       if (close && lookahead(close)(p)) {
-        if (!trailing) {
-          p.index = sepStart; // Separator skippen, da nicht erlaubt
-          return null;
-        }
+        if (!trailing) { p.index = sepStart; return null; } // Separator skippen, da nicht erlaubt
         break;
       }
 
@@ -259,19 +242,19 @@ const list = (inner, separator, options = {}) => {
 
 // ::: Transformationen
 
-const map = (combinator, fn) => decorateCombinator(p => {
-  const result = combinator(p);
+const map = (c, fn) => decorate (p => {
+  const result = c(p);
   return isNullish(result) ? null : fn(result, p);
 });
 
-const capture = (combinator, name) => decorateCombinator(p => {
-  const res = combinator(p);
-  return isNullish(res) ? null : { [name]: res };
+const capture = (c, name) => decorate (p => {
+  const result = c(p);
+  return isNullish(result) ? null : { [name]: result };
 });
 
-const node = (combinator, type) => decorateCombinator(p => {
+const node = (c, type) => decorate (p => {
   const start = p.index;
-  const res   = combinator(p); // Bugfix: ctx -> p
+  const res   = c(p);
   if (isNullish(res)) return null;
 
   const nodeObj = { type, start, end: p.index };
@@ -285,11 +268,8 @@ const node = (combinator, type) => decorateCombinator(p => {
         hasObjects = true;
       }
     }
-    if (hasObjects) {
-      Object.assign(nodeObj, merged);
-    } else {
-      nodeObj.children = res;
-    }
+    if (hasObjects) Object.assign(nodeObj, merged);
+    else            nodeObj.children = res;
   } 
   else if (isObject(res)) Object.assign(nodeObj, res);
   else                    nodeObj.value = res;
@@ -299,24 +279,27 @@ const node = (combinator, type) => decorateCombinator(p => {
 
 // ::: Utilities & Lazy Rules
 
-const lazy = (fn) => decorateCombinator((p) => fn()(p));
+const lazy = fn => decorate(p => fn()(p));
 
-const memo = (combinator) => decorateCombinator(p => {
-  p.memoCache ??= new Map();
-  let ruleCache = p.memoCache.get(combinator);
+const memo = c => decorate (p => {
+  p.memoCache ??= new Map;
+  let ruleCache = p.memoCache.get(c);
   if (!ruleCache) {
-    ruleCache = new Map();
-    p.memoCache.set(combinator, ruleCache);
+    ruleCache = new Map;
+    p.memoCache.set(c, ruleCache);
   }
 
   const index = p.index;
   const entry = ruleCache.get(index);
   if (entry !== undefined) {
-    if (entry.success) { p.index = entry.endPos; return entry.result; }
+    if (entry.success) {
+      p.index = entry.endPos; 
+      return entry.result;
+    }
     return null;
   }
 
-  const result = runWithBacktrack(p, combinator);
+  const result = runWithBacktrack(p,c);
   if (!isNullish(result)) {
     ruleCache.set(index, { success: true, result, endPos: p.index });
     return result;
@@ -326,19 +309,19 @@ const memo = (combinator) => decorateCombinator(p => {
   }
 });
 
-const named = (combinator, name) => {
-  const namedCombinator = decorateCombinator(p => combinator(p));
+const named = (c, name) => {
+  const namedCombinator = decorate(p => c(p));
   namedCombinator.displayName = name;
   return namedCombinator;
 };
 
-const debug = (combinator, message = '') => decorateCombinator((ctx) => {
-  const name = message || combinator.displayName || 'unnamed';
-  console.log(`[DEBUG] → Enter: "${name}" bei Index ${ctx.index}`);
-  const start = ctx.index;
-  const res   = combinator(ctx);
-  !isNullish(res) ? console.log(`[DEBUG] ✓ Success: "${name}" von ${start} bis ${ctx.index}.`, res)
-                  : console.log(`[DEBUG] ✗ Failed: "${name}" bei Index ${start}`);
+const debug = (c, message = '') => decorate (p => {
+  const name = message || c.displayName || 'unnamed';
+  console.log(`[DEBUG] → Enter: "${name}" bei Index ${p.index}`);
+  const start  = p.index;
+  const result = c(p);
+  !isNullish(result) ? console.log(`[DEBUG] ✓ Success: "${name}" von ${start} bis ${p.index}.`, result)
+                     : console.log(`[DEBUG] ✗ Failed: "${name}" bei Index ${start}`);
   return res;
 });
 
@@ -348,8 +331,8 @@ function createLazyRule (name) {
     if (isFn(p.parse)) return p.parse(name, ...args);
     throw new Error(`Regel "${name}" existiert nicht auf dem Parser-Kontext.`);
   };
-  const defaultCombinator =              decorateCombinator((p) => runRule(p));
-  const ruleBuilder       = (...args) => decorateCombinator((p) => runRule(p, args));
+  const defaultCombinator =              decorate(p => runRule(p));
+  const ruleBuilder       = (...args) => decorate(p => runRule(p, args));
 
   return new Proxy(defaultCombinator, {
     apply: (target, thisArg, args) => ruleBuilder(...args)
@@ -383,26 +366,39 @@ const combinatorPrototype = {
         const chain    = (...args) => seq(self, args.length ? lazyRule(...args) : lazyRule);
 
         // Der Rückgabewert ist sowohl ein ausführbarer Kombinator als auch als Funktion aufrufbar
-        return new Proxy(decorateCombinator(p => chain()(p)), {
-          apply(target, thisArg, args) { return chain(...args); },
-          get(target, subProp) { return chain()[subProp]; }
+        return new Proxy(decorate( p => chain()(p) ), {
+          apply (target, thisArg, args) { return chain(...args); },
+          get   (target, subProp)       { return chain()[subProp]; }
         });
       }
     });
   }
 };
 
-function decorateCombinator (fn) {
-  Object.setPrototypeOf(fn, combinatorPrototype);
-  return fn;
+function decorate (c) {
+  Object.setPrototypeOf(c, combinatorPrototype);
+  return c;
 }
 
 // ::: Aliase & Exports
-const custom = call; const expect = match; const is = check; const peek = lookahead;
-const rule = createLazyRule; // Alias für einfachen Rule-Bezug im Root-Scope
+const custom = call; 
+const expect = match; 
+const is     = check;
+const peek   = lookahead;
+const rule   = createLazyRule;
 
 export {
-  call, capture, check, choice, consume, custom, debug, expect, is, lazy, lookahead,
-  many, many1, map, match, memo, named, node, not, optional, peek, repeat, rule,
-  separated, seq, untilLoop as until, whileLoop as while, wrapped, list, doWhile
+  call, capture, check, choice, consume, custom,
+  debug, doWhile,
+  expect, 
+  is, 
+  lazy, list, lookahead,
+  many, many1, map, match, memo, 
+  named, node, not, 
+  optional, 
+  peek, 
+  repeat, rule,
+  separated, seq, 
+  untilLoop as until, 
+  whileLoop as while, wrapped,
 };
