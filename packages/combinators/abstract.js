@@ -16,6 +16,14 @@ const Parameter = named(
   'Parameter'
 );
 
+const Parameter = named(seq(
+    ident.capture('paramName'),
+    consume(':'),
+    ident.capture('paramType')
+  ).node('Parameter'),
+  'Parameter'
+);
+
 // 2. Die komplette Signatur-Liste: "(precedence: int, associativity: string)"
 const SignatureList = named(
   list(rule.Parameter, consume(','), {
@@ -72,6 +80,14 @@ export { DataDefinition };
 // ===== TOKENFRESSER =====
 // an experimental class using combinators
 // to create a higher abstraction of often used patterns
+// to be implemented for declarative parsing
+// with a more handy syntax
+// which is less flexible as combinators directly
+// but when used its for a specific language in that situation
+// so we don't need the 'total flexibility' at all
+// instead we need a mechanisms 
+// to declare parsing rules/patterns matching 
+// the style of the parsed language
 
 import { isString } from '@cosmonaut/utils/internals';
 import { choice, consume, list, match, named, rule } from '@cosmonaut/combinators';
@@ -136,18 +152,58 @@ class Tokenfresser () {
     );
   }
 
+  parseSeq (name) {
+    
+    const Parameter = named(
+      seq(
+        ident.capture('paramName'),
+        consume(':'),
+        ident.capture('paramType')
+      ).node('Parameter'),
+      name
+    );
+    
+  }
+
 }
 
+// ::: Basis-Atome (Token-Matcher)
+const ident     = match('IDENTIFIER');
+const stringLit = match('STRING');
+const intLit    = match('INT');
+
 const TF = new Tokenfresser;
+const SignatureList = TF.parseList(rule.Parameter,          ", ()").withName('SignatureList');
+const DataObject    = TF.parseList(rule.PropertyAssignment, ', {}').withName('DataObject');
 
-// 2. Die komplette Signatur-Liste: "(precedence: int, associativity: string)"
-const SignatureList = named(
-  TF.parseList (rule.Parameter, ', ()'),
-  TF.parseList (rule.Parameter, { separator: ',', wrapper: '()' }),
-  'SignatureList'
+
+const Parameter = named(
+  match('IDENTIFIER').capture('paramName')
+  . then.consume(':')
+  . then.match('IDENTIFIER').capture('paramType')
+  . node('Parameter'),
+  'Parameter'
 );
 
-const DataObject = named(
-  TF.parseList (rule.PropertyAssignment, ', {}'),
-  'DataObject'
+const Parameter = named(
+  seq(
+    match('IDENTIFIER').capture('paramName'),
+    consume(':'),
+    match('IDENTIFIER').capture('paramType')
+  ).node('Parameter'),
+  'Parameter'
 );
+
+parseAbfolge (pattern) {
+  return match('IDENTIFIER').capture('paramName')
+  . then.consume(':')
+  . then.match('IDENTIFIER').capture('paramType')
+  . node('Parameter'),
+  'Parameter'
+}
+
+const Parameter = TF.parsePattern(`IDENTIFIER : IDENTIFIER`, '?!?').toNode('Parameter').withName('Parameter');
+
+
+
+
