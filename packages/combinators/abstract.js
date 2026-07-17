@@ -134,14 +134,6 @@ function resolvePattern (name, input) {
 class Tokenfresser () {
 
   parseList (xxx, config = {}) {
-    
-    if (isString(config)) {
-      const { separator, wrapper } = config;
-      const [open, close] = resolveWrapper(wrapper);
-    } else {
-      const { separator, wrapper } = resolvePattern(config);
-    }
-    
     const { separator, wrapper } = isString(config) ? config : resolvePattern('listConfigPattern', config); 
     const [open, close] = resolveWrapper(wrapper);
     
@@ -152,31 +144,17 @@ class Tokenfresser () {
     );
   }
 
-  parseSeq (name) {
-    
-    const Parameter = named(
-      seq(
-        ident.capture('paramName'),
-        consume(':'),
-        ident.capture('paramType')
-      ).node('Parameter'),
-      name
-    );
-    
-  }
-
 }
 
-// ::: Basis-Atome (Token-Matcher)
-const ident     = match('IDENTIFIER');
-const stringLit = match('STRING');
-const intLit    = match('INT');
-
 const TF = new Tokenfresser;
+
+// with Tokenfresser
+// not working yet bc .parsePattern .toNode and .withName not implemented yet on Tokenfresser
 const SignatureList = TF.parseList(rule.Parameter,          ", ()").withName('SignatureList');
 const DataObject    = TF.parseList(rule.PropertyAssignment, ', {}').withName('DataObject');
+const Parameter     = TF.parsePattern(`IDENTIFIER : IDENTIFIER`, '?!?').toNode('Parameter').withName('Parameter');
 
-
+// without Tokenfresser
 const Parameter = named(
   match('IDENTIFIER').capture('paramName')
   . then.consume(':')
@@ -184,7 +162,6 @@ const Parameter = named(
   . node('Parameter'),
   'Parameter'
 );
-
 const Parameter = named(
   seq(
     match('IDENTIFIER').capture('paramName'),
@@ -194,15 +171,6 @@ const Parameter = named(
   'Parameter'
 );
 
-parseAbfolge (pattern) {
-  return match('IDENTIFIER').capture('paramName')
-  . then.consume(':')
-  . then.match('IDENTIFIER').capture('paramType')
-  . node('Parameter'),
-  'Parameter'
-}
-
-const Parameter = TF.parsePattern(`IDENTIFIER : IDENTIFIER`, '?!?').toNode('Parameter').withName('Parameter');
 
 
 
