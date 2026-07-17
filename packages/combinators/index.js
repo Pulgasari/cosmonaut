@@ -1,40 +1,4 @@
-// @cosmonaut/combinators
-
-// :::::: IMPORTS
-
-import { isFn, isNullish, isSymbol } from '@cosmonaut/utils/internals';
-
-// :::::: MAGIC EXPORTS
-
-const rule = new Proxy({}, {
-  get: (target, prop) => isSymbol(prop) ? target[prop] : createLazyRule(prop)
-});
-
-// 2. Die "parse" Basis-Funktion für dynamische Direktaufrufe: parse('Expression', 4)
-const parseBase = (ruleName, ...args) => decorateCombinator((p) => {
-  if (isFn(p[ruleName])) return p[ruleName](...args);
-  if (isFn(p.parse))     return p.parse(ruleName, ...args);
-  throw new Error(`Regel "${ruleName}" existiert nicht auf dem Parser-Kontext.`);
-});
-
-// Das "parse" Proxy (erlaubt sowohl Direktaufruf als auch Property-Zugriff!)
-const parse = new Proxy (parseBase, {
-  get: (target, prop) => (prop in target || isSymbol(prop)) ? target[prop] : createLazyRule(prop)
-});
-
-// ::: Primitives
-
-const call    = (fn)      => decorateCombinator(p => fn(p));
-const check   = (pattern) => decorateCombinator(p => p.check(pattern) ? p.peek() : null);
-const consume = (value)   => decorateCombinator(p => p.consume(value));
-const match   = (pattern) => decorateCombinator(p => p.match(pattern));
-
-// ::: Flow
-
-const choice = (...combinators) => {
-  const flat = combinators.flat();
-  decorateCombinator((p) => {
-    for (const combinator of flat) {
+const combinator of flat) {
       const result = runWithBacktrack(p, combinator);
       if (!isNullish(res)) return result;
     }
@@ -44,36 +8,36 @@ const choice = (...combinators) => {
 
 const seq = (...combinators) => {
   const flat = combinators.flat();
-  return decorateCombinator((ctx) => {
-    const start   = ctx.index;
+  return decorateCombinator(p => {
+    const start   = p.index;
     const results = [];
     const len     = flat.length;
-    for (let i = 0; i < len; i++) { // Klassischer Loop ist schneller als for...of
-      const res = flat[i](ctx);
-      if (isNullsih(res) || ctx.failed) {
-        ctx.index = start;
+    for (let i = 0; i < len; i++) {
+      const result = flat[i](p);
+      if (isNullish(result) || p.failed) {
+        p.index = start;
         return null;
       }
-      results.push(res);
+      results.push(result);
     }
     return results;
   });
 };
 
-const optional = (combinator) => decorateCombinator((ctx) => {
-  return runWithBacktrack(ctx, combinator) ?? null;
+const optional = (combinator) => decorateCombinator(p => {
+  return runWithBacktrack(p, combinator) ?? null;
 });
 
-const repeat = (combinator, n) => decorateCombinator((ctx) => {
-  const start   = ctx.index;
+const repeat = (combinator, n) => decorateCombinator(p => {
+  const start   = p.index;
   const results = [];
   for (let i = 0; i < n; i++) {
-    const res = combinator(ctx);
-    if (isNullish(res) || ctx.failed) {
-      ctx.index = start;
+    const result = combinator(p);
+    if (isNullish(result) || p.failed) {
+      p.index = start;
       return null;
     }
-    results.push(res);
+    results.push(result);
   }
   return results;
 });
@@ -122,29 +86,29 @@ const whileLoop = (cond) => decorateCombinator((ctx) => {
   return results;
 });
 
-const untilLoop = (cond) => decorateCombinator((ctx) => {
+const untilLoop = (cond) => decorateCombinator(p => {
   const results = [];
   
   if (isFn(cond) && !cond.many) {
-    while (!cond(ctx)) results.push(ctx.next());
+    while (!cond(p)) results.push(p.next());
     return results;
   }
 
   while (true) {
-    const res = runWithBacktrack(ctx, cond);
-    if (!isNullish(res)) break;
-    results.push(ctx.next());
+    const result = runWithBacktrack(p, cond);
+    if (!isNullish(result)) break;
+    results.push(p.next());
   }
   
   return results;
 });
 
-const not = (combinator) => decorateCombinator((p) => {
+const not = (combinator) => decorateCombinator(p => {
   const res = runWithBacktrack(p, combinator);
   return res === null ? true : null;
 });
 
-const lookahead = (combinator) => decorateCombinator((p) => {
+const lookahead = (combinator) => decorateCombinator(p => {
   const start = p.index;
   const res   = runWithBacktrack(p, combinator);
   p.index = start;
@@ -154,47 +118,48 @@ const lookahead = (combinator) => decorateCombinator((p) => {
 
 // ::: Parser Helpers
 
-const wrapped = (open, inner, close) => decorateCombinator((ctx) => {
-  const start = ctx.index;
-  if (open(ctx) === null) return null;
-  const res = inner(ctx);
-  if (res === null || ctx.failed) {
-    ctx.index = start;
-    return null;
-  }
-  if (close(ctx) === null) {
-    ctx.index = start;
-    return null;
-  }
-  return res;
-});
-
-const separated = (inner, separator) => decorateCombinator((ctx) => {
+const separated = (inner, seperator) => decorateCombinator(p => {
   const results = [];
-  const first = runWithBacktrack(ctx, inner);
+  const first   = runWithBacktrack(p, inner);
   if (isNullish(first)) return results;
   results.push(first);
 
   while (true) {
-    const start  = ctx.index;
-    const sepRes = runWithBacktrack(ctx, separator);
-    if (sepRes === null) break;
+    const start     = p.index;
+    const sepResult = runWithBacktrack(p, seperator);
+    if (sepResult === null) break;
 
-    const nextRes = runWithBacktrack(ctx, inner);
-    if (nextRes === null) {
-      ctx.index = start;
+    const nextResult = runWithBacktrack(p, inner);
+    if (nextResult === null) {
+      p.index = start;
       break;
     }
-    results.push(nextRes);
+    results.push(nextResult);
   }
+  
   return results;
+});
+
+const wrapped = (open, inner, close) => decorateCombinator(p => {
+  const start = p.index;
+  if (open(p) === null) return null;
+  const result = inner(p);
+  if (result === null || p.failed) {
+    p.index = start;
+    return null;
+  }
+  if (close(p) === null) {
+    p.index = start;
+    return null;
+  }
+  return result;
 });
 
 // ::: Transformation
 
-const map = (combinator, fn) => decorateCombinator((ctx) => {
-  const res = combinator(ctx);
-  return isNullish(res) ? null : fn(res, ctx);
+const map = (combinator, fn) => decorateCombinator(p => {
+  const result = combinator(p);
+  return isNullish(result) ? null : fn(result, p);
 });
 
 const capture = (combinator, name) => decorateCombinator(p => {
@@ -237,7 +202,7 @@ const lazy = (fn) => decorateCombinator((p) => {
   return resolved(p);
 });
 
-const memo = (combinator) => decorateCombinator((p) => {
+const memo = (combinator) => decorateCombinator(p => {
   p.memoCache ??= new Map;
   
   let ruleCache = p.memoCache.get(combinator);
@@ -363,95 +328,99 @@ function decorateCombinator (fn) {
 
 
 
-import { call } from '@cosmonaut/combinators';
+const doWhile = (body, condition) => call(p => {
+  const results = [];
+  let keepGoing;
+  do {
+    const result = body(p);
+    if (result === null || p.failed) return null;
+    results.push(result);
+    keepGoing = condition(p) === true; // condition is a combinator returning true/false
+  } while (keepGoing);
+  return results;
+});
 
-function listLoop (inner, separator, closeToken, trailing) {
-  return call((p) => {
-    const elements = [];
-
-    if (p.is(closeToken)) return elements;
+const listLoop = (inner, separator, close, trailing) => call(p => {
+  const elements = [];
     
+  if (p.is(close)) return elements;
+  do {
+    if (p.is(close)) break; // trailing comma erlaubt
 
-    do {
-      if (p.check(closeToken)) break; // trailing comma erlaubt
+    const element = inner(p);
+    if (element === null || p.failed) return null;
+    elements.push(element);
 
-      const element = inner(p);
-      if (element === null || p.failed) return null;
+    if (!p.match(separator)) break;
+    if (!trailing && p.is(close)) throw new Error('Trailing separator nicht erlaubt');
+  } 
+  while (!p.is(close));
 
-      elements.push(element);
+  return elements;
+});
 
-      if (!p.match(separator)) break;
-
-      if (!trailing && p.check(closeToken)) throw new Error('Trailing separator nicht erlaubt');
-    } while (!p.check(closeToken));
-
-    return elements;
-  });
-}
-
-function resolveWrapper (ctx, wrapper) {
+function resolveWrapper (p, wrapper) {
   if (!wrapper) return [null, null];
   const pair = p._wrappers?.[wrapper];
   if (!pair) throw new Error(`Wrapper "${wrapper}" nicht gefunden.`);
   return pair; // [openToken, closeToken]
 }
 
-import { seq, optional, consume } from '@cosmonaut/combinators';
+const listWithWrapper = (inner, wrapper, seperator, trailing) => call(p => {
+  const [open, close] = resolveWrapper(p, wrapper);
 
-function listWithWrapper (inner, wrapper, closeToken, separator, trailing) {
-  return call(p => {
-    const [open, close] = resolveWrapper(p, wrapper);
-    const actualClose = close ?? closeToken;
+  // opening token
+  if (open && close) p.consume(open);
 
-    if (!actualClose) throw new Error('Kein schließendes Token definiert');
+  // parse list body
+  const elements = listLoop(inner, separator, close, trailing)(p);
+  if (elements === null) return null;
 
-    // 1. Optionales öffnendes Token
-    if (open) p.consume(open);
+  // closening token
+  if (open && close) p.consume(close);
 
-    // 2. Liste parsen
-    const elements = listLoop(inner, separator, actualClose, trailing)(ctx);
-    if (elements === null) return null;
+  // done!
+  return elements;
+});
 
-    // 3. Schließendes Token konsumieren
-    if (open) p.consume(close); // close ist hier definiert, weil open gesetzt war
-    // (oder wenn closeToken, dann konsumiere das)
+const withWrapper = (inner, wrapper) => call(p => {
+  const [open, close] = resolveWrapper(p, wrapper);
 
-    return elements;
-  });
-}
+  // opening token
+  if (open && close) p.consume(open);
 
-import { call } from '@cosmonaut/combinators';
-
-function doWhile(body, condition) {
-  return call(p => {
-    const results = [];
-    let keepGoing;
-    do {
-      const res = body(ctx);
-      if (res === null || ctx.failed) return null;
-      results.push(res);
-      // condition ist ein Kombinator, der true zurückgibt, wenn die Schleife weiterlaufen soll
-      keepGoing = condition(ctx) === true;
-    } while (keepGoing);
-    return results;
-  });
-}
-
-const withOptionalWrapper = (inner, wrapperName) => call(p => {
-  const [open, close] = p._wrappers?.[wrapperName] ?? [null, null];
-  if (open) p.consume(open);
+  // parse body
   const result = inner(p);
-  if (result === null || ctx.failed) return null;
-  if (open) p.consume(close);
+  if (result === null || p.failed) return null;
+
+  // closening token
+  if (open && close) p.consume(close);
+
+  // done
   return result;
 });
 
 
-// for implementatio.
+
+
+
+
+// for implementation in the other one
 
 export function parseList (inner, options = {}) {
   const { wrapper = null, closeToken = null, separatorToken = ',', trailing = true } = options;
   return listWithWrapper (inner, wrapper, closeToken, separatorToken, trailing);
+}
+
+export function parseList2 (inner, options = {}) {
+  const { wrapper = null, close = null, separator = ',', trailing = true } = options;
+  // with wrapper
+  return withWrapper(
+    listLoop (inner, separator, close, trailing), 
+    wrapper
+  )(p);
+  // without wrapper
+  return listLoop (inner, separator, close, trailing);
 }
 
 
