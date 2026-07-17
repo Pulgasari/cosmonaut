@@ -7,37 +7,24 @@ const isFn      = (v) => typeof v === 'function';
 const isNullish = (v) => v === null || v === undefined;
 const isObject  = (v) => v !== null && typeof v === 'object';
 
-function runWithBacktrack (p, combinator) {
-  const startPos = p.index;
-  const result   = combinator(p);
-  if (isNullish(result) || p.failed) {
-    p.index = startPos;
-    return null;
-  }
-  return result;
-}
-
-const run = (p, c) => {
+// runWithBacktrack
+const runBT = (p,c) => {
   const start = p.index;
   const res = c(p);
-  if (isNullish(res) || p.failed) {
+  if (res == null || p.failed) {
     p.index = start;
     return null;
   }
   return res;
 };
 
-// Dann überall ersetzen:
-const not = c => decorate(p => run(p, c) == null ? true : null);
-const optional = c => decorate(p => run(p, c) ?? null);
-
 // ==================================
 // LAYER 1: CORE PRIMITIVES ("ATOMS")
 // ==================================
 
 const call     = c => decorate(c);
-const not      = c => decorate(p => runWithBacktrack(p,c) == null ? true : null);
-const optional = c => decorate(p => runWithBacktrack(p,c) ?? null);
+const not      = c => decorate(p => runBT(p,c) == null ? true : null);
+const optional = c => decorate(p => runBT(p,c) ?? null);
 
 const consume = (expected) => decorate(p => {
   if (isFn(p.consume)) return p.consume(expected);
@@ -60,25 +47,25 @@ const check = (expected) => decorate(p => {
   return !!(token && (token.type === expected || token.value === expected));
 });
 
-const choice = (...combinators) => {
-  const flat = combinators.flat();
+const choice = (...c) => {
+  const flat = c.flat();
   return decorate (p => {
-    for (const combinator of flat) {
-      const result = runWithBacktrack(p, combinator);
-      if (!isNullish(result)) return result;
+    for (const cc of flat) {
+      const result = runBT(p,cc);
+      if (result != null) return result;
     }
     return null;
   });
 };
 
-const seq = (...combinators) => {
-  const flat = combinators.flat();
+const seq = (...c) => {
+  const flat = c.flat();
   return decorate(p => {
     const start   = p.index;
     const results = new Array(flat.length); // pre-allocate
     for (let i = 0; i < flat.length; i++) {
       const res = flat[i](p);
-      if (isNullish(res) || p.failed) {
+      if (res == null || p.failed) {
         p.index = start;
         return null;
       }
@@ -102,7 +89,7 @@ const repeat = (c,n) => decorate(p => {
   const results = [];
   for (let i = 0; i < n; i++) {
     const result = c(p);
-    if (isNullish(result) || p.failed) {
+    if (result == null || p.failed) {
       p.index = start;
       return null;
     }
@@ -114,21 +101,21 @@ const repeat = (c,n) => decorate(p => {
 const many = c => decorate(p => {
   const results = [];
   let res;
-  while ((res = run(p,c)) !== null) {
+  while ((res = runBT(p,c)) !== null) {
     results.push(res);
   }
   return results;
 });
 
 const many1 = c => decorate(p => {
-  const first = c(p);           // kein backtrack beim ersten!
-  if (isNullish(first) || p.failed) {
+  const first = c(p);
+  if (first == null || p.failed) {
     p.index = /* start */; // oder explizit speichern
     return null;
   }
   const results = [first];
   let res;
-  while ((res = run(p, c)) !== null) {
+  while ((res = runBT(p,c)) !== null) {
     results.push(res);
   }
   return results;
@@ -137,14 +124,14 @@ const many1 = c => decorate(p => {
 const many1 = c => decorate((p) => {
   const start = p.index;
   const first = c(p);
-  if (isNullish(first) || p.failed) {
+  if (first == null || p.failed) {
     p.index = start;
     return null;
   }
   const results = [first];
   while (true) {
-    const result = runWithBacktrack(p,c);
-    if (isNullish(result)) break;
+    const result = runBT(p,c);
+    if (result == null) break;
     results.push(result);
   }
   return results;
@@ -154,9 +141,9 @@ const doWhile = (body, condition) => decorate(p => {
   const results = [];
   while (true) {
     const result = body(p);
-    if (isNullish(result) || p.failed) return null;
+    if (result == null || p.failed) return null;
     results.push(result);
-    if (runWithBacktrack(p, condition) === null) break;
+    if (runBT(p, condition) === null) break;
   }
   return results;
 });
@@ -168,8 +155,8 @@ const untilLoop = (cond) => decorate(p => {
     return results;
   }
   while (true) {
-    const result = runWithBacktrack(p, cond);
-    if (!isNullish(result)) break;
+    const result = runBT(p, cond);
+    if (result != null) break;
     results.push(p.next());
   }
   return results;
@@ -182,8 +169,8 @@ const whileLoop = (cond) => decorate(p => {
     return results;
   }
   while (true) {
-    const res = runWithBacktrack(p, cond);
-    if (isNullish(res)) break;
+    const res = runBT(p, cond);
+    if (res == null) break;
     results.push(res);
   }
   return results;
@@ -204,16 +191,16 @@ const wrapped = (open, inner, close) => decorate(p => {
 
 const separated = (inner, separator) => decorate(p => {
   const results = [];
-  const first   = runWithBacktrack(p, inner);
-  if (isNullish(first)) return results;
+  const first   = runBT(p, inner);
+  if (first == null) return results;
   results.push(first);
 
   while (true) {
     const start = p.index;
-    if (runWithBacktrack(p, separator) === null) break;
+    if (runBT(p, separator) === null) break;
     
-    const nextResult = runWithBacktrack(p, inner);
-    if (isNullish(nextResult)) {
+    const nextResult = runBT(p, inner);
+    if (nextResult == null) {
       p.index = start; // Zurücksetzen vor den Separator
       break;
     }
@@ -236,7 +223,7 @@ const list = (inner, options = {}) => {
     if (allowEmpty && close && lookahead(close)(p)) return results;
 
     const first = inner(p);
-    if (isNullish(first) || p.failed) return allowEmpty ? results : null;
+    if (first == null || p.failed) return allowEmpty ? results : null;
     results.push(first);
 
     while (true) {
@@ -252,7 +239,7 @@ const list = (inner, options = {}) => {
       }
 
       const next = inner(p);
-      if (isNullish(next) || p.failed) {
+      if (next == null || p.failed) {
         p.index = sepStart; // Rollback hinter das letzte valide Element
         break;
       }
@@ -268,18 +255,18 @@ const list = (inner, options = {}) => {
 
 const map = (c, fn) => decorate (p => {
   const result = c(p);
-  return isNullish(result) ? null : fn(result, p);
+  return result ==null ? null : fn(result, p);
 });
 
 const capture = (c, name) => decorate (p => {
   const result = c(p);
-  return isNullish(result) ? null : { [name]: result };
+  return result == null ? null : { [name]: result };
 });
 
 const node = (c, type) => decorate (p => {
   const start = p.index;
   const res   = c(p);
-  if (isNullish(res)) return null;
+  if (res == null) return null;
 
   const nodeObj = { type, start, end: p.index };
 
@@ -344,8 +331,8 @@ const debug = (c, message = '') => decorate (p => {
   console.log(`[DEBUG] → Enter: "${name}" bei Index ${p.index}`);
   const start  = p.index;
   const result = c(p);
-  !isNullish(result) ? console.log(`[DEBUG] ✓ Success: "${name}" von ${start} bis ${p.index}.`, result)
-                     : console.log(`[DEBUG] ✗ Failed: "${name}" bei Index ${start}`);
+  result != null ? console.log(`[DEBUG] ✓ Success: "${name}" von ${start} bis ${p.index}.`, result)
+                 : console.log(`[DEBUG] ✗ Failed: "${name}" bei Index ${start}`);
   return res;
 });
 
