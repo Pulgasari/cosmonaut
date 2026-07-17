@@ -75,14 +75,14 @@ const seq = (...combinators) => {
   const flat = combinators.flat();
   return decorate(p => {
     const start   = p.index;
-    const results = [];
-    for (const combinator of flat) {
-      const result = combinator(p);
-      if (isNullish(result) || p.failed) {
+    const results = new Array(flat.length); // pre-allocate
+    for (let i = 0; i < flat.length; i++) {
+      const res = flat[i](p);
+      if (isNullish(res) || p.failed) {
         p.index = start;
         return null;
       }
-      results.push(result);
+      results[i] = res;
     }
     return results;
   });
@@ -90,7 +90,7 @@ const seq = (...combinators) => {
 
 const lookahead = c => decorate(p => {
   const start  = p.index;
-  const result = runWithBacktrack(p,c);
+  const result = run(p,c);
   p.index = start;
   return result ?? null;
 });
