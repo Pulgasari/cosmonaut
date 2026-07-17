@@ -357,4 +357,54 @@ function createLazyRule (name) {
 }
 
 // ==========================================
-// FLUENT API SYNTAX-SUGAR PROTOT
+// FLUENT API SYNTAX-SUGAR PROTOTYPE
+// ==========================================
+
+const combinatorPrototype = {
+  capture(name)  { return capture(this, name); },
+  many()         { return many(this); },
+  many1()        { return many1(this); },
+  map(mapFn)     { return map(this, mapFn); },
+  node(type)     { return node(this, type); },
+  optional()     { return optional(this); },
+  repeat(n)      { return repeat(this, n); },
+
+  // Das Herzstück des Chaining-Comforts
+  get then() {
+    const self = this;
+    return new Proxy({}, {
+      get(_, prop) {
+        // Kern-Kombinatoren direkt als verkettete Funktion bereitstellen
+        const builders = { consume, match, check, choice, seq, optional, many, many1, wrapped, separated, list, node, map, capture };
+        if (prop in builders) {
+          return (...args) => seq(self, builders[prop](...args));
+        }
+
+        // Lazy Rules dynamisch routen (z.B. .then.Statement)
+        const lazyRule = createLazyRule(prop);
+        const chain = (...args) => seq(self, args.length ? lazyRule(...args) : lazyRule);
+
+        // Der Rückgabewert ist sowohl ein ausführbarer Kombinator als auch als Funktion aufrufbar
+        return new Proxy(decorateCombinator(p => chain()(p)), {
+          apply(target, thisArg, args) { return chain(...args); },
+          get(target, subProp) { return chain()[subProp]; }
+        });
+      }
+    });
+  }
+};
+
+function decorateCombinator (fn) {
+  Object.setPrototypeOf(fn, combinatorPrototype);
+  return fn;
+}
+
+// ::: Aliase & Exports
+const custom = call; const expect = match; const is = check; const peek = lookahead;
+const rule = createLazyRule; // Alias für einfachen Rule-Bezug im Root-Scope
+
+export {
+  call, capture, check, choice, consume, custom, debug, expect, is, lazy, lookahead,
+  many, many1, map, match, memo, named, node, not, optional, peek, repeat, rule,
+  separated, seq, untilLoop as until, whileLoop as while, wrapped, list, doWhile
+};
