@@ -361,28 +361,26 @@ function createLazyRule (name) {
 // ==========================================
 
 const combinatorPrototype = {
-  capture(name)  { return capture(this, name); },
-  many()         { return many(this); },
-  many1()        { return many1(this); },
-  map(mapFn)     { return map(this, mapFn); },
-  node(type)     { return node(this, type); },
-  optional()     { return optional(this); },
-  repeat(n)      { return repeat(this, n); },
+  capture  (name) { return capture  (this, name); },
+  many     ()     { return many     (this);       },
+  many1    ()     { return many1    (this);       },
+  map      (fn)   { return map      (this, fn);   },
+  node     (type) { return node     (this, type); },
+  optional ()     { return optional (this);       },
+  repeat   (n)    { return repeat   (this, n);    },
 
   // Das Herzstück des Chaining-Comforts
-  get then() {
+  get then () {
     const self = this;
     return new Proxy({}, {
       get(_, prop) {
         // Kern-Kombinatoren direkt als verkettete Funktion bereitstellen
-        const builders = { consume, match, check, choice, seq, optional, many, many1, wrapped, separated, list, node, map, capture };
-        if (prop in builders) {
-          return (...args) => seq(self, builders[prop](...args));
-        }
+        const builders = { capture, check, choice, consume, list, node, many, many1, map, match, optional, separated, seq, wrapped };
+        if (prop in builders) return (...args) => seq(self, builders[prop](...args));
 
         // Lazy Rules dynamisch routen (z.B. .then.Statement)
         const lazyRule = createLazyRule(prop);
-        const chain = (...args) => seq(self, args.length ? lazyRule(...args) : lazyRule);
+        const chain    = (...args) => seq(self, args.length ? lazyRule(...args) : lazyRule);
 
         // Der Rückgabewert ist sowohl ein ausführbarer Kombinator als auch als Funktion aufrufbar
         return new Proxy(decorateCombinator(p => chain()(p)), {
