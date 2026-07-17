@@ -6,7 +6,7 @@
 
 META LIST builtins = ( Identifier is String ) Array BigInt Boolean Date Error Function Map Number Object Promise RegExp Set String Symbol
 META LIST globals  = ( Identifier is String ) clearInterval clearTimeout console document globalThis process setInterval setTimeout window
-META LIST literals = ( Identifier is String ) false null true undefined Infinity NaN
+META LIST literals = ( Identifier is String ) false null true undefined
 META LIST puncts   = ( Identifier is String ) { } ( ) [ ] , ; . : ?
 META LIST tokens   = ( Key is String ) IDENTIFIER KEYWORD NUMBER PUNCT STRING TEMPLATE_STRING JSX_TEMPLATE
 
@@ -35,6 +35,19 @@ NODE PropDeclStatement = { identifier, mode, expr <> !!! }
 
 RULE PropDeclStatement => Node = prop Identifier `=` Expr <> !!!!
 
+====== HIGHLIGHTING RULES ===================================
+
+HL literal = ...meta:literals...
+
+
+literal-int   = [ "-" ] ( ? Digit ? { ? Digit ? | "_" } ) ;
+literal-float = [ "-" ] ( ? Digit ? { ? Digit ? | "_" } "." ? Ziffer ? { ? Ziffer ? } ) ;
+literal-range = ( Digit | Float ) ".." ( Digit | Float ) ;
+
+literal-array  =  "[" [ expr { "," expr } [ "," ] ] "]" ;
+literal-list   = "#[" [ expr { "," expr } [ "," ] ] "]" ;  (* no nesting *)
+literal-tuple  = "#(" [ expr { "," expr } [ "," ] ] ")" ;  (* no nesting *)
+literal-record = "#{" [ id ":" expr { "," id ":" expr } [ "," ] ] "}" ;
 
 
 
