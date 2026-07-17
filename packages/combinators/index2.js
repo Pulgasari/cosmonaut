@@ -1,11 +1,13 @@
-// ::: Typ- und Null-Checks (Inlined für maximale Performance)
+// @cosmonaut/combinators
+
+// :::::: HELPERS
+
 const isNullish = (v) => v === null || v === undefined;
 const isFn      = (v) => typeof v === 'function';
 const isArray   = Array.isArray;
 const isObject  = (v) => v !== null && typeof v === 'object';
 
-// ::: Hilfsfunktion für Backtracking
-function runWithBacktrack(p, combinator) {
+function runWithBacktrack (p, combinator) {
   const startPos = p.index;
   const result   = combinator(p);
   if (isNullish(result) || p.failed) {
@@ -15,13 +17,18 @@ function runWithBacktrack(p, combinator) {
   return result;
 }
 
-// ==========================================
-// SCHICHT 1: CORE PRIMITIVES (Die Atome)
-// ==========================================
+/****************
+c = combinator(s)
+p = parser
+*****************/
+
+// ==================================
+// LAYER 1: CORE PRIMITIVES ("ATOMS")
+// ==================================
 
 const consume = (expected) => decorateCombinator(p => {
   if (isFn(p.consume)) return p.consume(expected);
-  // Fallback, falls p ein einfacher Stream ist
+  // fallback for simple stream
   const token = p.peek?.();
   if (token && (token.type === expected || token.value === expected)) return p.next();
   return null;
@@ -29,6 +36,7 @@ const consume = (expected) => decorateCombinator(p => {
 
 const match = (expected) => decorateCombinator(p => {
   if (isFn(p.match)) return p.match(expected);
+  // fallback for simple stream
   const token = p.peek?.();
   return token && (token.type === expected || token.value === expected) ? token : null;
 });
@@ -349,65 +357,4 @@ function createLazyRule (name) {
 }
 
 // ==========================================
-// FLUENT API SYNTAX-SUGAR PROTOTYPE
-// ==========================================
-
-const combinatorPrototype = {
-  capture(name)  { return capture(this, name); },
-  many()         { return many(this); },
-  many1()        { return many1(this); },
-  map(mapFn)     { return map(this, mapFn); },
-  node(type)     { return node(this, type); },
-  optional()     { return optional(this); },
-  repeat(n)      { return repeat(this, n); },
-
-  // Das Herzstück des Chaining-Comforts
-  get then() {
-    const self = this;
-    return new Proxy({}, {
-      get(_, prop) {
-        // Kern-Kombinatoren direkt als verkettete Funktion bereitstellen
-        const builders = { consume, capture, check, choice, list, node, many, many1, map, match, optional, separated, seq, wrapped };
-        if (prop in builders) return (...args) => seq(self, builders[prop](...args));
-
-        // Lazy Rules dynamisch routen (z.B. .then.Statement)
-        const lazyRule = createLazyRule(prop);
-        const chain = (...args) => seq(self, args.length ? lazyRule(...args) : lazyRule);
-
-        // Der Rückgabewert ist sowohl ein ausführbarer Kombinator als auch als Funktion aufrufbar
-        return new Proxy(decorateCombinator(p => chain()(p)), {
-          apply(target, thisArg, args) { return chain(...args); },
-          get(target, subProp) { return chain()[subProp]; }
-        });
-      }
-    });
-  }
-};
-
-function decorateCombinator (fn) {
-  Object.setPrototypeOf(fn, combinatorPrototype);
-  return fn;
-}
-
-// ::: Aliase & Exports
-const custom = call; 
-const expect = match; 
-const is     = check; 
-const peek   = lookahead;
-const rule   = createLazyRule; // Alias für einfachen Rule-Bezug im Root-Scope
-
-export {
-  call, capture, check, choice, consume, custom,
-  debug, doWhile,
-  expect, 
-  is, 
-  lazy, list, lookahead,
-  many, many1, map, match, memo, 
-  named, node, not, 
-  optional, 
-  peek, 
-  repeat, rule,
-  separated, seq, 
-  untilLoop as until, 
-  whileLoop as while, wrapped,
-};
+// FLUENT API SYNTAX-SUGAR PROTOT
