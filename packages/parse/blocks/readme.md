@@ -1,6 +1,6 @@
-# @cosmonaut/parser/blocks
+# @cosmonaut/blocks
 
-Low-level parser combinators for building recursive-descent parsers with higher-level parsing rules.
+Low-level parser blocks (*"combinators"*) for building recursive-descent parsers with higher-level parsing rules.
 
 ---
 
