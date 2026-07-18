@@ -9,12 +9,12 @@ import {
 
 // ::::::
 
-export function parseBinaryExpr (ctx, { operators, excluded = new Set(), parseOperand, buildNode }, minPrecedence = 0) {
+export function parseBinaryExpr (p, { operators, excluded = new Set(), parseOperand, buildNode }, minPrecedence = 0) {
   let left = parseOperand();
   while (true) {
-    const match = matchOperator(ctx, operators, excluded, minPrecedence);
+    const match = matchOperator(p, operators, excluded, minPrecedence);
     if (!match) break;
-    const right = parseBinaryExpr(ctx, { operators, excluded, parseOperand, buildNode }, match.precedence + 1);
+    const right = parseBinaryExpr(p, { operators, excluded, parseOperand, buildNode }, match.precedence + 1);
     left = buildNode(match.operator, left, right);
   }
   return left;
