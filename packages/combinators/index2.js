@@ -64,12 +64,12 @@ const seq = (...c) => {
     const start   = p.index;
     const results = new Array(flat.length); // pre-allocate
     for (let i = 0; i < flat.length; i++) {
-      const res = flat[i](p);
-      if (res == null || p.failed) {
+      const result = flat[i](p);
+      if (result == null || p.failed) {
         p.index = start;
         return null;
       }
-      results[i] = res;
+      results[i] = result;
     }
     return results;
   });
@@ -84,16 +84,41 @@ const lookahead = c => decorate(p => {
 
 // :::::: FLOW & LOOPS
 
-const repeat = (c,n) => decorate(p => {
-  const start   = p.index;
+const loopDoWhile = (body, condition) => decorate(p => {
   const results = [];
-  for (let i = 0; i < n; i++) {
-    const result = c(p);
-    if (result == null || p.failed) {
-      p.index = start;
-      return null;
-    }
+  while (true) {
+    const result = body(p);
+    if (result == null || p.failed) return null;
     results.push(result);
+    if (runBT(p, condition) === null) break;
+  }
+  return results;
+});
+
+const loopUntil = (cond) => decorate(p => {
+  const results = [];
+  if (isFn(cond) && !cond.many) { // Schneller Pfad für Prädikate
+    while (!cond(p)) results.push(p.next());
+    return results;
+  }
+  while (true) {
+    const result = runBT(p, cond);
+    if (result != null) break;
+    results.push(p.next());
+  }
+  return results;
+});
+
+const loopWhile = (cond) => decorate(p => {
+  const results = [];
+  if (isFn(cond) && !cond.many) {
+    while (cond(p)) results.push(p.next());
+    return results;
+  }
+  while (true) {
+    const res = runBT(p, cond);
+    if (res == null) break;
+    results.push(res);
   }
   return results;
 });
@@ -137,41 +162,16 @@ const many1 = c => decorate((p) => {
   return results;
 });
 
-const doWhile = (body, condition) => decorate(p => {
+const repeat = (c,n) => decorate(p => {
+  const start   = p.index;
   const results = [];
-  while (true) {
-    const result = body(p);
-    if (result == null || p.failed) return null;
+  for (let i = 0; i < n; i++) {
+    const result = c(p);
+    if (result == null || p.failed) {
+      p.index = start;
+      return null;
+    }
     results.push(result);
-    if (runBT(p, condition) === null) break;
-  }
-  return results;
-});
-
-const untilLoop = (cond) => decorate(p => {
-  const results = [];
-  if (isFn(cond) && !cond.many) { // Schneller Pfad für Prädikate
-    while (!cond(p)) results.push(p.next());
-    return results;
-  }
-  while (true) {
-    const result = runBT(p, cond);
-    if (result != null) break;
-    results.push(p.next());
-  }
-  return results;
-});
-
-const whileLoop = (cond) => decorate(p => {
-  const results = [];
-  if (isFn(cond) && !cond.many) {
-    while (cond(p)) results.push(p.next());
-    return results;
-  }
-  while (true) {
-    const res = runBT(p, cond);
-    if (res == null) break;
-    results.push(res);
   }
   return results;
 });
@@ -184,7 +184,7 @@ const wrapped = (open, inner, close) => decorate(p => {
   const start = p.index;
   if (open(p) === null || p.failed) return null;
   const result = inner(p);
-  if (isNullish(result) || p.failed) { p.index = start; return null; }
+  if    (result == null || p.failed) { p.index = start; return null; }
   if (close(p) === null || p.failed) { p.index = start; return null; }
   return result;
 });
@@ -310,7 +310,7 @@ const memo = c => decorate (p => {
     return null;
   }
 
-  const result = runWithBacktrack(p,c);
+  const result = runBT(p,c);
   if (!isNullish(result)) {
     ruleCache.set(index, { success: true, result, endPos: p.index });
     return result;
@@ -400,7 +400,7 @@ const rule   = createLazyRule;
 
 export {
   call, capture, check, choice, consume, custom,
-  debug, doWhile,
+  debug, loopDoWhile as doWhile,
   expect, 
   is, 
   lazy, list, lookahead,
@@ -410,6 +410,6 @@ export {
   peek, 
   repeat, rule,
   separated, seq, 
-  untilLoop as until, 
-  whileLoop as while, wrapped,
+  loopUntil as until, 
+  loopWhile as while, wrapped,
 };
