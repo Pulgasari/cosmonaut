@@ -1,3 +1,5 @@
+// @cosmonaut/parser/classes/ParserState.js
+
 export default class Parser {
 
     constructor(tokens = []) {
