@@ -4,14 +4,14 @@ Low-level parser combinators for building recursive-descent parsers with higher-
 
 ---
 
-[Overview](#overview) · 
+[Overview](#blocks) · 
 [Docs](#docs) ·
 [Examples](#examples) ·
 [Terminology](#terminology)
 
 ---
 
-# Overview
+# Blocks
 
 ### atoms
 
@@ -345,25 +345,25 @@ const property =
 
 ---
 
-## Terminology
+# Terminology
 
-### AST (Abstract Syntax Tree)
+## AST (Abstract Syntax Tree)
 
 A tree representation of the parsed source code.
 
 AST construction is intentionally outside the scope of the low-level parser blocks.
 
-### Backtracking
+## Backtracking
 
 Restoring the parser state after a parser fails, allowing another parser to be tried from the same position.
 
-### Combinator
+## Combinator
 
 A function that takes one or more parsers and returns a new parser.
 
 Examples include `choice`, `seq`, `many` and `map`.
 
-### Consumer
+## Consumer
 
 A parser that consumes input when it succeeds.
 
