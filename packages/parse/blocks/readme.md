@@ -13,7 +13,7 @@ Low-level parser combinators for building recursive-descent parsers with higher-
 
 # Overview
 
-## atoms
+### atoms
 
 [`any`](#any) ·
 [`check`](#check) ·
@@ -21,7 +21,7 @@ Low-level parser combinators for building recursive-descent parsers with higher-
 [`expect`](#expect) ·
 [`token`](#token)
 
-## flow
+### flow
 
 [`choice`](#choice) ·
 [`lazy`](#lazy) ·
@@ -30,7 +30,7 @@ Low-level parser combinators for building recursive-descent parsers with higher-
 [`optional`](#optional) ·
 [`seq`](#seq)
 
-## repeat
+### repeat
 
 [`many`](#many) ·
 [`many1`](#many1) ·
@@ -42,7 +42,7 @@ Low-level parser combinators for building recursive-descent parsers with higher-
 [`sepEndBy`](#sependby) ·
 [`sepEndBy1`](#sependby1)
 
-## transform
+### transform
 
 [`capture`](#capture) ·
 [`filter`](#filter) ·
@@ -109,15 +109,15 @@ Consumes the next matching token or throws a syntax error.
 
 Accepts a parser result only if the given predicate returns `true`.
 
-## lazy
+### lazy
 
 Defers parser creation until parse time. Useful for recursive grammars.
 
-## lookAhead
+### lookAhead
 
 Runs a parser without consuming any input.
 
-## many
+### many
 
 Parses zero or more occurrences.
 
@@ -127,21 +127,17 @@ Always succeeds.
 many(token("IDENTIFIER"))
 ```
 
-## many1
+### many1
 
 Parses one or more occurrences of a parser.
 
 Fails if the first occurrence cannot be parsed.
 
----
-
-## many1Till
+### many1Till
 
 Parses one or more occurrences until the terminating parser succeeds.
 
----
-
-## manyTill
+### manyTill
 
 Parses zero or more occurrences until the terminating parser succeeds.
 
@@ -154,10 +150,9 @@ manyTill(
 )
 ```
 
-## map
+### map
 
 Transforms a parser result using the supplied function.
-
 
 ```js
 map(
@@ -166,77 +161,55 @@ map(
 )
 ```
 
----
-
-## not
+### not
 
 Succeeds only if the given parser fails. Consumes no input.
 
----
-
-## optional
+### optional
 
 Attempts a parser and returns `null` instead of failing.
 
 Consumes no input on failure.
 
----
-
-## repeat
+### repeat
 
 Parses a parser exactly *n* times.
 
----
-
-## sepBy
+### sepBy
 
 Parses zero or more elements separated by another parser.
 
 Always succeeds.
 
----
-
-## sepBy1
+### sepBy1
 
 Parses one or more elements separated by another parser.
 
----
-
-## sepEndBy
+### sepEndBy
 
 Parses zero or more elements separated and optionally terminated by a separator.
 
----
-
-## sepEndBy1
+### sepEndBy1
 
 Parses one or more elements separated and optionally terminated by a separator.
 
----
-
-## seq
+### seq
 
 Runs multiple parsers sequentially.
 
 Succeeds only if every parser succeeds.
 
----
-
-## tap
+### tap
 
 Executes a callback with the parser result without modifying it.
 
 Useful for debugging or collecting statistics.
 
----
-
-## token
+### token
 
 Consumes and returns a token matching the given type or value.
 
----
-
-## value
+### value
 
 Replaces a successful parser result with a constant value.
 
@@ -244,7 +217,17 @@ Replaces a successful parser result with a constant value.
 
 # Examples
 
-## Parse a comma-separated List
+- [Parse a Comma-Separated List]
+- [Parse a Parenthesized Argument List]
+- [Parse a Function Declaration]
+- [Parse a Block]
+- [Parse an Expression]
+- [Recursive Grammar]
+- [Build an Object]
+
+---
+
+## Parse a Comma-Separated List
 
 ```js
 const identifiers = sepBy(
