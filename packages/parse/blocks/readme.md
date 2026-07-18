@@ -351,27 +351,19 @@ const property =
 
 Restoring the parser state after a parser fails, allowing another parser to be tried from the same position.
 
----
-
 ## Combinator
 
 A function that takes one or more parsers and returns a new parser.
 
 Examples include `choice`, `seq`, `many` and `map`.
 
----
-
 ## Grammar
 
 The complete set of parsing rules describing a language.
 
----
-
 ## Lookahead
 
 Inspecting upcoming input without consuming it.
-
----
 
 ## Parser
 
@@ -379,21 +371,15 @@ A function that attempts to consume input and produce a result.
 
 A parser either succeeds or fails.
 
----
-
 ## Parser State
 
 The mutable state shared by all parsers, including the token stream and current position.
-
----
 
 ## Recursive Parser
 
 A parser that directly or indirectly invokes itself.
 
 Used to parse nested language constructs.
-
----
 
 ## Rule
 
@@ -405,8 +391,6 @@ Examples:
 - Statement
 - Pattern
 - FunctionDeclaration
-
----
 
 ## Separator
 
@@ -420,23 +404,17 @@ a, b, c
 
 `,` is the separator.
 
----
-
 ## Sequence
 
 Multiple parsers executed one after another.
 
 All parsers must succeed.
 
----
-
 ## Stream
 
 The ordered input processed by the parser.
 
 Usually a token stream, but may also be characters or bytes.
-
----
 
 ## Terminator
 
@@ -449,8 +427,6 @@ hello)
 ```
 
 `)` is the terminator.
-
----
 
 ## Token
 
@@ -468,13 +444,9 @@ KEYWORD
 +
 ```
 
----
-
 ## Token Stream
 
 An ordered collection of tokens consumed by the parser.
-
----
 
 ## Transformation
 
