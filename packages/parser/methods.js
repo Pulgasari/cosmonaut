@@ -1,11 +1,8 @@
-// @cosmonaut/parser/utils/parse.js ::: Parsing Methods (need ctx-binding)
+// @cosmonaut/parser/methods.js
 
 import * from '@cosmonaut/utils/internals';
 
-import {
-  resolveElementSpec,
-  resolveWrapper,
-} from './index.js';
+import { resolveElementSpec, resolveWrapper } from './utils.js';
 
 // ::::::
 
