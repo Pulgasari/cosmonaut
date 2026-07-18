@@ -345,17 +345,33 @@ const property =
 
 ---
 
-# Terminology
+## Terminology
 
-## Backtracking
+### AST (Abstract Syntax Tree)
+
+A tree representation of the parsed source code.
+
+AST construction is intentionally outside the scope of the low-level parser blocks.
+
+### Backtracking
 
 Restoring the parser state after a parser fails, allowing another parser to be tried from the same position.
 
-## Combinator
+### Combinator
 
 A function that takes one or more parsers and returns a new parser.
 
 Examples include `choice`, `seq`, `many` and `map`.
+
+### Consumer
+
+A parser that consumes input when it succeeds.
+
+Example:
+
+```js
+token("if")
+```
 
 ## Grammar
 
@@ -374,6 +390,12 @@ A parser either succeeds or fails.
 ## Parser State
 
 The mutable state shared by all parsers, including the token stream and current position.
+
+## Predicate
+
+A parser or function that only checks a condition without producing a meaningful value.
+
+Examples include `check`, `lookAhead` and `not`.
 
 ## Recursive Parser
 
@@ -453,3 +475,5 @@ An ordered collection of tokens consumed by the parser.
 A parser that changes another parser's result without changing how input is consumed.
 
 Examples include [`map`](#map), [`capture`](#map) and [`value`](#map).
+
+
