@@ -1,18 +1,6 @@
 // @cosmonaut/parser/blocks/repeat.js
 
-const decorate = c => c;
-
-const backtrack = (parser, combinator) => {
-    const pos = parser.save();
-
-    const result = combinator(parser);
-
-    if (result == null) {
-        parser.restore(pos);
-    }
-
-    return result;
-};
+import { backtrack, decorate } from './_internals.js';
 
 export const many = combinator => decorate(parser => {
   const results = [];
