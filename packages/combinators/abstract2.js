@@ -1,4 +1,6 @@
 import { consume, list, match,  map, named, node, seq } from '@cosmonaut/combinators';
+import ( isTitleCase } from '@cosmonaut/utils/internals';
+
 
 /**
  * Erzeugt einen dünnen, funktionalen Wrapper um einen Kombinator,
@@ -73,7 +75,7 @@ eyport default class Tokenfresser {
       } 
       else if (strategy === '?') {
         // Wenn das Wort bereits eine registrierte Regel oder PascalCase ist, lösen wir es lazy auf
-        if (this.rules.has(part) || /^[A-Z][a-zA-Z0-9_]*$/.test(part)) {
+        if (this.rules.has(part) || isTitleCase(part)) {
           return this.resolve(part);
         }
         // Ansonsten ist es ein nackter Token-Typ (z.B. IDENTIFIER)
@@ -101,12 +103,9 @@ eyport default class Tokenfresser {
     return createTFChain(compiled, this);
   }
 
-  /**
-   * Die List-Sonderfunktion. Akzeptiert als inneres Element sowohl fertige
-   * Kombinatoren als auch Strings für die Lazy-Registry.
-   * @param {string|Function} inner - Der Name der Regel oder ein direkter Kombinator
-   * @param {string} configStr - z.B. ", ()" (Separator und optionaler Wrapper)
-   */
+  
+  // inner - Der Name der Regel oder ein direkter Kombinator
+  // configStr - z.B. ", ()" (Separator und optionaler Wrapper)
   parseList (inner, configStr = ", {}") {
     const innerCombinator = typeof inner === 'string' ? this.resolve(inner) : inner;
 
