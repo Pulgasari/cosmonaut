@@ -14,9 +14,22 @@ fn backtrack = (p, combinator) => {
   return combinator(p) ?? p.save() |> p.restore;
 };
 
-fn choice = (...list |> flat as f) => decorate(p => {
+fn choice = (...list |> @.flat as f) => decorate(p => {
   return loop (f as c) do backtrack(p,c) ?? null      
 });
+
+fn choice = (...list |> @.flat as f) => decorate (
+  p => loop (f as c) do backtrack(p,c) ?? null
+);
+
+//
+fn backtrack = (p, combinator) => combinator(p) ?? p.save() |> p.restore;
+fn choice = (...list |> @.flat as f) => decorate p => loop (f as c) do backtrack(p,c) ?? null;  
+
+// minified
+fn backtrack=p,c=>c??p.save()|>p.restore;
+fn choice=...list|>@.flat as f=>decorate p=>loop(f as c)do backtrack(p,c)??null;  
+
 
 const backtrack = (p, combinator) => {
   return combinator(p) ?? p.restore(p.save());
