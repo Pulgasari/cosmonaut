@@ -1,6 +1,6 @@
 # @cosmonaut/parser/blocks
 
-Low-level parser combinators used to build higher-level parsing rules.
+Low-level parser combinators for building recursive-descent parsers with higher-level parsing rules.
 
 ---
 
@@ -57,6 +57,10 @@ Low-level parser combinators used to build higher-level parsing rules.
 
 Consumes and returns the next token, regardless of its type. Fails only at end of input.
 
+```js
+any()
+```
+
 ---
 
 ## capture
@@ -77,7 +81,12 @@ capture(identifier, "name")
 
 ## check
 
-Checks whether the next token matches the expected value or type without consuming it.
+Checks whether the next token matches a type or value without consuming it.
+
+```js
+check("IDENTIFIER")
+check("+")
+```
 
 ---
 
@@ -85,7 +94,13 @@ Checks whether the next token matches the expected value or type without consumi
 
 Tries multiple parsers in order and returns the first successful result. Automatically backtracks between attempts.
 
----
+```js
+choice(
+    token("let"),
+    token("const"),
+    token("var")
+)
+```
 
 ## eof
 
@@ -119,11 +134,13 @@ Runs a parser without consuming any input.
 
 ## many
 
-Parses zero or more occurrences of a parser.
+Parses zero or more occurrences.
 
 Always succeeds.
 
----
+```js
+many(token("IDENTIFIER"))
+```
 
 ## many1
 
@@ -145,11 +162,24 @@ Parses zero or more occurrences until the terminating parser succeeds.
 
 The terminator is consumed but not included in the returned results.
 
----
+```js
+manyTill(
+  any(),
+  token(")")
+)
+```
 
 ## map
 
 Transforms a parser result using the supplied function.
+
+
+```js
+map(
+  token("NUMBER"),
+  t => Number(t.value)
+)
+```
 
 ---
 
@@ -358,3 +388,4 @@ const property =
     ([key, , value]) => ({ key, value })
   );
 ```
+
