@@ -7,6 +7,7 @@ Low-level parser combinators for building recursive-descent parsers with higher-
 [Overview](#overview) · 
 [Docs](#docs) ·
 [Examples](#examples)
+[Terminology](#terminology)
 
 ---
 
@@ -389,3 +390,141 @@ const property =
   );
 ```
 
+---
+
+# Terminology
+
+## Backtracking
+
+Restoring the parser state after a parser fails, allowing another parser to be tried from the same position.
+
+---
+
+## Combinator
+
+A function that takes one or more parsers and returns a new parser.
+
+Examples include `choice`, `seq`, `many` and `map`.
+
+---
+
+## Grammar
+
+The complete set of parsing rules describing a language.
+
+---
+
+## Lookahead
+
+Inspecting upcoming input without consuming it.
+
+---
+
+## Parser
+
+A function that attempts to consume input and produce a result.
+
+A parser either succeeds or fails.
+
+---
+
+## Parser State
+
+The mutable state shared by all parsers, including the token stream and current position.
+
+---
+
+## Recursive Parser
+
+A parser that directly or indirectly invokes itself.
+
+Used to parse nested language constructs.
+
+---
+
+## Rule
+
+A named parser representing a language construct.
+
+Examples:
+
+- Expression
+- Statement
+- Pattern
+- FunctionDeclaration
+
+---
+
+## Separator
+
+A token or parser that separates consecutive elements.
+
+Examples:
+
+```txt
+a, b, c
+```
+
+`,` is the separator.
+
+---
+
+## Sequence
+
+Multiple parsers executed one after another.
+
+All parsers must succeed.
+
+---
+
+## Stream
+
+The ordered input processed by the parser.
+
+Usually a token stream, but may also be characters or bytes.
+
+---
+
+## Terminator
+
+A parser that marks the end of another parser.
+
+Example:
+
+```txt
+hello)
+```
+
+`)` is the terminator.
+
+---
+
+## Token
+
+A lexical unit produced by the lexer.
+
+Examples:
+
+```txt
+IDENTIFIER
+
+NUMBER
+
+KEYWORD
+
++
+```
+
+---
+
+## Token Stream
+
+An ordered collection of tokens consumed by the parser.
+
+---
+
+## Transformation
+
+A parser that changes another parser's result without changing how input is consumed.
+
+Examples include [`map`](#map), [`capture`](#map) and [`value`](#map).
