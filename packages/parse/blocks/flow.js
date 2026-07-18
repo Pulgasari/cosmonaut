@@ -1,6 +1,6 @@
 // @cosmonaut/parser/blocks/flow.js
 
-import { backtrack, decorate } from './internals.js';
+import { backtrack, decorate } from './_internals.js';
 
 export const choice = (...list) => decorate(parser => {
   for (const c of list.flat()) {
