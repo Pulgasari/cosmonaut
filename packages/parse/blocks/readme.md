@@ -4,6 +4,12 @@ Low-level parser combinators used to build higher-level parsing rules.
 
 ---
 
+[Overview](#overview) · 
+[Docs](#docs) ·
+[Examples](#examples)
+
+---
+
 # Overview
 
 ## Atoms
@@ -218,3 +224,137 @@ Consumes and returns a token matching the given type or value.
 ## value
 
 Replaces a successful parser result with a constant value.
+
+---
+
+# Examples
+
+## Parse a comma-separated List
+
+```js
+const identifiers = sepBy(
+  token("IDENTIFIER"),
+  token(",")
+);
+```
+
+Parses:
+
+```txt
+foo, bar, baz
+```
+
+↓
+
+```js
+[ foo, bar, baz ]
+```
+
+---
+
+## Parse a Parenthesized Argument List
+
+```js
+const arguments =
+    seq(
+        token("("),
+        sepBy(
+            token("IDENTIFIER"),
+            token(",")
+        ),
+        token(")")
+    );
+```
+
+Parses:
+
+```txt
+(foo, bar, baz)
+```
+
+---
+
+## Parse a Function Declaration
+
+```js
+const declaration =
+    seq(
+        token("function"),
+        token("IDENTIFIER"),
+        token("("),
+        sepBy(
+            token("IDENTIFIER"),
+            token(",")
+        ),
+        token(")")
+    );
+```
+
+Parses:
+
+```js
+function greet(name, age)
+```
+
+---
+
+## Parse a Block
+
+```js
+const block =
+    seq(
+        token("{"),
+        many(
+            rule.Statement
+        ),
+        token("}")
+    );
+```
+
+---
+
+## Parse an Expression
+
+```js
+const expression =
+    choice(
+        rule.BinaryExpression,
+        rule.CallExpression,
+        rule.Identifier,
+        rule.Literal
+    );
+```
+
+---
+
+## Recursive Grammar
+
+```js
+const expression = lazy(() =>
+    choice(
+        rule.BinaryExpression,
+        rule.Literal,
+        seq(
+            token("("),
+            expression,
+            token(")")
+        )
+    )
+);
+```
+
+---
+
+## Build an Object
+
+```js
+const property =
+  map(
+    seq(
+      token("IDENTIFIER"),
+      token(":"),
+      rule.Expression
+    ),
+    ([key, , value]) => ({ key, value })
+  );
+```
