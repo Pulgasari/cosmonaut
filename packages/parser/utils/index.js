@@ -29,20 +29,6 @@ export function describeTokenSpec (spec) {
        : JSON.stringify(spec);
 }
 
-/*
-export function describeTokenSpec (spec) {
-  if (isString(spec)) return `'${spec}'`;
-  if (isArray(spec))  return spec[1] !== undefined ? `${spec[0]} '${spec[1]}'` : spec[0];
-  if (isObject(spec)) return spec.value !== undefined ? `${spec.type} '${spec.value}'` : spec.type;
-  return String(spec);
-}
-
-export function describeToken (token, tokenTypes) {
-  if (!token || token.type === tokenTypes?.EOF) return 'end of input';
-  return `${token.type} '${token.value}'`;
-}
-*/
-
 // :::::: Sequence Result
 // wraps the tokens consumed by consumeSequence()/matchSequence() with index-based
 // accessors, so grammar code doesn't have to destructure raw token objects by hand.
@@ -114,20 +100,4 @@ export function resolveWrapper (wrapperMap, wrapper) {
   if (wrapperMap[wrapper])  return wrapperMap[wrapper];
   if (isString(wrapper, 2)) return [wrapper[0], wrapper[1]];
   throw new Error(`[Parser] Unknown Wrapper: "${wrapper}"`);
-
-  /*
-  if (wrapper is falsy)      return [null, null];
-  if (wrapper is Array)      return wrapper;
-  if (wrapper in wrapperMap) return wrapperMap[wrapper];
-  if (wrapper is String(2))  return [wrapper[0], wrapper[1]];
-  throw new Error(`[Parser] Unknown Wrapper: "${wrapper}"`);
-
-  return match (wrapper) {
-    is falsy      : [null, null];
-    is Array      : wrapper;
-    in wrapperMap : wrapperMap[wrapper];
-    is String (2) : [wrapper[0], wrapper[1]];
-    default       : throw new Error(`[Parser] Unknown Wrapper: "${wrapper}"`);
-  }
-  */
 }
