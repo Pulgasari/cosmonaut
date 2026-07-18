@@ -217,15 +217,13 @@ Replaces a successful parser result with a constant value.
 
 # Examples
 
-- [Parse a Comma-Separated List]
-- [Parse a Parenthesized Argument List]
-- [Parse a Function Declaration]
-- [Parse a Block]
-- [Parse an Expression]
-- [Recursive Grammar]
-- [Build an Object]
-
----
+- [Parse a Comma-Separated List](#parse-a-comma-separated-list)
+- [Parse a Parenthesized Argument List](#parse-a-paranthesized-argument-list)
+- [Parse a Function Declaration](#parse-a-function-declaration-statement)
+- [Parse a Block](#parse-a-block)
+- [Parse an Expression](#parse-an-expression)
+- [Recursive Grammar](#recursive-grammar)
+- [Build an Object](#build-an-object)
 
 ## Parse a Comma-Separated List
 
@@ -248,8 +246,6 @@ foo, bar, baz
 [ foo, bar, baz ]
 ```
 
----
-
 ## Parse a Parenthesized Argument List
 
 ```js
@@ -269,8 +265,6 @@ Parses:
 ```txt
 (foo, bar, baz)
 ```
-
----
 
 ## Parse a Function Declaration
 
@@ -294,8 +288,6 @@ Parses:
 function greet(name, age)
 ```
 
----
-
 ## Parse a Block
 
 ```js
@@ -309,8 +301,6 @@ const block =
     );
 ```
 
----
-
 ## Parse an Expression
 
 ```js
@@ -322,8 +312,6 @@ const expression =
         rule.Literal
     );
 ```
-
----
 
 ## Recursive Grammar
 
@@ -340,8 +328,6 @@ const expression = lazy(() =>
     )
 );
 ```
-
----
 
 ## Build an Object
 
