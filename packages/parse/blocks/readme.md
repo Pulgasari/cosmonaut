@@ -19,19 +19,33 @@ Low-level parser blocks (*"combinators"*) for building recursive-descent parsers
 [`check`](#check) ·
 [`eof`](#eof) ·
 [`expect`](#expect) ·
+[`fail`](#fail) ·
+[`succeed`](#succeed) ·
 [`token`](#token)
+
+### chains
+
+[`chain`](#chain) ·
+[`chainl1`](#chainl1) ·
+[`chainr1`](#chainr1)
 
 ### flow
 
+[`between`](#between) ·
 [`choice`](#choice) ·
+[`cut`](#cut) ·
 [`lazy`](#lazy) ·
 [`lookAhead`](#lookahead) ·
 [`not`](#not) ·
 [`optional`](#optional) ·
-[`seq`](#seq)
+[`seq`](#seq) ·
+[`skip`](#skip) ·
+[`then`](#then)
 
 ### repeat
 
+[`atLeast`](#atLeast) ·
+[`atMost`](#atMost) ·
 [`many`](#many) ·
 [`many1`](#many1) ·
 [`many1Till`](#many1till) ·
@@ -40,7 +54,8 @@ Low-level parser blocks (*"combinators"*) for building recursive-descent parsers
 [`sepBy`](#sepby) ·
 [`sepBy1`](#sepby1) ·
 [`sepEndBy`](#sependby) ·
-[`sepEndBy1`](#sependby1)
+[`sepEndBy1`](#sependby1) ·
+[`times`](#times) ·
 
 ### transform
 
