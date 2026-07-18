@@ -6,14 +6,14 @@ Low-level parser combinators for building recursive-descent parsers with higher-
 
 [Overview](#overview) · 
 [Docs](#docs) ·
-[Examples](#examples)
+[Examples](#examples) ·
 [Terminology](#terminology)
 
 ---
 
 # Overview
 
-## Atoms
+## atoms
 
 [`any`](#any) ·
 [`check`](#check) ·
@@ -21,7 +21,7 @@ Low-level parser combinators for building recursive-descent parsers with higher-
 [`expect`](#expect) ·
 [`token`](#token)
 
-## Flow
+## flow
 
 [`choice`](#choice) ·
 [`lazy`](#lazy) ·
@@ -30,7 +30,7 @@ Low-level parser combinators for building recursive-descent parsers with higher-
 [`optional`](#optional) ·
 [`seq`](#seq)
 
-## Repeat
+## repeat
 
 [`many`](#many) ·
 [`many1`](#many1) ·
@@ -42,7 +42,7 @@ Low-level parser combinators for building recursive-descent parsers with higher-
 [`sepEndBy`](#sependby) ·
 [`sepEndBy1`](#sependby1)
 
-## Transform
+## transform
 
 [`capture`](#capture) ·
 [`filter`](#filter) ·
@@ -54,7 +54,7 @@ Low-level parser combinators for building recursive-descent parsers with higher-
 
 # Docs
 
-## any
+### any
 
 Consumes and returns the next token, regardless of its type. Fails only at end of input.
 
@@ -62,9 +62,7 @@ Consumes and returns the next token, regardless of its type. Fails only at end o
 any()
 ```
 
----
-
-## capture
+### capture
 
 Wraps a successful parser result in an object under the given property name.
 
@@ -78,9 +76,7 @@ capture(identifier, "name")
 { name: result }
 ```
 
----
-
-## check
+### check
 
 Checks whether the next token matches a type or value without consuming it.
 
@@ -89,9 +85,7 @@ check("IDENTIFIER")
 check("+")
 ```
 
----
-
-## choice
+### choice
 
 Tries multiple parsers in order and returns the first successful result. Automatically backtracks between attempts.
 
@@ -103,35 +97,25 @@ choice(
 )
 ```
 
-## eof
+### eof
 
 Succeeds only if the parser has reached the end of the token stream.
 
----
-
-## expect
+### expect
 
 Consumes the next matching token or throws a syntax error.
 
----
-
-## filter
+### filter
 
 Accepts a parser result only if the given predicate returns `true`.
-
----
 
 ## lazy
 
 Defers parser creation until parse time. Useful for recursive grammars.
 
----
-
 ## lookAhead
 
 Runs a parser without consuming any input.
-
----
 
 ## many
 
