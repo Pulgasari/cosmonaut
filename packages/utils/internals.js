@@ -19,3 +19,6 @@ export const isString = (sth, length) => {
     ? typeof sth === 'string' && sth.length === length
     : typeof sth === 'string';
 }
+
+export const isTitleCase = sth => /^[A-Z][a-zA-Z0-9_]*$/.test(sth);
+
