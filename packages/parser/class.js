@@ -1,4 +1,4 @@
-// @cosmonaut/parser
+// @cosmonaut/parser/class.js
 
 // :::::: IMPORTS
 
@@ -8,12 +8,6 @@ import {
   resolveTokenSpec, describeTokenSpec, describeToken, makeSequenceResult,
   parseList, parseListWhen, parseUnaryExpression, parseUntil, parseWrapped, parseBinaryExpression,
 } from './utils.js';
-
-// :::::: RE-EXPORTS
-
-export * from './utils.js';
-export * from '@cosmonaut/presets';
-export * from '@cosmonaut/utils';
 
 // :::::: MAIN EXPORT
 
