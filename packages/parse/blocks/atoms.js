@@ -1,6 +1,6 @@
 // @cosmonaut/parser/blocks/atoms.js
 
-const decorate = c => c;
+import { decorate } from './_internals.js';
 
 export const 
 
