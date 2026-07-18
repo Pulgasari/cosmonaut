@@ -1,16 +1,6 @@
-// flow
+// @cosmonaut/parser/blocks/flow.js
 
-const decorate = c => c;
-
-const backtrack = (parser, combinator) => {
-
-  const pos    = parser.save();
-  const result = combinator(parser);
-
-  if (result == null) parser.restore(pos);
-  
-  return result;
-};
+import { backtrack, decorate } from './internals.js';
 
 export const choice = (...list) => decorate(parser => {
   for (const c of list.flat()) {
@@ -54,3 +44,81 @@ export const seq = (...list) => decorate(parser => {
 
   return results;
 });
+
+export const between = (open, inner, close) => decorate(parser => {
+  const pos = parser.save();
+
+  if (open(parser) == null) {
+    parser.restore(pos);
+    return null;
+  }
+
+  const result = inner(parser);
+
+  if (result == null) {
+    parser.restore(pos);
+    return null;
+  }
+
+  if (close(parser) == null) {
+    parser.restore(pos);
+    return null;
+  }
+
+  return result;
+});
+
+export const skip = (parser, discarded) => decorate(state => {
+  const pos = state.save();
+  const result = parser(state);
+
+  if (result == null) {
+    state.restore(pos);
+    return null;
+  }
+
+  if (discarded(state) == null) {
+    state.restore(pos);
+    return null;
+  }
+
+  return result;
+});
+
+export const then = (discarded, parser) => decorate(state => {
+  const pos = state.save();
+
+  if (discarded(state) == null) {
+    state.restore(pos);
+    return null;
+  }
+
+  const result = parser(state);
+
+  if (result == null) {
+    state.restore(pos);
+    return null;
+  }
+
+  return result;
+});
+
+// cut / commit ::: wraps a combinator such that a failure becomes a hard
+// error (thrown) instead of a soft `null` (backtrackable). Since `choice`
+// and `optional` only ever check for `null`, a thrown error propagates
+// straight through them uncaught — exactly the "no more alternatives,
+// this is a real syntax error now" semantics.
+
+export const cut = (parser, message) => decorate(state => {
+  const result = parser(state);
+
+  if (result == null) {
+    throw state.error
+      ? state.error(message ?? "cut(): expected parser to succeed.")
+      : new Error(message ?? "cut(): expected parser to succeed.");
+  }
+
+  return result;
+});
+
+export const commit = cut;
