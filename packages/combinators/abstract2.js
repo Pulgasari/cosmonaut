@@ -1,27 +1,16 @@
 import { consume, list, match,  map, named, node, seq } from '@cosmonaut/combinators';
 import ( isTitleCase } from '@cosmonaut/utils/internals';
 
-
-/**
- * Erzeugt einen dünnen, funktionalen Wrapper um einen Kombinator,
- * um die Tokenfresser-Komfort-API bereitzustellen, ohne die
- * Core-Kombinatoren von @cosmonaut/combinators zu verändern.
- */
-
-function createTFChain (combinatorFn, tf) {
+function createChain (fn, tf) {
   // Die Chain selbst ist eine stinknormale Kombinator-Funktion (p => result)
-  const chain = (p) => combinatorFn(p);
-
-  // Wandelt das Ergebnis bei Erfolg in einen AST-Node um
-  chain.toNode = (type) => {
-    return createTFChain(node(combinatorFn, type), tf);
-  };
-
+  const chain = p => fn(p);
+  // convert to AST
+  chain.toNode = type => createChain(node(fn, type), tf);
   // Benennt den Kombinator für Debug-Zwecke UND registriert ihn im Tokenfresser
-  chain.withName = (name) => {
-    const namedCombinator = named(combinatorFn, name);
-    tf.register(name, namedCombinator); // Automatische Registrierung für String-Verweise!
-    return createTFChain(namedCombinator, tf);
+  chain.withName = name => {
+    const namedCombinator = named(fn, name);
+    tf.register(name, namedCombinator); // auto-register
+    return createChain(namedCombinator, tf);
   };
 
   return chain;
@@ -30,21 +19,19 @@ function createTFChain (combinatorFn, tf) {
 // ==========================================
 // DIE TOKENFRESSER KLASSE
 // ==========================================
-eyport default class Tokenfresser {
+
+export default class Tokenfresser {
   constructor() {
     this.rules = new Map; // inner registry for compiled rules
   }
-
-  /**
-   * Registriert eine fertige Regel in der internen Registry
-   */
-  register (name, combinator) {
+  
+  registerRule (name, combinator) {
     this.rules.set(name, combinator);
   }
   
   // creates lazy-wrapper for RULE from REGISTRY
   // (it's recursive so order of RULE definitions doesn't matter)
-  resolve (name) {
+  resolveRule (name) {
     return (p) => {
       const rule = this.rules.get(name);
       if (!rule) throw new Error(`Grammatik-Fehler: Die Regel "${name}" wurde aufgerufen, aber noch nicht definiert.`);
@@ -52,12 +39,6 @@ eyport default class Tokenfresser {
     };
   }
 
-  /**
-   * Der flexible Pattern-Compiler mit positionaler Strategie und Capture-Mapping.
-   * @param {string} patternStr - z.B. "IDENTIFIER : IDENTIFIER"
-   * @param {string} strategyStr - z.B. "?!?" (? = match, ! = consume)
-   * @param {Object} captureObj - z.B. { paramName: 0, paramType: 2 }
-   */
   parsePattern (patternStr, strategyStr, captureObj = null) {
     const parts      =  patternStr.trim().split(/\s+/);
     const strategies = strategyStr.trim().split('');
@@ -74,7 +55,6 @@ eyport default class Tokenfresser {
         return consume(part);
       } 
       else if (strategy === '?') {
-        // Wenn das Wort bereits eine registrierte Regel oder PascalCase ist, lösen wir es lazy auf
         if (this.rules.has(part) || isTitleCase(part)) {
           return this.resolve(part);
         }
@@ -100,12 +80,9 @@ eyport default class Tokenfresser {
       });
     }
 
-    return createTFChain(compiled, this);
+    return createChain(compiled, this);
   }
-
   
-  // inner - Der Name der Regel oder ein direkter Kombinator
-  // configStr - z.B. ", ()" (Separator und optionaler Wrapper)
   parseList (inner, configStr = ", {}") {
     const innerCombinator = typeof inner === 'string' ? this.resolve(inner) : inner;
 
@@ -122,17 +99,31 @@ eyport default class Tokenfresser {
     }
 
     // Nutzt das unberührte, mächtige Core-list-Atom
-    const compiled = list(innerCombinator, consume(separator), {
+    const compiled = list(innerCombinator, {
+      separator  : separator ? consume(separator) : null,
       open       :  openChar ? consume (openChar) : null,
       close      : closeChar ? consume(closeChar) : null,
       trailing   : true,
       allowEmpty : true
     });
 
-    return createTFChain (compiled, this);
+    return createChain (compiled, this);
   }
 }
 
 const TF = new Tokenfresser();
 export { TF };
 
+
+
+/**
+* parsePattern
+* Der flexible Pattern-Compiler mit positionaler Strategie und Capture-Mapping.
+* @param {string} patternStr - z.B. "IDENTIFIER : IDENTIFIER"
+* @param {string} strategyStr - z.B. "?!?" (? = match, ! = consume)
+* @param {Object} captureObj - z.B. { paramName: 0, paramType: 2 }
+*/
+
+// -- parseList --
+// inner - Der Name der Regel oder ein direkter Kombinator
+// configStr - z.B. ", ()" (Separator und optionaler Wrapper)
