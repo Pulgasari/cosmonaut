@@ -83,7 +83,7 @@ export default class Tokenfresser {
     return createChain(compiled, this);
   }
   
-  parseList (inner, configStr = ", {}") {
+  parseListPattern (inner, configStr = ", {}") {
     const innerCombinator = typeof inner === 'string' ? this.resolve(inner) : inner;
 
     // Konfiguration zerlegen (z.B. ", ()")
