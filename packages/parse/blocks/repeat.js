@@ -145,3 +145,38 @@ export const many1Till = (item, end) => decorate(parser => {
     ];
 
 });
+
+export const times = (combinator, min, max = Infinity) => decorate(parser => {
+  const start   = parser.save();
+  const results = [];
+
+  for (let i = 0; i < min; i++) {
+    const result = combinator(parser);
+
+    if (result == null) {
+      parser.restore(start);
+      return null;
+    }
+
+    results.push(result);
+  }
+
+  while (results.length < max) {
+    const pos    = parser.save();
+    const result = combinator(parser);
+
+    if (result == null) {
+      parser.restore(pos);
+      break;
+    }
+
+    if (parser.index === pos) throw new Error("times(): parser consumed no input.");
+
+    results.push(result);
+  }
+
+  return results;
+});
+
+export const atLeast = (combinator, min) => times(combinator, min, Infinity);
+export const atMost  = (combinator, max) => times(combinator, 0, max);
