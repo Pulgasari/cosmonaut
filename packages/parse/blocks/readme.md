@@ -4,7 +4,7 @@ Low-level parser combinators for building recursive-descent parsers with higher-
 
 ---
 
-[Overview](#blocks) · 
+[Blocks](#blocks) · 
 [Docs](#docs) ·
 [Examples](#examples) ·
 [Terminology](#terminology)
