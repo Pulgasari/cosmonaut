@@ -2,6 +2,12 @@
 
 Low-level parser blocks (*"combinators"*) for building recursive-descent parsers with higher-level parsing rules.
 
+## Installation
+
+```sh
+deno install jsr:@cosmonaut/blocks
+```
+
 ---
 
 [Blocks](#blocks) · 
