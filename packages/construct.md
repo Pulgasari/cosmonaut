@@ -64,9 +64,9 @@ cosmonaut/packages/parser/methods/parseUnaryExpr.js
 
 Note:
 
-For example the call to `p.parse('Statement')` method is the sugar the CosmonautParser provides when the implementor register its own methodes to the class. Otherwise he must only use `parseStatement(p)`.
+For example the call here to `p.parse('Statement')` method is the sugar the CosmonautParser provides when the implementor register its own methodes to the class. Otherwise he must only use `parseStatement(p)`.
 
-The reason for this is that the `p.parse()` wrapper enhances the readability while the registering in general gonna decorate the methods with debugging info etc.
+The reason for this is that the `p.parse()` wrapper enhances the readability while the registering in general will/should in future gonna decorate the methods with debugging info, statistics, etc. (but these additional decorations are not part of the current task)
 
 ```js
 // myLangParseMethods.js (example)
