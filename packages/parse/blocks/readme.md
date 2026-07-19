@@ -461,14 +461,14 @@ foo, bar, baz
 
 ```js
 const arguments =
-    seq(
-        token("("),
-        sepBy(
-            token("IDENTIFIER"),
-            token(",")
-        ),
-        token(")")
-    );
+  seq(
+    token("("),
+    sepBy(
+      token("IDENTIFIER"),
+      token(",")
+    ),
+    token(")")
+  );
 ```
 
 Parses:
@@ -481,16 +481,16 @@ Parses:
 
 ```js
 const declaration =
-    seq(
-        token("function"),
-        token("IDENTIFIER"),
-        token("("),
-        sepBy(
-            token("IDENTIFIER"),
-            token(",")
-        ),
-        token(")")
-    );
+  seq(
+    token("function"),
+    token("IDENTIFIER"),
+    token("("),
+    sepBy(
+      token("IDENTIFIER"),
+      token(",")
+    ),
+    token(")")
+  );
 ```
 
 Parses:
@@ -503,40 +503,40 @@ function greet(name, age)
 
 ```js
 const block =
-    seq(
-        token("{"),
-        many(
-            rule.Statement
-        ),
-        token("}")
-    );
+  seq(
+    token("{"),
+    many(
+      rule.Statement
+    ),
+    token("}")
+  );
 ```
 
 ## Parse an Expression
 
 ```js
 const expression =
-    choice(
-        rule.BinaryExpression,
-        rule.CallExpression,
-        rule.Identifier,
-        rule.Literal
-    );
+  choice(
+    rule.BinaryExpression,
+    rule.CallExpression,
+    rule.Identifier,
+    rule.Literal
+  );
 ```
 
 ## Recursive Grammar
 
 ```js
 const expression = lazy(() =>
-    choice(
-        rule.BinaryExpression,
-        rule.Literal,
-        seq(
-            token("("),
-            expression,
-            token(")")
-        )
+  choice(
+    rule.BinaryExpression,
+    rule.Literal,
+    seq(
+      token("("),
+      expression,
+      token(")")
     )
+  )
 );
 ```
 
