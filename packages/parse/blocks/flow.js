@@ -6,13 +6,42 @@ export const
 lazy     = fn => decorate (parser => fn()(parser)),
 not      = c  => decorate (parser => lookAhead(c)(parser) ? null : true),
 optional = c  => decorate (parser => backtrack(parser, c)),
-  
-choice = (...list) => decorate(parser => {
+
+between = (open, inner, close) => decorate (state => {
+  const pos = state.save();
+
+  if (open(state) == null) {
+    state.restore(pos);
+    return null;
+  }
+
+  const result = inner(state);
+
+  if (result == null || close(state) == null) {
+    state.restore(pos);
+    return null;
+  }
+
+  return result;
+}),
+
+choice = (...list) => decorate (parser => {
   for (const c of list.flat()) {
     const result = backtrack(parser, c);
     if (result != null) return result;
   }
   return null;
+}),
+
+cut = (parser, message) => decorate (state => {
+  const result = parser(state);
+  if (result != null) return result;
+
+  message ??= "cut(): expected parser to succeed.";
+
+  throw state.error
+    ? state.error(message)
+    : new Error(message);
 }),
 
 lookAhead = c => decorate (parser => {
@@ -38,39 +67,11 @@ seq = (...list) => decorate (parser => {
   return results;
 }),
 
-between = (open, inner, close) => decorate (parser => {
-  const pos = parser.save();
-
-  if (open(parser) == null) {
-    parser.restore(pos);
-    return null;
-  }
-
-  const result = inner(parser);
-
-  if (result == null) {
-    parser.restore(pos);
-    return null;
-  }
-
-  if (close(parser) == null) {
-    parser.restore(pos);
-    return null;
-  }
-
-  return result;
-}),
-
 skip = (parser, discarded) => decorate (state => {
   const pos    = state.save();
   const result = parser(state);
 
-  if (result == null) {
-    state.restore(pos);
-    return null;
-  }
-
-  if (discarded(state) == null) {
+  if (result == null || discarded(state) == null) {
     state.restore(pos);
     return null;
   }
@@ -92,16 +93,6 @@ then = (discarded, parser) => decorate (state => {
     state.restore(pos);
     return null;
   }
-
-  return result;
-}),
-
-cut = (parser, message) => decorate (state => {
-  const result = parser(state);
-
-  if (result == null) throw state.error
-    ? state.error (message ?? "cut(): expected parser to succeed.")
-    : new Error   (message ?? "cut(): expected parser to succeed.");
 
   return result;
 });
