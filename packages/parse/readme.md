@@ -66,6 +66,17 @@ But additionally the CosmonautParser provides a link to the blocks-system access
 
 ### Example for Creating Custom Parsing Methods
 
+```js
+// myLangParseMethods.js (example)
+
+
+export function parseLabeledStatement (p) {
+  const label = p.advance().value; // identifier
+  p.advance(); // ':'
+  const body = p.parse('Statement');
+  return ASTNode['LabeledStatement']({ label, body });
+}
+```
 
 
 
