@@ -20,23 +20,17 @@ Should be used like this:
 
 ```js
 import Parser from '@cosmonaut/parser';
+import * as methods from './myLangParseMethods.js'; // custom parsing methods
+
+const myLangParserConfig = {
+  methods : methods,
+};
 
 const myInputTokens = []; // assumed to be here
 const myLangParserConfig = {};
 const myLangParser = new Parser (myInputTokens, myLangParserConfig);
 const myLangAST    = myLangParser.run();
 ```
-
-When initializing the CosmonautParser you provide the mechanics and meta infos you need for your language like this:
-
-```js
-import * as methods from './myLangParseMethods.js';
-
-const myLangParserConfig = {
-  methods : methods,
-};
-```
-
 
 ---
 
