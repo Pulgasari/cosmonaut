@@ -2,8 +2,7 @@
 
 import { decorate } from './_internals.js';
 
-export const 
-
+export const
 check   = value => decorate (parser => parser.check  (value)),
 expect  = value => decorate (parser => parser.consume(value)),
 token   = value => decorate (parser => parser.match  (value)),
