@@ -50,13 +50,15 @@ const myLangParserConfig = {
 
 The main methods you use are:
 
-- `p.parse()`
+- `p.check()`, `p.match()`, `p.expect()`, `p.advance()`
+- `p.checkSequence()`, `p.matchSequence()`, `p.expectSequence()`
+- `p.parse()` (the central parsing method wrapper)
 - `p.parsePattern()`
 - `p.parseListPattern()`
 - `p.parseBinaryExpr()`
 - `p.parseUnaryExpr()`
+- `p.$` a link to the blocks-system
 
-But additionally the CosmonautParser provides a link to the blocks-system accessible under `p.$`.
 
 ---
 
@@ -100,7 +102,7 @@ export function parseStatement (p) {
 
   return p.dispatch({
     'alias'         : 'AliasDeclaration',
-    'fn async'      : 'FunctionDeclaration',
+    'async'         : 'FunctionDeclaration',
     'break'         : 'BreakStatement',
     'class'         : 'ClassDeclaration',
     'const'         : 'VariableDeclaration',
