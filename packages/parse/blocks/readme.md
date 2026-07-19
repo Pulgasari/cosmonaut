@@ -89,7 +89,7 @@ atLeast(token("IDENTIFIER"), 2)
 
 Parses at most `n` occurrences of a parser. Always succeeds, even with zero matches.
 
-```
+```js
 atMost(token("IDENTIFIER"), 3)
 ```
 
@@ -97,7 +97,7 @@ atMost(token("IDENTIFIER"), 3)
 
 Parses an opening parser, an inner parser, and a closing parser in sequence. Returns only the inner result.
 
-```
+```js
 between(
   token("("),
   expression,
@@ -123,7 +123,7 @@ capture(identifier, "name")
 
 Runs a parser, then uses its result to build the *next* parser to run. Unlike `map`, which only transforms the result, `chain` lets the result decide what gets parsed next — the basis for context-sensitive grammars.
 
-```
+```js
 chain(
   token("LENGTH"),
   length => repeat(any(), Number(length.value))
@@ -134,7 +134,7 @@ chain(
 
 Like `chain`, but repeats the bind step: each result is fed back into the same function to produce the next parser, until one fails. Requires at least one successful step.
 
-```
+```js
 chain1(
   identifier,
   prev => memberAccessFollowing(prev)
@@ -145,7 +145,7 @@ chain1(
 
 Parses a left-associative chain of operands separated by an operator, folding the result from left to right. A common way to build binary-expression parsing without a full precedence-climbing (Pratt) parser.
 
-```
+```js
 chainl1(
   multiplicative,
   choice(token("+"), token("-")),
@@ -165,7 +165,7 @@ as `((a + b) - c)`.
 
 Like [`chainl1`](#chainl), but folds right-associatively — the rightmost application binds first. Used for operators like exponentiation (`^`) or assignment (`=`).
 
-```
+```js
 chainr1(
   unary,
   token("^"),
@@ -175,7 +175,7 @@ chainr1(
 
 Parses:
 
-```
+```js
 a ^ b ^ c
 ```
 
@@ -210,7 +210,7 @@ Alias for [`cut`](#cut).
 
 Marks a parser as non-backtrackable: if it fails past this point, the failure becomes a hard error instead of a silent `null`, so `choice` won't try another alternative. Used once a grammar rule is unambiguously committed (e.g. after matching a keyword).
 
-```
+```js
 seq(
   token("if"),
   cut(expression, "expected condition after 'if'"),
@@ -230,7 +230,7 @@ Consumes the next matching token or throws a syntax error.
 
 A parser that always fails and consumes no input. Useful as a neutral "zero" element when composing other parsers.
 
-```
+```js
 fail()
 ```
 
@@ -332,7 +332,7 @@ Succeeds only if every parser succeeds.
 
 Runs a parser, then a second parser whose result is discarded. Returns only the first parser's result.
 
-```
+```js
 skip(expression, token(";"))
 ```
 
@@ -340,7 +340,7 @@ skip(expression, token(";"))
 
 A parser that always succeeds with the given value and consumes no input. Useful as a neutral "identity" element, e.g. as a default in `choice`.
 
-```
+```js
 choice(identifier, succeed(null))
 ```
 
