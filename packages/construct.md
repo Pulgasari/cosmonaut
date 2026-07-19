@@ -2,6 +2,8 @@
 
 This document lays out the construction plan for the CosmonautParser we gonna build at this location: `cosmonaut/packages/parser/classes/Parser.js`
 
+So for this task the only relevant main directory of the repo is: `cosmonaut/packages/parser/`. Please make sure you have the up to date files by loading them or the whole repo.
+
 ---
 
 General Notes about the internal construction of the CosmonautParser.
@@ -143,11 +145,14 @@ The naming of the methods must have one of these Formats:
 - `parseMethodName` (= 'parse' prefix and method name in titlecase)
 - `MethodName` (= titlecase, no prefix)
 
-The class internally maps the function and its name to be used like this:
+The class internally maps/binds/whatever these functions and its name to be used with the CosmonautParser class like this:
 
-- `p.parseForStatement(...args)`
-- `p.parse('ForStatement', ...args)`
-- `p.parse['ForStatement'](...args)`
+- `p.parseMethodName()`
+- `p.parse('MethodName')`
+- `p.parse['MethodName']`
+- `p.parseMethodName(...args)`
+- `p.parse('MethodName', ...args)`
+- `p.parse['MethodName'](...args)`
 
 ---
 
