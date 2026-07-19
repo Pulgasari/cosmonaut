@@ -66,6 +66,12 @@ But additionally the CosmonautParser provides a link to the blocks-system access
 
 ### Example for Creating Custom Parsing Methods
 
+Note:
+
+For example the call to `p.parse('Statement')` method is the sugar the CosmonautParser provides when the implementor register its own methodes to the class. Otherwise he must only use `parseStatement(p)`.
+
+The reason for this is that the `p.parse()` wrapper enhances the readability while the registering in general gonna decorate the methods with debugging info etc.
+
 ```js
 // myLangParseMethods.js (example)
 
@@ -89,7 +95,33 @@ export function parseBlock (p) {
   return ASTNode['BlockStatement']({ body });
 }
 
+export function parseStatement (p) {
+  if (p.checkSequence('IDENTIFIER', ':')) return p.parse('LabeledStatement');
 
+  return p.dispatch({
+    'alias'         : 'AliasDeclaration',
+    'fn async'      : 'FunctionDeclaration',
+    'break'         : 'BreakStatement',
+    'class'         : 'ClassDeclaration',
+    'const'         : 'VariableDeclaration',
+    'continue'      : 'ContinueStatement',
+    'export'        : 'ExportDeclaration',
+    'fn'            : 'FunctionDeclaration',
+    'for'           : 'ForStatement',
+    'if'            : 'IfStatement',
+    'import'        : 'ImportDeclaration',
+    'let'           : 'VariableDeclaration',
+    'mold'          : 'MoldStatement',
+    'return'        : 'ReturnStatement',
+    'sift'          : 'SiftStatement',
+    'switch'        : 'SwitchStatement',
+    'trait'         : 'TraitDeclaration',
+    'try'           : 'TryStatement',
+    'union'         : 'UnionDeclaration',
+    'while'         : 'WhileStatement',
+    'var'           : 'VariableDeclaration',
+  }).or('ExprStatement');
+}
 ```
 
 
