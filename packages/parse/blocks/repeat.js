@@ -2,20 +2,22 @@
 
 import { backtrack, decorate } from './_internals.js';
 
-export const many = combinator => decorate(parser => {
+export const 
+
+many = combinator => decorate (parser => {
   const results = [];
 
   while (true) {
-    const pos    = parser.save();
-    const result = combinator(parser);
+    const position = parser.save();
+    const result   = combinator(parser);
 
     if (result == null) {
-      parser.restore(pos);
+      parser.restore(position);
       break;
     }
 
     // infinite loop guard
-    if (parser.index === pos) throw new Error("many(): parser consumed no input.");
+    if (parser.index === position) throw new Error("many(): parser consumed no input.");
 
     results.push(result);
   }
