@@ -81,7 +81,7 @@ any()
 
 Parses at least `n` occurrences of a parser. Fails if fewer than `n` are found.
 
-```
+```js
 atLeast(token("IDENTIFIER"), 2)
 ```
 
