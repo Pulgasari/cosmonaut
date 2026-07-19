@@ -4,26 +4,29 @@ import { backtrack, decorate } from './_internals.js';
 
 export const 
 
-many = combinator => decorate (parser => {
+
+many = parser => decorate(state => {
   const results = [];
 
   while (true) {
-    const position = parser.save();
-    const result   = combinator(parser);
+    const position = state.save();
+    const result   = parser(state);
 
     if (result == null) {
-      parser.restore(position);
+      state.restore(position);
       break;
     }
 
     // infinite loop guard
-    if (parser.index === position) throw new Error("many(): parser consumed no input.");
+    if (state.index === position) {
+      throw new Error("many(): parser consumed no input.");
+    }
 
     results.push(result);
   }
 
   return results;
-});
+}),
 
 export const many1 = combinator => decorate(parser => {
   const first = combinator(parser);
