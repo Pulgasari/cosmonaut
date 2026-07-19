@@ -1,10 +1,12 @@
 // _internal.js
 
-export const decorate = c => c;
+export const 
 
-export const backtrack = (parser, combinator) => {
-    const pos = parser.save();
-    const result = combinator(parser);
-    if (result == null) parser.restore(pos);
+decorate = parser => parser,
+
+backtrack = (state, parser) => {
+    const position = state.save();
+    const result   = parser(state);
+    if (result == null) state.restore(position);
     return result;
 };
