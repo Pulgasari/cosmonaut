@@ -36,7 +36,7 @@ const myLangAST    = myLangParser.run();
 
 ---
 
-The public methods of the CosmonautParser class:
+### The public methods of the CosmonautParser class:
 
 - `p.check()`, `p.match()`, `p.expect()`, `p.advance()`
 - `p.checkSequence()`, `p.matchSequence()`, `p.expectSequence()`
@@ -121,7 +121,7 @@ export function parseStatement (p) {
 
 ---
 
-## Clarification on the CosmonautParser's `parse()` Method and the registered Custom Parse Methods the User
+### Clarification on the CosmonautParser's `parse()` Method and the registered Custom Parse Methods the User
 
 The user provides an array/object of objects like for example:
 
@@ -156,14 +156,11 @@ The class internally maps/binds/whatever these functions and its name to be used
 
 ---
 
-Additional Notes:
+## Additional Notes for Coding Style:
 
-- I am aware that there are several issues with the unidentical naming of stuff. But for now we don't do nothing about it. But we gonna collect and remember all the issues like this we will come across while bulding the CosmonautParser to fix this afterwards.
-
-
-
-
-
+- we use indent size of `2 spaces`
+- when defining functions we use whitespace around the parens for example `function (args) {...}`
+- in general we use modern js syntax style unless these of big negative impact on performance somehow (like array spreading in some cases or whatever)
 
 
 
