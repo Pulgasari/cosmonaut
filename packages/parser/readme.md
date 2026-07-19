@@ -162,6 +162,7 @@ The class internally maps/binds/whatever these functions and its name to be used
 
 - we use indent size of `2 spaces`
 - when defining functions we use whitespace around the parens for example `function (args) {...}`
+- any comments in the code or defined error messages etc. are strictly using English
 - in general we use modern js syntax style unless these have big negative impact on performance somehow. (like array spreading in some cases or whatever)
 
 
