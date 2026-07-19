@@ -1,0 +1,12 @@
+{
+  "name": "@cosmonaut/ebnf",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./index.js",
+  "dependencies": {
+    "@cosmonaut/lexer": "*",
+    "@cosmonaut/parser": "*",
+    "@cosmonaut/presets": "*",
+    "@cosmonaut/utils": "*"
+  }
+}
