@@ -76,6 +76,20 @@ export function parseLabeledStatement (p) {
   const body = p.parse('Statement');
   return ASTNode['LabeledStatement']({ label, body });
 }
+
+export function parseWhileStatement (p) {
+  p.advance(); // 'while'
+  const test = p.parse('Wrapped', '()', 'ConditionTest');
+  const body = p.parse('Block');
+  return ASTNode.WhileStatement({ test, body });
+}
+
+export function parseBlock (p) {
+  const p.parse('Wrapped', '{}', 'Body');
+  return ASTNode['BlockStatement']({ body });
+}
+
+
 ```
 
 
