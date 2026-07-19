@@ -119,6 +119,38 @@ export function parseStatement (p) {
 
 ---
 
+## Clarification on the CosmonautParser's `parse()` Method and the registered Custom Parse Methods the User
+
+The user provides an array/object of objects like for example:
+
+```js
+const methods = {
+  'parseForStatement': function,
+  'parseVariableDeclaration': function,
+};
+const myLangParser = new Parser (myInputTokens, { methods });
+```
+
+Which in practice could simply look like this:
+
+```js
+import * as methods from './myLangParseMethods.js'; // custom parsing methods
+const myLangParser = new Parser (myInputTokens, { methods });
+```
+
+The naming of the methods must have one of these Formats:
+
+- `parseMethodName` (= 'parse' prefix and method name in titlecase)
+- `MethodName` (= titlecase, no prefix)
+
+The class internally maps the function and its name to be used like this:
+
+- `p.parseForStatement(...args)`
+- `p.parse('ForStatement', ...args)`
+- `p.parse['ForStatement'](...args)`
+
+---
+
 Additional Notes:
 
 - I am aware that there are several issues with the unidentical naming of stuff. But for now we don't do nothing about it. But we gonna collect and remember all the issues like this we will come across while bulding the CosmonautParser to fix this afterwards.
