@@ -3,31 +3,31 @@
 import { backtrack, decorate } from './_internals.js';
 
 export const
-lazy     = fn => decorate (parser => fn()(parser)),
-not      = c  => decorate (parser => lookAhead(c)(parser) ? null : true),
-optional = c  => decorate (parser => backtrack(parser, c)),
+lazy     = parser => decorate (state => parser()(state)),
+not      = parser => decorate (state => lookAhead(parser)(state) ? null : true),
+optional = parser => decorate (state => backtrack(state, parser)),
 
 between = (open, inner, close) => decorate (state => {
-  const pos = state.save();
+  const position = state.save();
 
   if (open(state) == null) {
-    state.restore(pos);
+    state.restore(position);
     return null;
   }
 
   const result = inner(state);
 
   if (result == null || close(state) == null) {
-    state.restore(pos);
+    state.restore(position);
     return null;
   }
 
   return result;
 }),
 
-choice = (...list) => decorate (parser => {
-  for (const c of list.flat()) {
-    const result = backtrack(parser, c);
+choice = (...parsers) => decorate (state => {
+  for (const parser of parsers.flat()) {
+    const result = backtrack(state, parser);
     if (result != null) return result;
   }
   return null;
@@ -44,21 +44,21 @@ cut = (parser, message) => decorate (state => {
     : new Error(message);
 }),
 
-lookAhead = c => decorate (parser => {
-  const pos    = parser.save();
-  const result = c(parser);
-  parser.restore(pos);
+lookAhead = parser => decorate (state => {
+  const position = state.save();
+  const result   = parser(state);
+  state.restore(position);
   return result;
 }),
 
-seq = (...list) => decorate (parser => {
-  const pos     = parser.save();
-  const results = [];
+seq = (...parsers) => decorate (state => {
+  const position = state.save();
+  const results  = [];
 
-  for (const c of list.flat()) {
-    const result = c(parser);
+  for (const parser of parsers.flat()) {
+    const result = parser(state);
     if (result == null) {
-      parser.restore(pos);
+      state.restore(position);
       return null;
     }
     results.push(result);
@@ -68,11 +68,11 @@ seq = (...list) => decorate (parser => {
 }),
 
 skip = (parser, discarded) => decorate (state => {
-  const pos    = state.save();
-  const result = parser(state);
+  const position = state.save();
+  const result   = parser(state);
 
   if (result == null || discarded(state) == null) {
-    state.restore(pos);
+    state.restore(position);
     return null;
   }
 
@@ -80,17 +80,17 @@ skip = (parser, discarded) => decorate (state => {
 }),
 
 then = (discarded, parser) => decorate (state => {
-  const pos = state.save();
+  const position = state.save();
 
   if (discarded(state) == null) {
-    state.restore(pos);
+    state.restore(position);
     return null;
   }
 
   const result = parser(state);
 
   if (result == null) {
-    state.restore(pos);
+    state.restore(position);
     return null;
   }
 
