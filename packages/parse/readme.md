@@ -4,7 +4,7 @@ This document lays out the construction plan for the CosmonautParser we gonna bu
 
 ---
 
-General Notes:
+General Notes about the internal construction of the CosmonautParser.
 
 1. The modular blocks for the base parsing mechanics are provided by `/blocks`. These are pure and kinda its "own thing" but used here.
 
@@ -41,7 +41,7 @@ const puncts    = [];
 
 const myLangParserConfig = {
   methods : methods.
-  nodes   : nodes,
+  nodes   : nodes, // note sure if really needed here?
 };
 ```
 
@@ -57,6 +57,34 @@ The main methods you use are:
 - `p.parseUnaryExpr()`
 
 But additionally the CosmonautParser provides a link to the blocks-system accessible under `p.$`.
+
+---
+
+### Example for Creating Custom Nodes
+
+---
+
+### Example for Creating Custom Parsing Methods
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
