@@ -250,7 +250,9 @@ expect(token("SEMICOLON"))
 
 ### fail
 
-A parser that always fails and consumes no input. Useful as a neutral "zero" element when composing other parsers.
+A parser that always fails and consumes no input.
+
+Useful as a neutral "zero" element when composing other parsers.
 
 ```js
 fail()
@@ -294,7 +296,7 @@ many(token("IDENTIFIER"))
 
 ### manyTill
 
-Parses zero or more occurrences until the [terminator](#terminator) succeeds.
+Parses zero or more occurrences until a [terminator](#terminator) succeeds.
 
 The [terminator](#terminator) is consumed but not included in the returned results.
 
@@ -384,7 +386,7 @@ sepBy1(expression, token(","))
 
 ### sepEndBy
 
-Parses zero or more elements separated and optionally terminated by a separator.
+Parses zero or more elements separated and optionally terminated by a [separator](#separator).
 
 ```js
 sepEndBy(property, token(","))
@@ -392,7 +394,7 @@ sepEndBy(property, token(","))
 
 ### sepEndBy1
 
-Parses one or more elements separated and optionally terminated by a separator.
+Parses one or more elements separated and optionally terminated by a [separator](#separator).
 
 ```js
 sepEndBy1(property, token(","))
@@ -414,7 +416,9 @@ seq(
 
 ### skip
 
-Runs a parser, then a second parser whose result is discarded. Returns only the first parser's result.
+Runs a parser, then a second parser whose result is discarded. 
+
+Returns only the first parser's result.
 
 ```js
 skip(expression, token(";"))
@@ -422,7 +426,9 @@ skip(expression, token(";"))
 
 ### succeed
 
-A parser that always succeeds with the given value and consumes no input. Useful as a neutral "identity" element, e.g. as a default in `choice`.
+A parser that always succeeds with the given value and consumes no input. 
+
+Useful as a neutral "identity" element, e.g. as a default in `choice`.
 
 ```js
 choice(identifier, succeed(null))
@@ -440,7 +446,9 @@ tap(expression, (result, state) => console.log("parsed:", result))
 
 ### then
 
-Runs a parser whose result is discarded, then a second parser. Returns only the second parser's result.
+Runs a parser whose result is discarded, then a second parser.
+
+Returns only the second parser's result.
 
 ```js
 then(token("return"), expression)
@@ -448,7 +456,9 @@ then(token("return"), expression)
 
 ### times
 
-Parses between `min` and `max` occurrences of a parser (inclusive). `atLeast` and `atMost` are convenience wrappers around this.
+Parses between `min` and `max` occurrences of a parser (inclusive). 
+
+[`atLeast`](#atleast) and [`atMost`](#atmost) are convenience wrappers around this.
 
 ```js
 times(token("DIGIT"), 2, 5)
