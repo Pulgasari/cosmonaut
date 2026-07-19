@@ -222,9 +222,19 @@ seq(
 
 Succeeds only if the parser has reached the end of the token stream.
 
+Consumes no input.
+
+```js
+seq(expression, eof())
+```
+
 ### expect
 
-Consumes the next matching token or throws a syntax error.
+Consumes a token matching the given type or value, or throws a syntax error if it doesn't match.
+
+```js
+expect(token("SEMICOLON"))
+```
 
 ### fail
 
@@ -236,15 +246,29 @@ fail()
 
 ### filter
 
-Accepts a parser result only if the given predicate returns `true`.
+Accepts a parser result only if it satisfies a predicate.
+
+```js
+filter(number, n => n.value > 0)
+```
 
 ### lazy
 
-Defers parser creation until parse time. Useful for recursive grammars.
+Defers evaluation of a parser until it actually runs.
+
+Needed to reference a rule before it's defined, e.g. for recursive grammars.
+
+```js
+const expression = lazy(() => choice(binary, unary, primary));
+```
 
 ### lookAhead
 
-Runs a parser without consuming any input.
+Runs a parser and returns its result, but restores the position afterwards, so no input is consumed.
+
+```js
+lookAhead(token("function"))
+```
 
 ### many
 
@@ -256,27 +280,37 @@ Always succeeds.
 many(token("IDENTIFIER"))
 ```
 
-### many1
-
-Parses one or more occurrences of a parser.
-
-Fails if the first occurrence cannot be parsed.
-
-### many1Till
-
-Parses one or more occurrences until the terminating parser succeeds.
-
 ### manyTill
 
-Parses zero or more occurrences until the terminating parser succeeds.
+Parses zero or more occurrences until the [terminator](#terminator) succeeds.
 
-The terminator is consumed but not included in the returned results.
+The [terminator](#terminator) is consumed but not included in the returned results.
 
 ```js
 manyTill(
   any(),
   token(")")
 )
+```
+
+### many1
+
+Parses one or more occurrences of a parser.
+
+Fails if the first occurrence cannot be parsed.
+
+```js
+many1(token("DIGIT"))
+```
+
+### many1Till
+
+Parses one or more occurrences of a parser until a [terminator](#terminator) succeeds. 
+
+Requires at least one match before the [terminator](#terminator) succeeds. Fails otherwise.
+
+```js
+many1Till(statement, token("}"))
 ```
 
 ### map
