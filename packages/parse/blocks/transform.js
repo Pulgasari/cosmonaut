@@ -2,6 +2,113 @@
 
 import { backtrack, decorate } from './_internals.js';
 
+export const 
+    
+map = (parser, fn) => decorate (state => {
+  const result = parser(state);
+  return result ?? fn(result, state);
+});
+
+value = (parser, value) => decorate (state => {
+  const result = parser(state);
+  return result ?? value;
+});
+
+capture = (parser, name) => decorate (state => {
+  const result = parser(state);
+  return result ?? {[name]: result};
+});
+
+tap = (parser, fn) => decorate(state => {
+
+    const result = parser(state);
+
+    if (result != null) {
+        fn(result, state);
+    }
+
+    return result;
+
+});
+
+export const filter = (parser, predicate) => decorate(state => {
+
+    const result = parser(state);
+
+    if (result == null) {
+        return null;
+    }
+
+    return predicate(result, state)
+        ? result
+        : null;
+
+});
+
+
+
+
+//////
+
+
+
+
+import { decorate } from './_internals.js';
+
+export const
+
+map = (parser, fn) => decorate(state => {
+  const result = parser(state);
+
+  if (result == null) return null;
+
+  return fn(result, state);
+}),
+
+value = (parser, value) => decorate(state => {
+  const result = parser(state);
+
+  if (result == null) return null;
+
+  return value;
+}),
+
+capture = (parser, name) => decorate(state => {
+  const result = parser(state);
+
+  if (result == null) return null;
+
+  return {
+    [name]: result
+  };
+}),
+
+tap = (parser, fn) => decorate(state => {
+  const result = parser(state);
+
+  if (result != null) {
+    fn(result, state);
+  }
+
+  return result;
+}),
+
+filter = (parser, predicate) => decorate(state => {
+  const result = parser(state);
+
+  if (result == null) return null;
+
+  return predicate(result, state)
+    ? result
+    : null;
+});
+
+
+
+// @cosmonaut/blocks/parser/transform.js
+
+import { backtrack, decorate } from './_internals.js';
+
 export const map = (parser, fn) => decorate(state => {
 
     const result = parser(state);
