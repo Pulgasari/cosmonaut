@@ -1,36 +1,31 @@
 // @cosmonaut/parser/classes/ParserState.js
 
-export default class Parser {
+export default class ParserState {
 
-    constructor(tokens = []) {
-        this.setTokens(tokens);
-    }
+  constructor (tokens = []) {
+    this.setTokens(tokens);
+  }
 
-    setTokens(tokens) {
-        this.tokens = tokens;
-        this.index = 0;
-    }
+  setTokens (tokens) {
+    this.tokens = tokens;
+    this.index  = 0;
+  }
 
-    reset() {
-        this.index = 0;
-    }
+  reset () {
+    this.index = 0;
+  }
 
-    peek(offset = 0) {
-        return this.tokens[this.index + offset] ?? null;
-    }
+  peek (offset = 0) {
+    return this.tokens[this.index + offset] ?? null;
+  }
 
-    next() {
-        if (!this.eof()) this.index++;
-        return this.peek(-1);
-    }
+  next () {
+    if (!this.eof()) this.index++;
+    return this.peek(-1);
+  }
 
-    eof() {
-        return this.peek()?.type === "EOF";
-    }
-
-    save() {
-        return this.index;
-    }
+  isEOF () { return this.peek()?.type === "EOF"; }
+  save  () { return this.index; }
 
     restore(position) {
         this.index = position;
