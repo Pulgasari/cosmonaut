@@ -79,7 +79,9 @@ any()
 
 ### atLeast
 
-Parses at least `n` occurrences of a parser. Fails if fewer than `n` are found.
+Parses at least *n* occurrences of a parser. 
+
+Fails if fewer than *n* are found.
 
 ```js
 atLeast(token("IDENTIFIER"), 2)
@@ -87,7 +89,9 @@ atLeast(token("IDENTIFIER"), 2)
 
 ### atMost
 
-Parses at most `n` occurrences of a parser. Always succeeds, even with zero matches.
+Parses at most *n* occurrences of a parser.
+
+Always succeeds, even with zero matches.
 
 ```js
 atMost(token("IDENTIFIER"), 3)
@@ -95,7 +99,9 @@ atMost(token("IDENTIFIER"), 3)
 
 ### between
 
-Parses an opening parser, an inner parser, and a closing parser in sequence. Returns only the inner result.
+Parses an opening parser, an inner parser, and a closing parser in sequence. 
+
+Returns only the inner result.
 
 ```js
 between(
@@ -121,7 +127,7 @@ capture(identifier, "name")
 
 ### chain
 
-Runs a parser, then uses its result to build the *next* parser to run. Unlike `map`, which only transforms the result, `chain` lets the result decide what gets parsed next — the basis for context-sensitive grammars.
+Runs a parser, then uses its result to build the *next* parser to run. Unlike [`map`](#map), which only transforms the result, `chain` lets the result decide what gets parsed next — the basis for context-sensitive grammars.
 
 ```js
 chain(
@@ -132,7 +138,9 @@ chain(
 
 ### chain1
 
-Like `chain`, but repeats the bind step: each result is fed back into the same function to produce the next parser, until one fails. Requires at least one successful step.
+Like [`chain`](#chain), but repeats the bind step: each result is fed back into the same function to produce the next parser, until one fails.
+
+Requires at least one successful step.
 
 ```js
 chain1(
@@ -143,7 +151,9 @@ chain1(
 
 ### chainl1
 
-Parses a left-associative chain of operands separated by an operator, folding the result from left to right. A common way to build binary-expression parsing without a full precedence-climbing (Pratt) parser.
+Parses a left-associative chain of operands separated by an operator, folding the result from left to right. 
+
+A common way to build binary-expression parsing without a full precedence-climbing (Pratt) parser.
 
 ```js
 chainl1(
@@ -163,7 +173,9 @@ as `((a + b) - c)`.
 
 ### chainr1
 
-Like [`chainl1`](#chainl), but folds right-associatively — the rightmost application binds first. Used for operators like exponentiation (`^`) or assignment (`=`).
+Like [`chainl1`](#chainl), but folds right-associatively — the rightmost application binds first. 
+
+Used for operators like exponentiation (`^`) or assignment (`=`).
 
 ```js
 chainr1(
@@ -220,7 +232,7 @@ seq(
 
 ### eof
 
-Succeeds only if the parser has reached the end of the token stream.
+Succeeds only if the parser has reached the end of the [token stream](#token-stream).
 
 Consumes no input.
 
