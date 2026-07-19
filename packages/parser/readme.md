@@ -182,6 +182,14 @@ class Parser {
 
   ...
 }
+
+function expandSpecs (specs) {
+  // 'checkAny("{ | )")' statt 'checkAny("{", "|", ")")' -> ein einzelner String-Arg wird
+  // an Whitespace aufgesplittet. Mehrere Args (oder Arrays als Specs) bleiben unangetastet.
+  return (specs.length === 1 && isString(specs[0]))
+    ? specs[0].trim().split(/\s+/)
+    : specs;
+}
 ```
 
 ---
