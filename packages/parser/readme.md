@@ -158,6 +158,34 @@ The class internally maps/binds/whatever these functions and its name to be used
 
 ---
 
+###
+
+```js
+class Parser {
+  ...
+
+  checkSequence (...specs) {
+    return expandSpecs(specs).every((spec, i) => this._matches(this.peek(i), spec));
+  }
+
+  matchSequence (...specs) {
+    const list = expandSpecs(specs);
+    if (!this.checkSequence(...list)) return null; // falsy -> 'if (p.matchSequence(...))' just works
+    return makeSequenceResult(list.map(() => this.advance()));
+  }
+
+  consumeSequence (...specs) {
+    const list = expandSpecs(specs);
+    if (!this.checkSequence(...list)) throw this._unexpected(list);
+    return makeSequenceResult(list.map(() => this.advance()));
+  }
+
+  ...
+}
+```
+
+---
+
 ## Additional Notes for Coding Style:
 
 - we use indent size of `2 spaces`
