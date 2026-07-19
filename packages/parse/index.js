@@ -1,18 +1,18 @@
 // @cosmonaut/parser
 
-// :::::: Classes
-
-export Parser      from './classes/Parser.js';
-export ParserState from './classes/ParserState.js';
-
-// :::::: The Blocks
+// :::::: Blocks (Library)
 
 export * from './blocks/atoms.js';
 export * from './blocks/flow.js';
 export * from './blocks/repeat.js';
 export * from './blocks/transform.js';
 
-// :::::: The Methods
+// :::::: Classes
+
+export Parser      from './classes/Parser.js';
+export ParserState from './classes/ParserState.js';
+
+// :::::: Methods
 
 export { default as parseBinaryExpr  } from './methods/parseBinaryExpr.js';
 export { default as parseListPattern } from './methods/parseListPattern.js';   
