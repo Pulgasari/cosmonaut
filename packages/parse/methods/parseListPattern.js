@@ -3,13 +3,12 @@
 import { expect, sepEndBy, seq, token } from '@cosmonaut/blocks;
 
 
-export default (parser, inner, config = ", {}") {
+export default function (ctx, element, config = ", {}") {
 
   const [separator = ",", wrapper = "{}"] = config.trim().split(/\s+/);
-
   const open  = wrapper?.[0];
   const close = wrapper?.[1];
-  const item  = typeof inner === "string" ? state => state[inner]() : inner;
+  const item  = typeof element === "string" ? state => state[element]() : element;  
   const list  = sepEndBy (item, expect(separator));
 
   if (!open || !close) return list(parser);
@@ -18,6 +17,6 @@ export default (parser, inner, config = ", {}") {
     expect(open),
     list,
     expect(close)
-  )(parser)[1];
+  )(ctx)[1];
   
 }
