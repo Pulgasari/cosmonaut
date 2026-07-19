@@ -30,18 +30,10 @@ const myLangAST    = myLangParser.run();
 When initializing the CosmonautParser you provide the mechanics and meta infos you need for your language like this:
 
 ```js
-import { comments, keywords, puncts from './myLangMeta.js';
 import * as methods from './myLangParseMethods.js';
-import * as nodes   from './myLangNodes.js';
-
-const comments  = [];
-const keywords  = [];
-const operators = [];
-const puncts    = [];
 
 const myLangParserConfig = {
-  methods : methods.
-  nodes   : nodes, // note sure if really needed here?
+  methods : methods,
 };
 ```
 
