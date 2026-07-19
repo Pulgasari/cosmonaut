@@ -9,8 +9,10 @@ export * from './blocks/transform.js';
 
 // :::::: Classes
 
-export Parser      from './classes/Parser.js';
-export ParserState from './classes/ParserState.js';
+export { default }                from './classes/Parser.js';
+export { default as Parser }      from './classes/Parser.js';
+export { default as ParserState } from './classes/ParserState.js';
+
 
 // :::::: Methods
 
