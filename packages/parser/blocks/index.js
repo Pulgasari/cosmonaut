@@ -1,7 +1,7 @@
 // @cosmonaut/blocks
 
-export * from './blocks/atoms.js';
-export * from './blocks/chain.js';
-export * from './blocks/flow.js';
-export * from './blocks/repeat.js';
-export * from './blocks/transform.js';
+export * from './atoms.js';
+export * from './chain.js';
+export * from './flow.js';
+export * from './repeat.js';
+export * from './transform.js';
