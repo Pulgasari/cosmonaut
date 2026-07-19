@@ -1,10 +1,8 @@
 # task: EBNF
 
-at `packages/utils/ebnf.js` an EBNF-compiler is located which now should be refactored:
+at `packages/utils/ebnf.js` an "parseMethods-from-EBNF-grammar-generator" is located which now should be refactored:
 
-1. to be build from `packages/lexer` and `packages/parser` and finally become a public utility to be parse code from EBNF grammar file.
-
-## 2. 
+to be build from `packages/lexer` and `packages/parser` and finally become a public utility mainly to be used as `makeRules/MethodsFromEBNFFile`.
 
 Ich denke es wäre sinnvoll Teile davon vorher (oder erst hinterher?) als kleine wiederverwendbare Logiken auszulagern 
 
