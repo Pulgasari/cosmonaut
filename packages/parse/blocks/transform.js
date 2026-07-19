@@ -6,47 +6,29 @@ export const
     
 map = (parser, fn) => decorate (state => {
   const result = parser(state);
-  return result ?? fn(result, state);
+  return result == null ? null : fn(result, state);
 });
 
 value = (parser, value) => decorate (state => {
   const result = parser(state);
-  return result ?? value;
+  return result == null ? null : value;
 });
 
 capture = (parser, name) => decorate (state => {
   const result = parser(state);
-  return result ?? {[name]: result};
+  return result == null ? null : {[name]: result};
 });
 
-tap = (parser, fn) => decorate(state => {
-
-    const result = parser(state);
-
-    if (result != null) {
-        fn(result, state);
-    }
-
-    return result;
-
+tap = (parser, fn) => decorate (state => {
+  const result = parser(state);
+  return result != null ? fn(result, state) : null;
 });
 
-export const filter = (parser, predicate) => decorate(state => {
-
-    const result = parser(state);
-
-    if (result == null) {
-        return null;
-    }
-
-    return predicate(result, state)
-        ? result
-        : null;
-
+filter = (parser, predicate) => decorate (state => {
+  const result = parser(state);
+  return result == null ? null 
+       : predicate(result, state) ? result : null;
 });
-
-
-
 
 //////
 
