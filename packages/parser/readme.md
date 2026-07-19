@@ -84,7 +84,7 @@ export function parseWhileStatement (p) {
   p.advance(); // 'while'
   const test = p.parse('Wrapped', '()', 'ConditionTest');
   const body = p.parse('Block');
-  return ASTNode.WhileStatement({ test, body });
+  return ASTNode.['WhileStatement']({ test, body });
 }
 
 export function parseBlock (p) {
