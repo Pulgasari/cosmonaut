@@ -2,13 +2,11 @@
 
 This document lays out the construction plan for the CosmonautParser we gonna build at this location: `cosmonaut/packages/parser/classes/Parser.js`
 
-So for this task the only relevant main directory of the repo is: `cosmonaut/packages/parser/`. Please make sure you have the up to date files by loading them
-
-Or maybe better: Just reload the whole repo from `pulgasari/cosmonaut` or `https://github.com/pulgasari/cosmonaut`
+So for this task the only relevant main directory of the repo is: `cosmonaut/packages/parser/`.
 
 ---
 
-General Notes about the internal construction of the CosmonautParser.
+## General Notes about the internal construction of the CosmonautParser
 
 1. The modular blocks for the base parsing mechanics are provided by `cosmonaut/packages/parser/blocks`. These are pure and kinda its "own thing" but used here.
 
