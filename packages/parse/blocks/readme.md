@@ -350,6 +350,22 @@ Executes a callback with the parser result without modifying it.
 
 Useful for debugging or collecting statistics.
 
+### then
+
+Runs a parser whose result is discarded, then a second parser. Returns only the second parser's result.
+
+```js
+then(token("return"), expression)
+```
+
+### times
+
+Parses between `min` and `max` occurrences of a parser (inclusive). `atLeast` and `atMost` are convenience wrappers around this.
+
+```js
+times(token("DIGIT"), 2, 5)
+```
+
 ### token
 
 Consumes and returns a token matching the given type or value.
