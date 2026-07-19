@@ -3,9 +3,9 @@
 // Public API: turn EBNF grammar source into an object of parseMethods,
 // ready to be passed into `new Parser(tokens, { methods })`.
 
-import { createEBNFLexer }  from './lexer.js';
-import { parseEBNFGrammar } from './grammar.js';
-import { compileExpr }      from './compile.js';
+import { createEBNFLexer }  from './_lexer.js';
+import { parseEBNFGrammar } from './_grammar.js';
+import { compileExpr }      from './_compile.js';
 import { toPascalCase }     from '@cosmonaut/utils/internals';
 
 export function makeRulesFromEBNF (source) {
