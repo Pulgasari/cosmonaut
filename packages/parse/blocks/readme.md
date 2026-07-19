@@ -622,7 +622,7 @@ Determines how a chain of operators of equal precedence is grouped. Left-associa
 
 A tree representation of the parsed source code.
 
-AST construction is intentionally outside the scope of the low-level parser blocks.
+AST construction is intentionally outside the scope of these low-level parser blocks.
 
 ## Backtracking
 
@@ -632,11 +632,13 @@ Restoring the parser state after a parser fails, allowing another parser to be t
 
 A function that takes one or more parsers and returns a new parser.
 
-Examples include `choice`, `seq`, `many` and `map`.
+Examples include [`choice`](#choice), [`seq`](#seq), [`many`](#many) and [`map`](#map).
 
 ## Commit / Cut
 
-A point in a grammar rule after which failure is no longer treated as a backtrackable alternative, but as a genuine syntax error. Improves error messages and avoids pathological backtracking in deeply nested `choice`/`seq` combinations.
+A point in a grammar rule after which failure is no longer treated as a backtrackable alternative, but as a genuine syntax error.
+
+Improves error messages and avoids pathological backtracking in deeply nested [`choice`](#choice)/[`seq`](#seq) combinations.
 
 ## Consumer
 
@@ -664,13 +666,13 @@ A parser either succeeds or fails.
 
 ## Parser State
 
-The mutable state shared by all parsers, including the token stream and current position.
+The mutable state shared by all parsers, including the [token stream](#token-stream) and current position.
 
 ## Predicate
 
 A parser or function that only checks a condition without producing a meaningful value.
 
-Examples include `check`, `lookAhead` and `not`.
+Examples include [`check`](#check), [`lookAhead`](#lookahead) and [`not`](#not).
 
 ## Recursive Parser
 
