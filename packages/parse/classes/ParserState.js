@@ -11,49 +11,34 @@ export default class ParserState {
     this.index  = 0;
   }
 
-  reset () {
-    this.index = 0;
-  }
+  isEOF () { return this.peek()?.type === "EOF"; }
+  reset () { this.index = 0; }
+  save  () { return this.index; }
 
-  peek (offset = 0) {
-    return this.tokens[this.index + offset] ?? null;
-  }
+  restore (position)   { this.index = position; }
+  peek    (offset = 0) { return this.tokens[this.index + offset] ?? null; }
 
   next () {
     if (!this.eof()) this.index++;
     return this.peek(-1);
   }
+  
+  check (typeOrValue) {
+    const token = this.peek();
+    if (!token) return false;
 
-  isEOF () { return this.peek()?.type === "EOF"; }
-  save  () { return this.index; }
+    return token.type === typeOrValue
+        || token.value === typeOrValue;
+  }
 
-    restore(position) {
-        this.index = position;
-    }
+  match (typeOrValue) {
+    return !this.check(typeOrValue) ? null : this.next();
+  }
 
-    check(typeOrValue) {
-        const token = this.peek();
-        if (!token) return false;
-
-        return token.type === typeOrValue
-            || token.value === typeOrValue;
-    }
-
-    match(typeOrValue) {
-        if (!this.check(typeOrValue)) return null;
-        return this.next();
-    }
-
-    consume(typeOrValue) {
-        const token = this.match(typeOrValue);
-
-        if (token == null) {
-            throw new SyntaxError(
-                `Expected '${typeOrValue}'`
-            );
-        }
-
-        return token;
-    }
+  consume (typeOrValue) {
+    const token = this.match(typeOrValue);
+    if (token == null) throw new SyntaxError(`Expected '${typeOrValue}'`);
+    return token;
+  }
 
 }
