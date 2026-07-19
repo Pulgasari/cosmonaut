@@ -100,23 +100,7 @@ export function parseStatement (p) {
     'async'         : 'FunctionDeclaration',
     'break'         : 'BreakStatement',
     'class'         : 'ClassDeclaration',
-    'const'         : 'VariableDeclaration',
-    'continue'      : 'ContinueStatement',
-    'export'        : 'ExportDeclaration',
-    'fn'            : 'FunctionDeclaration',
-    'for'           : 'ForStatement',
-    'if'            : 'IfStatement',
-    'import'        : 'ImportDeclaration',
-    'let'           : 'VariableDeclaration',
-    'mold'          : 'MoldStatement',
-    'return'        : 'ReturnStatement',
-    'sift'          : 'SiftStatement',
-    'switch'        : 'SwitchStatement',
-    'trait'         : 'TraitDeclaration',
-    'try'           : 'TryStatement',
-    'union'         : 'UnionDeclaration',
-    'while'         : 'WhileStatement',
-    'var'           : 'VariableDeclaration',
+    ...
   }).or('ExprStatement');
 }
 ```
@@ -155,42 +139,6 @@ The class internally maps/binds/whatever these functions and its name to be used
 - `p.parseMethodName(...args)`
 - `p.parse('MethodName', ...args)`
 - `p.parse['MethodName'](...args)`
-
----
-
-###
-
-```js
-class Parser {
-  ...
-
-  checkSequence (...specs) {
-    return expandSpecs(specs).every((spec, i) => this._matches(this.peek(i), spec));
-  }
-
-  matchSequence (...specs) {
-    const list = expandSpecs(specs);
-    if (!this.checkSequence(...list)) return null; // falsy -> 'if (p.matchSequence(...))' just works
-    return makeSequenceResult(list.map(() => this.advance()));
-  }
-
-  consumeSequence (...specs) {
-    const list = expandSpecs(specs);
-    if (!this.checkSequence(...list)) throw this._unexpected(list);
-    return makeSequenceResult(list.map(() => this.advance()));
-  }
-
-  ...
-}
-
-function expandSpecs (specs) {
-  // 'checkAny("{ | )")' statt 'checkAny("{", "|", ")")' -> ein einzelner String-Arg wird
-  // an Whitespace aufgesplittet. Mehrere Args (oder Arrays als Specs) bleiben unangetastet.
-  return (specs.length === 1 && isString(specs[0]))
-    ? specs[0].trim().split(/\s+/)
-    : specs;
-}
-```
 
 ---
 
