@@ -2,10 +2,11 @@
 
 import { backtrack, decorate } from './_internals.js';
 
-export const 
+export const
+atLeast = (parser, min) => times(parser, min, Infinity),
+atMost  = (parser, max) => times(parser, 0, max),
 
-
-many = parser => decorate(state => {
+many = parser => decorate (state => {
   const results = [];
 
   while (true) {
@@ -28,44 +29,51 @@ many = parser => decorate(state => {
   return results;
 }),
 
-export const many1 = combinator => decorate(parser => {
-  const first = combinator(parser);
+many1 = parser => decorate (state => {
+  const first = parser(state);
   if (first == null) return null;
-  return [first, ...many(combinator)(parser)];
-});
 
-export const repeat = (combinator, count) => decorate(parser => {
-  const start = parser.save();
-  const results = [];
+  const results = many(parser)(state);
+  results.unshift(first);
+
+  return results;
+}),
+
+repeat = (parser, count) => decorate (state => {
+  const position = state.save();
+  const results  = [];
+
   for (let i = 0; i < count; i++) {
-    const result = combinator(parser);
+    const result = parser(state);
+
     if (result == null) {
-      parser.restore(start);
+      state.restore(position);
       return null;
     }
+
     results.push(result);
   }
+
   return results;
-});
+}),
 
-export const sepBy = (item, separator) => decorate(parser => {
-  const results = [];
-  const first   = backtrack(parser, item);
-
-  if (first == null) return results;
-  results.push(first);
+sepBy = (item, separator) => decorate (state => {
+  const first = backtrack(state, item);
+  if (first == null) return [];
+  const results = [first];
 
   while (true) {
-    const pos = parser.save();
-    if (backtrack(parser, separator) == null) {
-      parser.restore(pos);
+    const position = state.save();
+
+    if (backtrack(state, separator) == null) {
+      state.restore(position);
       break;
     }
 
-    const next = item(parser);
+    const next = item(state);
 
     if (next == null) {
-      parser.restore(pos);
+      state.restore(position);
       break;
     }
 
@@ -73,93 +81,87 @@ export const sepBy = (item, separator) => decorate(parser => {
   }
 
   return results;
-});
+}),
 
-export const sepBy1 = (item, separator) => decorate(parser => {
-  const first = item(parser);
+sepBy1 = (item, separator) => decorate (state => {
+  const first = item(state);
   if (first == null) return null;
-  return [ first, ...sepBy(item, separator)(parser) ];
-});
 
-export const sepEndBy = (item, separator) => decorate(parser => {
-  const results = [];
-  const first = backtrack(parser, item);
+  const results = sepBy(item, separator)(state);
+  results.unshift(first);
 
-  if (first == null) return results;
-  results.push(first);
+  return results;
+}),
+
+sepEndBy = (item, separator) => decorate (state => {
+  const first = backtrack(state, item);
+  if (first == null) return [];
+  const results = [first];
 
   while (true) {
-    if (backtrack(parser, separator) == null) break;
+    if (backtrack(state, separator) == null) break;
 
-    const next = backtrack(parser, item);
+    const next = backtrack(state, item);
     if (next == null) break; // trailing separator allowed
+
     results.push(next);
   }
+
   return results;
-});
+}),
 
-export const sepEndBy1 = (item, separator) => decorate(parser => {
-  const first = item(parser);
+sepEndBy1 = (item, separator) => decorate (state => {
+  const first = item(state);
   if (first == null) return null;
-  return [ first, ...sepEndBy(item, separator)(parser) ];
-});
 
-export const manyTill = (item, end) => decorate(parser => {
+  const results = sepEndBy(item, separator)(state);
+  results.unshift(first);
 
-    const results = [];
+  return results;
+}),
 
-    while (true) {
-
-        if (backtrack(parser, end) != null) {
-            end(parser);
-            break;
-        }
-
-        const pos = parser.save();
-
-        const result = item(parser);
-
-        if (result == null) {
-            parser.restore(pos);
-            return null;
-        }
-
-        if (parser.index === pos) {
-            throw new Error("manyTill(): parser consumed no input.");
-        }
-
-        results.push(result);
-
-    }
-
-    return results;
-
-});
-
-export const many1Till = (item, end) => decorate(parser => {
-
-    const first = item(parser);
-
-    if (first == null) {
-        return null;
-    }
-
-    return [
-        first,
-        ...manyTill(item, end)(parser)
-    ];
-
-});
-
-export const times = (combinator, min, max = Infinity) => decorate(parser => {
-  const start   = parser.save();
+manyTill = (item, end) => decorate (state => {
   const results = [];
 
+  while (true) {
+    const position = state.save();
+    if (end(state) != null) break;
+
+    state.restore(position);
+
+    const result = item(state);
+    if (result == null) return null;
+
+    // infinite loop guard
+    if (state.index === position) {
+      throw new Error("manyTill(): parser consumed no input.");
+    }
+
+    results.push(result);
+  }
+
+  return results;
+}),
+
+many1Till = (item, end) => decorate (state => {
+  const first = item(state);
+  if (first == null) return null;
+
+  const results = manyTill(item, end)(state);
+  results.unshift(first);
+
+  return results;
+}),
+
+times = (parser, min, max = Infinity) => decorate (state => {
+  const position = state.save();
+  const results  = [];
+
   for (let i = 0; i < min; i++) {
-    const result = combinator(parser);
+    const result = parser(state);
 
     if (result == null) {
-      parser.restore(start);
+      state.restore(position);
       return null;
     }
 
@@ -167,21 +169,21 @@ export const times = (combinator, min, max = Infinity) => decorate(parser => {
   }
 
   while (results.length < max) {
-    const pos    = parser.save();
-    const result = combinator(parser);
+    const position = state.save();
+    const result   = parser(state);
 
     if (result == null) {
-      parser.restore(pos);
+      state.restore(position);
       break;
     }
 
-    if (parser.index === pos) throw new Error("times(): parser consumed no input.");
+    // infinite loop guard
+    if (state.index === position) {
+      throw new Error("times(): parser consumed no input.");
+    }
 
     results.push(result);
   }
 
   return results;
 });
-
-export const atLeast = (combinator, min) => times(combinator, min, Infinity);
-export const atMost  = (combinator, max) => times(combinator, 0, max);
