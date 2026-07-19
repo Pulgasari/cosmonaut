@@ -1,0 +1,17 @@
+{
+  "name": "@cosmonaut/blocks",
+  "version": "1.0.0",
+  "description": "Composable parser combinators. Could be used standalone. But were created for the Cosmonaut parser/compiler toolkit.",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "keywords": [
+    "compiler",
+    "parser",
+    "parser-combinators",
+    "parsing",
+    "cosmonaut"
+  ],
+  "license": "MIT"
+}
