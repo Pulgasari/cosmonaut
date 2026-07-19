@@ -196,9 +196,9 @@ Tries multiple parsers in order and returns the first successful result. Automat
 
 ```js
 choice(
-    token("let"),
-    token("const"),
-    token("var")
+  token("let"),
+  token("const"),
+  token("var")
 )
 ```
 
@@ -292,7 +292,13 @@ map(
 
 ### not
 
-Succeeds only if the given parser fails. Consumes no input.
+Succeeds only if the given parser fails. 
+
+Consumes no input.
+
+```js
+not(token("EOF"))
+```
 
 ### optional
 
@@ -300,9 +306,17 @@ Attempts a parser and returns `null` instead of failing.
 
 Consumes no input on failure.
 
+```js
+optional(token(","))
+```
+
 ### repeat
 
 Parses a parser exactly *n* times.
+
+```js
+repeat(token("DIGIT"), 4)
+```
 
 ### sepBy
 
@@ -310,23 +324,47 @@ Parses zero or more elements separated by another parser.
 
 Always succeeds.
 
+```js
+sepBy(expression, token(","))
+```
+
 ### sepBy1
 
 Parses one or more elements separated by another parser.
+
+```js
+sepBy1(expression, token(","))
+```
 
 ### sepEndBy
 
 Parses zero or more elements separated and optionally terminated by a separator.
 
+```js
+sepEndBy(property, token(","))
+```
+
 ### sepEndBy1
 
 Parses one or more elements separated and optionally terminated by a separator.
+
+```js
+sepEndBy1(property, token(","))
+```
 
 ### seq
 
 Runs multiple parsers sequentially.
 
 Succeeds only if every parser succeeds.
+
+```js
+seq(
+  token("("),
+  expression,
+  token(")")
+)
+```
 
 ### skip
 
@@ -350,6 +388,10 @@ Executes a callback with the parser result without modifying it.
 
 Useful for debugging or collecting statistics.
 
+```js
+tap(expression, (result, state) => console.log("parsed:", result))
+```
+
 ### then
 
 Runs a parser whose result is discarded, then a second parser. Returns only the second parser's result.
@@ -370,9 +412,17 @@ times(token("DIGIT"), 2, 5)
 
 Consumes and returns a token matching the given type or value.
 
+```js
+token("IDENTIFIER")
+```
+
 ### value
 
 Replaces a successful parser result with a constant value.
+
+```js
+value(token("true"), true)
+```
 
 ---
 
