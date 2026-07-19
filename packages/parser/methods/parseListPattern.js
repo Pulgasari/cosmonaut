@@ -1,6 +1,6 @@
 // @cosmonaut/parser/methods/parseListPattern.js
 
-import { expect, sepEndBy, seq, token } from '@cosmonaut/blocks;
+import { expect, sepEndBy, seq, token } from '@cosmonaut/blocks';
 
 
 export default function (ctx, element, config = ", {}") {
@@ -11,7 +11,7 @@ export default function (ctx, element, config = ", {}") {
   const item  = typeof element === "string" ? state => state[element]() : element;  
   const list  = sepEndBy (item, expect(separator));
 
-  if (!open || !close) return list(parser);
+  if (!open || !close) return list(ctx);
 
   return seq(
     expect(open),
