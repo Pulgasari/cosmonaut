@@ -8,8 +8,62 @@ General Notes:
 
 1. The modular blocks for the base parsing mechanics are provided by `/blocks`. These are pure and kinda its "own thing" but used here.
 
-2. Special higher-level parsing methods are stored in `/methods`. (They will be expanded and enhanced over time. They are kinda pure as well and could be used without the CosmonautParser we are building. But they are also the core mechanics the CosmonautParser provides.
+2. Special higher-level parsing methods are stored in `/methods`. (They will be expanded and enhanced over time. They are kinda pure as well and could be used without the CosmonautParser we are building. But they are also the core parsing methodes the CosmonautParser provides.
 
 3. The Parser State of the Parser is provided by the `ParserState` class in `/classes/ParserState.js`.
 
 ---
+
+## Features, Abilities and Usage of the CosmonautParser
+
+Should be used like this:
+
+```js
+import Parser from '@cosmonaut/parser';
+
+const myInputTokens = []; // assumed to be here
+const myLangParserConfig = {};
+const myLangParser = new Parser (myInputTokens, myLangParserConfig);
+const myLangAST    = myLangParser.run();
+```
+
+When initializing the CosmonautParser you provide the mechanics and meta infos you need for your language like this:
+
+```js
+import { comments, keywords, puncts from './myLangMeta.js';
+import * as methods from './myLangParseMethods.js';
+import * as nodes   from './myLangNodes.js';
+
+const comments  = [];
+const keywords  = [];
+const operators = [];
+const puncts    = [];
+
+const myLangParserConfig = {
+  methods : methods.
+  nodes   : nodes,
+};
+```
+
+
+---
+
+The main methods you use are:
+
+- `p.parse()`
+- `p.parsePattern()`
+- `p.parseListPattern()`
+- `p.parseBinaryExpr()`
+- `p.parseUnaryExpr()`
+
+But additionally the CosmonautParser provides a link to the blocks-system accessible under `p.$`.
+
+
+
+
+
+
+
+
+
+
