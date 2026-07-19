@@ -126,7 +126,11 @@ export function parseStatement (p) {
 }
 ```
 
+---
 
+Additional Notes:
+
+- I am aware that there are several issues with the unidentical naming of stuff. But for now we don't do nothing about it. But we gonna collect and remember all the issues like this we will come across while bulding the CosmonautParser.
 
 
 
