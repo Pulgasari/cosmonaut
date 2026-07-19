@@ -1,6 +1,6 @@
 // @cosmonaut/parser/methods/parseUnaryExpr.js
 
-export function default (parser, config) {
+export default function (parser, config) {
 
   const {
     operators,
