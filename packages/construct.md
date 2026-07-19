@@ -1,16 +1,16 @@
 # CosmonautParser
 
-This document lays out the construction plan for the CosmonautParser we gonna build next.
+This document lays out the construction plan for the CosmonautParser we gonna build at this location: `cosmonaut/packages/parser/classes/Parser.js`
 
 ---
 
 General Notes about the internal construction of the CosmonautParser.
 
-1. The modular blocks for the base parsing mechanics are provided by `/blocks`. These are pure and kinda its "own thing" but used here.
+1. The modular blocks for the base parsing mechanics are provided by ``cosmonaut/packages/parser/blocks`. These are pure and kinda its "own thing" but used here.
 
 2. Special higher-level parsing methods are stored in `/methods`. (They will be expanded and enhanced over time. They are kinda pure as well and could be used without the CosmonautParser we are building. But they are also the core parsing methodes the CosmonautParser provides.
 
-3. The Parser State of the Parser is provided by the `ParserState` class in `/classes/ParserState.js`.
+3. The Parser State of the CosmonautParser is provided by the `ParserState` class in `cosmonaut/packages/parser/classes/ParserState.js`.
 
 ---
 
@@ -34,7 +34,7 @@ const myLangAST    = myLangParser.run();
 
 ---
 
-The main methods you use are:
+The public methods of the CosmonautParser class:
 
 - `p.check()`, `p.match()`, `p.expect()`, `p.advance()`
 - `p.checkSequence()`, `p.matchSequence()`, `p.expectSequence()`
@@ -44,15 +44,21 @@ The main methods you use are:
 - `p.parseBinaryExpr()`
 - `p.parseUnaryExpr()`
 - `p.$` a link to the blocks-system
+- `p.dispatch()` with optional `.or()` applied to it
 
+This means that we have to create these: `check`, `match`, `expect`, `advance`, `checkSequence`, `matchSequence`, `expectSequence`, `parse`, `$`, `dispatch/or`
+
+While these already exist:
+```
+cosmonaut/packages/parser/methods/parseBinaryExpr.js
+cosmonaut/packages/parser/methods/parseListPattern.js
+cosmonaut/packages/parser/methods/parsePattern.js
+cosmonaut/packages/parser/methods/parseUnaryExpr.js
+```
 
 ---
 
-### Example for Creating Custom Nodes
-
----
-
-### Example for Creating Custom Parsing Methods
+### Example for Creating Custom Parsing Methods which the User than registers at the CosmonautParser when initializing it
 
 Note:
 
@@ -62,7 +68,6 @@ The reason for this is that the `p.parse()` wrapper enhances the readability whi
 
 ```js
 // myLangParseMethods.js (example)
-
 
 export function parseLabeledStatement (p) {
   const label = p.advance().value; // identifier
