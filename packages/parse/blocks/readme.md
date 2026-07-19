@@ -614,6 +614,23 @@ const property =
 
 # Terminology
 
+[Associativity](#associativity) ·
+[AST (Abstract Syntax Tree)](#ast-abstract-syntax-tree) ·
+[Backtracking](#backtracking) ·
+[Combinator](#combinator) ·
+[Commit / Cut](#commit-cut) ·
+[Consumer](#consumer) ·
+[Grammar](#grammar) ·
+[Lookahead](#lookahead) ·
+[Parser](#parser) ·
+[Parser State](#parser-state) ·
+[](#) ·
+[](#) ·
+[](#) ·
+[](#) ·
+
+
+
 ## Associativity
 
 Determines how a chain of operators of equal precedence is grouped. Left-associative operators group from the left (`a - b - c` → `(a - b) - c`), right-associative from the right (`a ^ b ^ c` → `a ^ (b ^ c)`).
