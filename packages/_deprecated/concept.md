@@ -5,6 +5,18 @@ TYPE == { identifier, args, body }
 RULE == fn IDENT     ArgsList      Block     => 1 3 5
 RULE == fn IDENT `=` ArgsList `=>` Statement => 1 4 7
 CODE == `${identifier} :\= proc(${args})${body};\n`
+
+META FunctionDeclaration
+TYPE == { identifier, args, body }
+RULE == fn IDENT     ArgsList      Block     => 1 3 5
+RULE == fn IDENT `=` ArgsList `=>` Statement => 1 4 7
+CODE == `${identifier} :\= proc(${args})${body};\n`
+
+TYPE FnDecl
+:: { identifier, args, body }
+== fn IDENT     ArgsList      Block     => 1 3 5
+== fn IDENT `=` ArgsList `=>` Statement => 1 4 7
+>> `${identifier} :\= proc(${args})${body};\n`
 ```
 
 ```md
