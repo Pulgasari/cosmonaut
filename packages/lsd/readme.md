@@ -197,6 +197,7 @@ META LIST operators = (
 }
 
 # //////////// TOKENIZER ///////////////////////////////////////////////
+# !!!  here order and relation of rules is part of the control flow  !!!
 
 TKN COMMENT     :: /\/\/[^\n]*/y
 TKN WHITESPACE  :: /[ \t\n\r]+/y
@@ -212,23 +213,16 @@ TKN STRING      == /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`])*`/y
 # //////////// RULES ///////////////////////////////////////////////////
 # !!!  here order and relation of rules is part of the control flow  !!!
 
-RULE program      == statement*
-RULE statement    == decl-var | decl-fn | statement-expr
+RULE program   == statement*
+RULE statement == decl-val | decl-fn | statement-expr
 
-RULE id           == @char { @char | @digit | `_` }
-RULE id-const     == "#" id ;
-RULE id-label     == "$" id ;
-RULE id-ref       == "&" id ;
-RULE id-temp      == "@" id ;
-RULE id-qualified == id { "::" id } ;
-
-RULE expr-id      == NODE <= id-const | id-label | id-ref | id-temp | id-qualified
+RULE id        == @char { @char | @digit | `_` }
+RULE id-ns     == id { `::` id } ;
+RULE id-val    == [ `#` | `$` | `&` | `@` ] id ;
 
 # ------------ Variables -----------------------------------------------
 
-RULE decl-const ==         `val` `#` IDENTIFIER `=` expr `;`
-RULE decl-val   ==         `val`     IDENTIFIER `=` expr `;`
-RULE decl-var   == NODE <= decl-const | decl-var
+RULE decl-val   == NODE <= `val` id-val  ( `#=`| `=` ) expr `;`
 
 # ------------ Functions -----------------------------------------------
 
@@ -236,7 +230,7 @@ RULE decl-fn         == NODE <= decl-fn-classic | decl-fn-arrow
 RULE decl-fn-classic ==         `fn` IDENTIFIER `(` args:list-id? `)` body:block
 RULE decl-fn-arrow   ==         `fn` IDENTIFIER ( `=` params-fn? )? `=>` body:statement
 
-RULE fn-params == `(` list-id? `)` / list-id
+RULE fn-params == `(` list-id? `)` | list-id
 RULE list-id   == IDENTIFIER ( `,`? IDENTIFIER )*
 RULE block     => `{` statement* `}`
 
@@ -244,13 +238,13 @@ RULE block     => `{` statement* `}`
 
 RULE expr            ==         call-fn / expr-binary / LITERAL / IDENTIFIER / STRING / NUMBER
 RULE expr-binary     == NODE <= left:expr op:OPERATOR right:expr
-RULE call-fn         == NODE <= callee:IDENTIFIER ( args:ParenCallArgs / args:SingleBareArg )
+RULE call-fn         == NODE <= callee:IDENTIFIER ( args-call-parent | arg-bare-single )
 RULE args-call-paren ==         `(` list-args-call? `)`
 RULE arg-bare-single ==         LITERAL | IDENTIFIER | STRING | NUMBER
 RULE list-args-call  ==         list-args-named / list-expr
-RULE list-args-named == NODE <= args:arg-named ( `,`? args:arg-named )*
+RULE list-args-named == NODE <= args:arg-named ( `,`? arg-named )*
 RULE arg-named       == NODE <= key:IDENTIFIER `:` value:expr
-RULE list-expr       == NODE <= items:expr ( `,`? items:expr )*
+RULE list-expr       == NODE <= expr ( `,`? expr )*
 
 # ------------ Literals ------------------------------------------------
 
