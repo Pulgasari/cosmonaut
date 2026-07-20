@@ -309,6 +309,10 @@ HL STRING  = "string.quoted"
 [ ] = optional  =
 { } = 0 oder n  = many
 
+--- peg
+
+ .     == wildcard (länge 1) == advance()
+
 --- we need
 
 terminate == ende der zeile
@@ -321,6 +325,8 @@ recursion
 { }1 = 1 oder n
 { }5 = 5 oder n
 
+    terminal = `string`
+non-terminal = RuleName or name-rule
 
 --- syntax goals
 
