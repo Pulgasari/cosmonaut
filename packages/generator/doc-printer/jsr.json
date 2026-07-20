@@ -1,0 +1,6 @@
+{
+  "name": "@cosmonaut/doc-printer",
+  "version": "1.0.0",
+  "exports": "./index.js",
+  "dependencies": ["@cosmonaut/doc"]
+}
