@@ -177,9 +177,12 @@ Below is the complete unified `.lsd` specification for the current feature set o
 
 # //////////// META ////////////////////////////////////////////////////
 
-META LIST keywords = as break continue catch do fn for if in new pkg pnt prop ref return static switch until use while yield
-META LIST literals = false null true undefined
-META LIST symbols  = a-z A-Z 0-9 `_` `$`
+META char  == ( a..z | A..Z )
+META digit == 0..9
+
+META LIST keywords == as break continue catch do fn for if in new pkg pnt prop ref return static switch until use while yield
+META LIST literals == false null true undefined
+META LIST symbols  == a-z A-Z 0-9 `_` `$`
 
 META LIST operators = (
   group         is String
@@ -202,59 +205,59 @@ TKN KEYWORD     == @keywords
 TKN LITERAL     == @literals
 TKN OPERATOR    == @operators
 
+TKN IDENTIFIER  == /[a-zA-Z_$][a-zA-Z0-9_$]*/y
 TKN NUMBER      == /0[xX][0-9a-fA-F_]+|0[bB][01_]+|\d[\d_]*\.\d[\d_]*(?:[eE][+-]?\d+)?|\d[\d_]*/y
 TKN STRING      == /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`])*`/y
-TKN IDENTIFIER  == /[a-zA-Z_$][a-zA-Z0-9_$]*/y
 
 # //////////// RULES ///////////////////////////////////////////////////
+# !!!  here order and relation of rules is part of the control flow  !!!
 
-RULE program   :: statement*
-RULE statement :: decl-var | decl-fn | statement-expr
+RULE program      == statement*
+RULE statement    == decl-var | decl-fn | statement-expr
 
-RULE id           == ? Letter { Letter | Digit | "_" } ? ;
+RULE id           == @char { @char | @digit | `_` }
 RULE id-const     == "#" id ;
 RULE id-label     == "$" id ;
 RULE id-ref       == "&" id ;
 RULE id-temp      == "@" id ;
 RULE id-qualified == id { "::" id } ;
 
-RULE expr-id == Node <= id-const | id-label | id-ref | id-temp | id-qualified
-
+RULE expr-id      == NODE <= id-const | id-label | id-ref | id-temp | id-qualified
 
 # ------------ Variables -----------------------------------------------
 
-RULE decl-const == `val` `#` IDENTIFIER `=` expr `;`
-RULE decl-val   == `val`     IDENTIFIER `=` expr `;`
+RULE decl-const ==         `val` `#` IDENTIFIER `=` expr `;`
+RULE decl-val   ==         `val`     IDENTIFIER `=` expr `;`
 RULE decl-var   == NODE <= decl-const | decl-var
-
 
 # ------------ Functions -----------------------------------------------
 
 RULE decl-fn         == NODE <= decl-fn-classic | decl-fn-arrow
-RULE decl-fn-classic == `fn` identifier:IDENTIFIER `(` args:IdentList? `)` body:Block
-RULE decl-fn-arrow   == `fn` identifier:IDENTIFIER ( `=` args:FunctionParams? )? `=>` body:Statement
+RULE decl-fn-classic ==         `fn` IDENTIFIER `(` args:list-id? `)` body:block
+RULE decl-fn-arrow   ==         `fn` IDENTIFIER ( `=` params-fn? )? `=>` body:statement
 
-RULE fn-params == `(` IdentList? `)` / IdentList
-RULE IdentList == IDENTIFIER ( `,`? IDENTIFIER )*
-RULE block     => `{` Statement* `}`
+RULE fn-params == `(` list-id? `)` / list-id
+RULE list-id   == IDENTIFIER ( `,`? IDENTIFIER )*
+RULE block     => `{` statement* `}`
 
 # ------------ Expressions & Calls -------------------------------------
 
-RULE expr            == call-fn / expr-binary / LITERAL / IDENTIFIER / STRING / NUMBER
-RULE expr-binary     == NODE <= left:Expression op:OPERATOR right:Expression
+RULE expr            ==         call-fn / expr-binary / LITERAL / IDENTIFIER / STRING / NUMBER
+RULE expr-binary     == NODE <= left:expr op:OPERATOR right:expr
 RULE call-fn         == NODE <= callee:IDENTIFIER ( args:ParenCallArgs / args:SingleBareArg )
-RULE args-call-paren == `(` list-args-call? `)`
-RULE arg-bare-single == LITERAL | IDENTIFIER | STRING | NUMBER
-RULE list-args-call  == list-args-named / list-expr
+RULE args-call-paren ==         `(` list-args-call? `)`
+RULE arg-bare-single ==         LITERAL | IDENTIFIER | STRING | NUMBER
+RULE list-args-call  ==         list-args-named / list-expr
 RULE list-args-named == NODE <= args:arg-named ( `,`? args:arg-named )*
 RULE arg-named       == NODE <= key:IDENTIFIER `:` value:expr
 RULE list-expr       == NODE <= items:expr ( `,`? items:expr )*
 
 # ------------ Literals ------------------------------------------------
 
-RULE literal-array == Node <=  `[` { elements: list-expr } `]`
-RULE literal-list  == Node <= `#[`   elements: list-expr   `]`
-RULE literal-tuple == Node <= `#(`   elements: list-expr?  `)`
+RULE literal-array  == NODE <=  `[` { list-expr } `]`
+RULE literal-list   == NODE <= `#[`   list-expr   `]`
+RULE literal-record == NODE <= `#(`   list-expr?  `)`
+RULE literal-tuple  == NODE <= `#(`   list-expr?  `)`
 
 # //////////// AST CREATION ////////////////////////////////////////////
 
@@ -282,11 +285,12 @@ CODE list-expr      == `${items, ", "}`
 
 # //////////// SYNTAX HIGHLIGHTING /////////////////////////////////////
 
+HL COMMENT = "comment.line"
 HL KEYWORD = "keyword.control"
 HL LITERAL = "constant.language"
 HL NUMBER  = "constant.numeric"
 HL STRING  = "string.quoted"
-HL COMMENT = "comment.line"
+
 ```
 
 
