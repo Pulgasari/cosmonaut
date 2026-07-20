@@ -1,6 +1,8 @@
-# ==============================================================================
-# POO LANGUAGE SPECIFICATION (VARIANT 2 SPEC)
-# ==============================================================================
+# ======================================================================
+# POO :: LANGUAGE SPECIFICATION DATA :: poo.lsd :: Variant 2
+# ======================================================================
+
+# //////////// META ////////////////////////////////////////////////////
 
 META PROP id == IDENTIFIER
 
@@ -12,16 +14,17 @@ META TABLE operators == (
   associativity is String
   precedence    is Number
 ) {
-  assign   left   100  ( \= +\= -\= *\= /\= \?\?\= )
-  compare  idk    200  ( ~\= \=\= \=\=\= \!\= \!\=\= < > \=\< \>\= || && \?\? )
+  assign   left   100  ( = += -= *= /= ??= #= )
+  compare  idk    200  ( ~= ~== == === != !== < > =< >= <=> || && ?? )
   additive left   300  ( + - )
   multi    left   400  ( * / % )
-  pipe     left   500  ( |> \?\?> )
+  pipe     left   500  ( >> >>> )
+  idk      idk    idk  ( |? |> |. )
+  idk      idk    idk  ( >=< )
 }
 
-# ==============================================================================
-# TOKENIZER RULES (TKN)
-# ==============================================================================
+# //////////// TOKENIZER ///////////////////////////////////////////////
+# !!!  here order and relation of rules is part of the control flow  !!!
 
 TKN COMMENT     == /\/\/[^\n]*/y
 TKN WHITESPACE  == /[ \t\n\r]+/y
@@ -34,9 +37,7 @@ TKN NUMBER      == /0[xX][0-9a-fA-F_]+|0[bB][01_]+|\d[\d_]*\.\d[\d_]*(?:[eE][+-]
 TKN STRING      == /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`])*`/y
 TKN IDENTIFIER  == /[a-zA-Z_$][a-zA-Z0-9_$]*/y
 
-# ==============================================================================
-# STANDALONE PARSER RULES (Global Hilfsregeln ohne AST-Knoten)
-# ==============================================================================
+# //////////// RULES ///////////////////////////////////////////////////
 
 RULE == Program          == Statement*
 RULE == Statement        == VarDecl | FnDecl | ExprStatement
@@ -47,9 +48,9 @@ RULE == ParenCallArgs    == `(` CallArgsList? `)`
 RULE == SingleBareArg    == LITERAL | IDENTIFIER | STRING | NUMBER
 RULE == CallArgsList     == list-args-named | list-args-expression
 
-# ==============================================================================
-# COHESIVE LANGUAGE BLOCKS (META Blocks with Types, Rules, and Code)
-# ==============================================================================
+# //////////// META BLOCKS /////////////////////////////////////////////
+
+# ------------ Declaration ----------------------------------------------
 
 #### ValDeclarationOperator
 META ValDeclOp
@@ -122,12 +123,26 @@ TYPE == { elements }
 RULE == `#(` list-args-expression? `)` => 2
 CODE == `${elements}`
 
-# ==============================================================================
-# SYNTAX HIGHLIGHTING RULES (HL)
-# ==============================================================================
+# //////////// SYNTAX HIGHLIGHTING /////////////////////////////////////
 
+HL COMMENT == `comment.line`
 HL KEYWORD == `keyword.control`
 HL LITERAL == `constant.language`
 HL NUMBER  == `constant.numeric`
 HL STRING  == `string.quoted`
-HL COMMENT == `comment.line,
+
+
+
+
+
+
+
+# //////////// AST CREATION ////////////////////////////////////////////
+# //////////// CODEGEN (Target: Odin) //////////////////////////////////
+# //////////// META BLOCKS /////////////////////////////////////////////
+# //////////// RULES ///////////////////////////////////////////////////
+# ------------ Declarations --------------------------------------------
+# ------------ Expressions & Calls -------------------------------------
+# ------------ Functions -----------------------------------------------
+# ------------ Literals ------------------------------------------------
+# ------------ Variables -----------------------------------------------
