@@ -1,5 +1,3 @@
-
-
 ```md
 # ======================================================================
 # POO :: LANGUAGE SPECIFICATION DATA :: poo.lsd :: Variant 2
@@ -46,18 +44,16 @@ TKN IDENTIFIER  == /[a-zA-Z_$][a-zA-Z0-9_$]*/y
 
 # //////////// RULES ///////////////////////////////////////////////////
 
-RULE == Program          == Statement*
-RULE == Statement        == VarDecl | FnDecl | ExprStatement
-RULE == FnParams         == `(` IdentList? `)` | IdentList
-RULE == IdentList        == IDENTIFIER ( `,`? IDENTIFIER )*
-RULE == Block            == `{` Statement* `}`
-RULE == ParenCallArgs    == `(` CallArgsList? `)`
-RULE == SingleBareArg    == LITERAL | IDENTIFIER | STRING | NUMBER
-RULE == CallArgsList     == list-args-named | list-args-expression
+RULE == Program       == Statement*
+RULE == Statement     == VarDecl | FnDecl | ExprStatement
+RULE == FnParams      == `(` IdentList? `)` | IdentList
+RULE == IdentList     == IDENTIFIER ( `,`? IDENTIFIER )*
+RULE == Block         == `{` Statement* `}`
+RULE == ParenCallArgs == `(` CallArgsList? `)`
+RULE == SingleBareArg == LITERAL | IDENTiFIER | STRING | NUMBER
+RULE == CallArgsList  == NamedArgsList | ExprArgsList
 
-# //////////// META BLOCKS /////////////////////////////////////////////
-
-# ------------ Declaration ----------------------------------------------
+# ------------ Declarations --------------------------------------------
 
 #### ValDeclarationOperator
 META ValDeclOp
@@ -84,8 +80,8 @@ RULE == `fn` IDENTIFIER     FnParams      Block     => 2 3 4
 RULE == `fn` IDENTIFIER `=` FnParams `=>` Statement => 2 4 6
 CODE == `${identifier} :\= proc(${args})${body};\n`
 
-#### BinaryExpr
-META BinaryExpression
+#### BinaryExpression
+META BinaryExpr
 TYPE == { left, op, right }
 RULE == Expr OPERATOR Expr => 1 2 3
 CODE == `(${left} ${op}${right})`
@@ -95,15 +91,16 @@ TYPE == { args }
 RULE == decl-prop-named ( `,`? decl-prop-named )* => 1
 CODE == `{\n${args, ",\n"}\n}`
 
+#### NamedPropDeclaration
 META NamedPropDecl
 TYPE == { key, value }
 RULE == IDENTIFIER `:` Expression => 1 3
 CODE == `${key} \=${value}`
 
-# Inverted name syntax (list-args-expression)
+#### ExpressionArgumentsList
 META ExprArgsList
 TYPE == { items }
-RULE == Expression ( `,`? Expression )* => 1
+RULE == Expr ( `,`? Expr )* => 1
 CODE == `${items, ", "}`
 
 #### ArrayLikeLiteral
@@ -115,21 +112,6 @@ RULE == `#[` ArgsListExpr? `]` => 2 List
 RULE ==  `[` ArgsListExpr? `]` => 2 Array
 CODE == `${elements}`
 
-META ArrayLiteral
-TYPE == { elements }
-RULE == `[` list-args-expression? `]` => 2
-CODE == `${elements}`
-
-META ListLiteral
-TYPE == { elements }
-RULE == `#[` list-args-expression? `]` => 2
-CODE == `${elements}`
-
-META TupleLiteral
-TYPE == { elements }
-RULE == `#(` list-args-expression? `)` => 2
-CODE == `${elements}`
-
 # //////////// SYNTAX HIGHLIGHTING /////////////////////////////////////
 
 HL COMMENT == `comment.line`
@@ -137,12 +119,6 @@ HL KEYWORD == `keyword.control`
 HL LITERAL == `constant.language`
 HL NUMBER  == `constant.numeric`
 HL STRING  == `string.quoted`
-
-
-
-
-
-
 
 # //////////// AST CREATION ////////////////////////////////////////////
 # //////////// CODEGEN (Target: Odin) //////////////////////////////////
