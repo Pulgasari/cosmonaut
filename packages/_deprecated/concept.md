@@ -174,3 +174,144 @@ packages/
     ├── lalr-generator/      # Erzeugt die Parse-Tabellen aus Grammatiken
     └── (evtl. yacc-compat)  # Kompatibilitätslayer
 ```
+
+
+```
+[ A ]
+​Wiederholung (0 oder mehr): { A }
+​Wiederholung (1 oder mehr): Nicht nativ als Symbol vorhanden. Muss als A , { A } ausgeschrieben
+
+```md
+?  =
+!1 = many1
+
+--- ebnf
+
+      ,      == concat    =
+      ;      == terminate =
+ ( A  | B )  == alternate =
+    ( A )    == group     = 
+    [ A ]    == optional  =
+    { A }    == match 0 + infinity
+A , { A }    == match 1 + infinity
+
+--- peg
+
+ .     == wildcard (länge 1) == advance()
+
+    terminal = 'string'
+non-terminal = RuleName
+
+  ( ...   ... ) == sequence (alles muss matchen)
+  ( ... | ... ) == ordered choice
+
+  A? or [A]  == match  0 or 1 times  + greedy 
+  A*         == match  0 or infinity + greedy
+  A+         == expect 1 or infinity + greedy
+ &A          == lookahead +1
+ !A          == lookahead -1
+ !.          = eof
+
+--- regex
+
+  * + ?     == wiederholung + greedy
+  *? +?     == lazy / non-greedy
+{n}         == exakte zählung
+{n, m}      == ranges
+(?=A)       == lookahead +1
+(?!A)       == lookahead -1
+[a-zA-Z0-9] == zeicheklassen
+
+--- we need
+
+  A*    == many  + greedy
+  A+    == many1 + greedy
+  A?    == optional
+ !A     lookahead -1
+ &A     lookaheqd +1
+
+terminate == ende der zeile
+
+many0
+many1
+recursion
+
+{ }  = 0 oder n
+{ }1 = 1 oder n
+{ }5 = 5 oder n
+
+    terminal = `string`
+non-terminal = RuleName or name-rule
+
+---
+  ( A )    == sequenz
+  [ A ]    == optional
+  { A }    == match  0 or greedy  |  could match but dont cares
+  { A }*   == match  1 or greedy  |  needs 1 match to be relevant
+  { A }*n  == match  n or greedy
+  { A }+   == expect 1 or greedy
+  { A }+n  == expect n or greedy
+  
+
+   A!    == lookahead +1
+   A!n   == lookahead +n
+  !A     == lookahead -1
+ n!A     == lookahead -n
+
+  KETTE [ `,` | `,` KETTE ]
+  KETTE | [ `,` KETTE ]
+
+
+---
+
+--- many1 (Mindestens 1 Element
+-- no traling sep == "A" oder "A, B"
+Many1Strict ::= Item { "," Item }
+Many1Strict  <- Item ( "," Item )*
+Many1Strict_M = Item ( "," Item )*
+Many1Strict  <- Item ( `,` Item )*
+
+-- opt traling sep == "A", "A,", "A, B", "A, B,"
+Many1Trailing ::= Item { "," Item } [ "," ]
+Many1Trailing  <- Item ( "," Item )*  ","?
+Many1Trailing   = Item ( "," Item )*  ","?
+Many1Trailing   = Item ( "," Item )*  [`,`]
+
+
+--- many0
+-- no traling sep but could empty
+Many0Strict ::= [ Item { "," Item }  ]
+Many0Strict  <- ( Item ( "," Item )* )?
+Many0Strict_M = ( Item ( "," Item )* )?
+Many0Strict ::= [ Item { `,` Item }  ]
+Many0Strict_B = ListOf<Item, ",">
+Many0Strict_B = ListOf<Item `,`>
+Many0Strict_B = ListPattern[Item `,`]
+
+-- opt traling sep but could empty
+Many0Trailing ::= [ Item { "," Item } [ "," ] ]
+Many0Trailing  <- ( Item ( "," Item )*  ","?  )?
+Many0Trailing   = ( Item ( "," Item )*  ","?  )?
+Many0Trailing   = [ Item ( "," Item )* [`,`]  ]
+
+
+
+[Item `,`] | [Item]
+[Item] | [`,` Item]
+
+ { (Item `,`) | Item }
+ { Item | (`,` Item) }
+
+
+    Item { Item, `,` }
+  [ Item { Item, `,` } ]
+    Item { `,` Item } [`,`]
+  { Item [`,`] }
+
+  [ Item [`,`] ]
+
+
+
+
+
+
