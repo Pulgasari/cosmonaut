@@ -31,6 +31,18 @@ RULE FnDecl == fn IDENT `=` ArgsList `=>` Statement => NODE 1 4 7
 RULE Dispatch == KEYWORD ? fn  : FnDecl
                          ? val : ValDecl
 
+NODE FnDecl == { identifier, args, body }
+RULE FnDecl
+== fn IDENT     ArgsList      Block     => NODE 1 3 5
+== fn IDENT `=` ArgsList `=>` Statement => NODE 1 4 7    
+
+
+TYPE FnDecl
+:: { identifier, args, body }
+== fn IDENT     ArgsList      Block     => 1 3 5
+== fn IDENT `=` ArgsList `=>` Statement => 1 4 7
+
+
 
 const RULE = {
   seq(
