@@ -1,0 +1,104 @@
+# ==============================================================================
+# POO LANGUAGE SPECIFICATION (FINAL REFINED DSL SYNTAX)
+# ==============================================================================
+
+META LIST keywords = as break continue catch do fn for if in new pkg pnt prop ref return static switch until use while yield
+META LIST literals = false null true undefined
+
+META LIST operators = (
+  group         is String
+  associativity is String
+  precedence    is Number
+) {
+  assign   left   100  ( = += -= *= /= ??= )
+  compare  idk    200  ( ~= == === != !== < > =< >= || && ?? )
+  additive left   300  ( + - )
+  multi    left   400  ( * / % )
+  pipe     left   500  ( |> ??> )
+}
+
+# ==============================================================================
+# TOKENIZER RULES (TKN)
+# ==============================================================================
+
+TKN COMMENT     = /\/\/[^\n]*/y
+TKN WHITESPACE  = /[ \t\n\r]+/y
+
+TKN KEYWORD     = keywords
+TKN LITERAL     = literals
+TKN OPERATOR    = operators
+
+TKN NUMBER      = /0[xX][0-9a-fA-F_]+|0[bB][01_]+|\d[\d_]*\.\d[\d_]*(?:[eE][+-]?\d+)?|\d[\d_]*/y
+TKN STRING      = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`])*`/y
+TKN IDENTIFIER  = /[a-zA-Z_$][a-zA-Z0-9_$]*/y
+
+# ==============================================================================
+# PARSER RULES (RULE) & AST SIGNATURES (NODE)
+# ==============================================================================
+
+# Reine PEG-Regeln ohne Node-Transformation nutzen einfach das "="
+RULE Program = Statement*
+RULE Statement = VarDecl / FunctionDecl / ExpressionStatement
+
+# --- Variables ---
+# Regel mündet implizit in ein Node mit dem Namen "VarDecl"
+RULE VarDecl = Node <= "val" name:IDENTIFIER "=" value:Expression ";"
+NODE VarDecl = { name, value }
+
+# --- Functions ---
+# Regel mündet explizit in ein Node namens "FunctionDecl"
+RULE FunctionDecl = Node "FunctionDecl" <= ClassicFunctionDecl / ArrowFunctionDecl
+NODE FunctionDecl = { identifier, args, body }
+
+# Diese Regeln parsen den Text separat, münden aber am Ende in der übergeordneten Rule "FunctionDecl"
+RULE ClassicFunctionDecl = Rule "FunctionDecl" <= "fn" identifier:IDENTIFIER "(" args:IdentList? ")" body:Block
+RULE ArrowFunctionDecl   = Rule "FunctionDecl" <= "fn" identifier:IDENTIFIER ( "=" args:FunctionParams? )? "=>" body:Statement
+
+RULE FunctionParams = "(" IdentList? ")" / IdentList
+RULE IdentList      = IDENTIFIER ( ","? IDENTIFIER )*
+RULE Block          = "{" Statement* "}"
+
+# --- Expressions & Calls ---
+RULE Expression = FunctionCall / BinaryExpression / LITERAL / IDENTIFIER / STRING / NUMBER
+
+# Mathematische Ausdrücke fließen in den BinaryExpression-Knoten
+RULE BinaryExpression = Node <= left:Expression op:OPERATOR right:Expression
+NODE BinaryExpression = { left, op, right }
+
+# Aufrufe fließen in den FunctionCall-Knoten
+RULE FunctionCall = Node <= callee:IDENTIFIER ( args:ParenCallArgs / args:SingleBareArg )
+NODE FunctionCall = { callee, args }
+
+RULE ParenCallArgs = "(" CallArgsList? ")"
+RULE SingleBareArg = LITERAL / IDENTIFIER / STRING / NUMBER
+
+RULE CallArgsList = NamedArgsList / ExpressionList
+
+RULE NamedArgsList = Node <= args:NamedArg ( ","? args:NamedArg )*
+NODE NamedArgsList = { args }
+
+RULE NamedArg = Node <= key:IDENTIFIER ":" value:Expression
+NODE NamedArg = { key, value }
+
+RULE ExpressionList = Node <= items:Expression ( ","? items:Expression )*
+NODE ExpressionList = { items }
+
+# --- Literals ---
+RULE ArrayLiteral = Node <= "[" elements:ExpressionList? "]"
+NODE ArrayLiteral = { elements }
+
+RULE ListLiteral = Node <= "#[" elements:ExpressionList? "]"
+NODE ListLiteral = { elements }
+
+RULE TupleLiteral = Node <= "#(" elements:ExpressionList? ")"
+NODE TupleLiteral = { elements }
+
+# ==============================================================================
+# SYNTAX HIGHLIGHTING RULES (HL)
+# ==============================================================================
+
+HL KEYWORD = "keyword.control"
+HL LITERAL = "constant.language"
+HL NUMBER  = "constant.numeric"
+HL STRING  = "string.quoted"
+HL COMMENT = "comment.line"
