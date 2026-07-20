@@ -304,13 +304,13 @@ HL STRING  = "string.quoted"
 
 --- ebnf
 
-      ,   == concat    =
-      ;   == terminate =
-      |   == alternate =
-    ( A ) == group     = 
-    [ A ] == optional  =
-    { A } == match 0 + infinity
-A , { A } == match 1 + infinity
+      ,      == concat    =
+      ;      == terminate =
+ ( A  | B )  == alternate =
+    ( A )    == group     = 
+    [ A ]    == optional  =
+    { A }    == match 0 + infinity
+A , { A }    == match 1 + infinity
 
 --- peg
 
@@ -328,6 +328,16 @@ non-terminal = RuleName
  &A          == lookahead +1
  !A          == lookahead -1
  !.          = eof
+
+--- regex
+
+  * + ?     == wiederholung + greedy
+  *? +?     == lazy / non-greedy
+{n}         == exakte zählung
+{n, m}      == ranges
+(?=A)       == lookahead +1
+(?!A)       == lookahead -1
+[a-zA-Z0-9] == zeicheklassen
 
 --- we need
 
