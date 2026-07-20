@@ -3,29 +3,39 @@
 *(Language Specification Data)*
 *(Language Syntax Definition)*
 
-This document defines the current specification of the universal Language DSL (file extension `.lsd`) for the JavaScript Lexer/Parser/Compiler Toolkit. This DSL serves as the **Single Source of Truth** for the entire lifecycle of a language: tokenization, parsing, AST generation, code generation, and syntax highlighting.
+---
+
+This document defines the current specification of the ***Language Specification Data*** DSL (`.lsd`) created for the ***Cosmonaut Toolkit***. 
+
+A LSD file could serve as the **Single Source of Truth** for the entire lifecycle of a language: tokenization, parsing, AST generation, code generation, and syntax highlighting.
 
 ---
 
 ## 1. Core Architecture & Keywords
 
-The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the equals sign (`=`) for declarations and the directional arrow (`<=`) for syntactic data flow. It is divided into six functional blocks:
+The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the equals sign (`=`) for declarations and the directional arrow (`<=`) for **syntactic data flow**. 
 
-* **`META`**: Global lists, character sets, configurations, and operator precedences.
-* **`TKN`**: Regular expressions for the lexical scanner (tokenizer).
-* **`RULE`**: Deterministic parsing rules (PEG-based) with optional AST node or rule routing.
-* **`NODE`**: Declarative definition of the target structures for the Abstract Syntax Tree (AST).
-* **`CODE`**: Template definitions for generating target source code from AST nodes.
-* **`HL`**: Mappings for semantic and syntactic code highlighting.
+It is divided into six functional keywords:
+
+* **[`META`](#meta)**: Global lists, character sets, configurations, and operator precedences.
+* **[`TKN`](#tkn)**: Regular expressions for the lexical scanner (tokenizer).
+* **[`RULE`](#rule)**: Deterministic parsing rules (PEG-based) with optional AST node or rule routing.
+* **[`NODE`](#node)**: Declarative definition of the target structures for the Abstract Syntax Tree (AST).
+* **[`CODE`](#code)**: Template definitions for generating target source code from AST nodes.
+* **[`HL`](#hl)**: Mappings for semantic and syntactic code highlighting.
 
 ---
 
-## 2. Tokenizer & Metadata (META & TKN)
+## META
 
-### META LIST (Character Ranges & Escaping)
+### META
+
+### META LIST
+
 Defines static word or symbol lists. To prevent unnecessary bloat, standard character ranges (e.g., `a-z`, `A-Z`, `0-9`) can be specified. 
 
 Since the equals sign `=` and spaces are control characters of the DSL, special symbols can either be escaped with a backslash (`\=`) or entirely wrapped in backticks (`` ` `=` ``) as a template string literal:
+
 ```md
 META LIST symbols = a-z A-Z 0-9 `_` `$`
 META LIST puncts  = `{` `}` `(` `)` `[` `]` `,` `;` `.` `:` `?` \=
@@ -44,12 +54,14 @@ META LIST operators = (
 }
 ```
 
-### TKN Rules
+### TKN
+
 Defines tokens using JavaScript regular expression literals, which should include the sticky flag `/y` for high-performance, pointer-based text analysis:
+
 ```md
 TKN STRING     = /"(?:\\.|[^"\\])*"/y
-TKN KEYWORD    = keywords
-TKN OPERATOR   = operators
+TKN KEYWORD    = @keywords
+TKN OPERATOR   = @operators
 ```
 
 ---
