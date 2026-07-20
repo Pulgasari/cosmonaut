@@ -392,7 +392,7 @@ Many1Strict  <- Item ( `,` Item )*
 Many1Trailing ::= Item { "," Item } [ "," ]
 Many1Trailing  <- Item ( "," Item )*  ","?
 Many1Trailing   = Item ( "," Item )*  ","?
-Many1Trailing   = Item ( "," Item )*  [`1`]
+Many1Trailing   = Item ( "," Item )*  [`,`]
 
 
 --- many0
@@ -412,6 +412,19 @@ Many0Trailing   = [ Item ( "," Item )* [`,`]  ]
 
 
 
+[Item `,`] | [Item]
+[Item] | [`,` Item]
+
+ { (Item `,`) | Item }
+ { Item | (`,` Item) }
+
+
+    Item { Item, `,` }
+  [ Item { Item, `,` } ]
+    Item { `,` Item } [`,`]
+  { Item [`,`] }
+
+  [ Item [`,`] ]
 
 
 
