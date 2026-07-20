@@ -313,6 +313,14 @@ HL STRING  = "string.quoted"
 
  .     == wildcard (länge 1) == advance()
 
+    terminal = 'string'
+non-terminal = RuleName
+
+  ( ...   ... ) == sequence (alles muss matchen)
+  ( ... | ... ) == ordered choice
+
+  A? or [A]  == match 0 or 1 times + greedy if it matches
+
 --- we need
 
 terminate == ende der zeile
