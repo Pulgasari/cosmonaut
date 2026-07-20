@@ -1,5 +1,6 @@
 # LSD
 
+*(Language Specification Data)*
 *(Language Syntax Definition)*
 
 ---
