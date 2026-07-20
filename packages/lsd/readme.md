@@ -3,52 +3,49 @@
 *(Language Specification Data)*
 *(Language Syntax Definition)*
 
----
-
-Dieses Dokument hält den aktuellen Spezifikationsstand der universellen Language-DSL für das JavaScript Lexer/Parser/Compiler Toolkit fest. Die DSL dient als **Single Source of Truth** für den Tokenizer, Parser, die AST-Generierung und das Syntax-Highlighting.
+This document defines the current specification of the universal Language DSL (file extension `.lsd`) for the JavaScript Lexer/Parser/Compiler Toolkit. This DSL serves as the **Single Source of Truth** for the entire lifecycle of a language: tokenization, parsing, AST generation, code generation, and syntax highlighting.
 
 ---
 
-## 1. Kern-Architektur & Keywords
+## 1. Core Architecture & Keywords
 
-Die DSL verzichtet bewusst auf redundanten Sonderzeichen-Bloat und nutzt einheitlich das Gleichheitszeichen (`=`) für Deklarationen sowie den Richtungspfeil (`<=`) für den syntaktischen Datenfluss. Sie ist in fünf funktionale Blöcke unterteilt:
+The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the equals sign (`=`) for declarations and the directional arrow (`<=`) for syntactic data flow. It is divided into six functional blocks:
 
-* **`META`**: Globale Listen, Konfigurationen und Operator-Präzedenzen.
-* **`TKN`**: Reguläre Ausdrücke für den lexikalischen Scanner (Tokenizer).
-* **`RULE`**: Deterministische Parsing-Regeln (PEG-basiert) mit optionaler AST- oder Regel-Mündung.
-* **`NODE`**: Deklarative Definition der Ziel-Datenstrukturen des Abstract Syntax Trees (AST).
-* **`HL`**: Mappings für semantisches und syntaktisches Code-Highlighting.
+* **`META`**: Global lists, character sets, configurations, and operator precedences.
+* **`TKN`**: Regular expressions for the lexical scanner (tokenizer).
+* **`RULE`**: Deterministic parsing rules (PEG-based) with optional AST node or rule routing.
+* **`NODE`**: Declarative definition of the target structures for the Abstract Syntax Tree (AST).
+* **`CODE`**: Template definitions for generating target source code from AST nodes.
+* **`HL`**: Mappings for semantic and syntactic code highlighting.
 
 ---
 
-## 2. Tokenizer- & Metadaten (META & TKN)
+## 2. Tokenizer & Metadata (META & TKN)
 
-### META LIST
+### META LIST (Character Ranges & Escaping)
+Defines static word or symbol lists. To prevent unnecessary bloat, standard character ranges (e.g., `a-z`, `A-Z`, `0-9`) can be specified. 
 
-Definiert statische Wort- oder Symbollisten, die vom Tokenizer wiederverwendet werden können, um z. B. Keywords von Identifiers zu trennen.
-
+Since the equals sign `=` and spaces are control characters of the DSL, special symbols can either be escaped with a backslash (`\=`) or entirely wrapped in backticks (`` ` `=` ``) as a template string literal:
 ```md
-META LIST keywords = as break continue fn pkg val
+META LIST symbols = a-z A-Z 0-9 `_` `$`
+META LIST puncts  = `{` `}` `(` `)` `[` `]` `,` `;` `.` `:` `?` \=
 ```
 
 ### META LIST operators
-
-Ein spezialisierter Block, der Operatorgruppen, deren Assoziativität und Priorität (Precedence) definiert. Das Toolkit nutzt diese Tabelle, um intern einen Pratt-Parser für mathematische Ausdrücke zu generieren, ohne dass die PEG-Regeln tief verschachtelt werden müssen.
+Defines operator groups and their priority (precedence) for the integrated Pratt parser:
 ```md
 META LIST operators = (
   group         is String
   associativity is String
   precedence    is Number
 ) {
-  assign   left   100  ( = += -= )
+  assign   left   100  ( \= +\= -\= )
   additive left   300  ( + - )
 }
 ```
 
 ### TKN Rules
-
-Definiert Tokens mithilfe von JavaScript-RegEx-Literalen. Jedes native RegEx-Literal sollte das Sticky-Flag `/y` besitzen, um eine performante, zeigerbasierte Analyse des Quelltextes zu ermöglichen.
-
+Defines tokens using JavaScript regular expression literals, which should include the sticky flag `/y` for high-performance, pointer-based text analysis:
 ```md
 TKN STRING     = /"(?:\\.|[^"\\])*"/y
 TKN KEYWORD    = keywords
@@ -57,90 +54,96 @@ TKN OPERATOR   = operators
 
 ---
 
-## 3. Parser-Regeln & AST-Knoten (RULE & NODE)
+## 3. Parser Rules & AST Nodes (RULE & NODE)
 
-Die Syntax unterscheidet strikt zwischen reiner Textanalyse (PEG-Muster), der Überführung von gematchten Daten in Datenstrukturen (Knoten) und der Strukturdeklaration selbst.
+String literals and node identifiers inside parsing rules are strictly wrapped in backticks (`` ` ``).
 
-### A. Reine Grammatik-Regel (Kein Node)
-
-Wenn ein Ausdruck lediglich eine Struktur gruppiert oder validiert, ohne einen eigenen Speicher-Knoten im Baum zu hinterlassen, wird ein einfaches `=` verwendet.
-
+### A. Pure Grammar Rule (No Node output)
+When an expression merely groups or validates a syntax structure without leaving its own dedicated node in the memory tree, a simple `=` is used.
 ```md
 RULE Program = Statement*
 ```
 
-### B. Implizite Node-Überführung (`= Node <=`)
-
-Der Pfeil `<=` signalisiert den Datenfluss: Die rechts stehende PEG-Regel wird geparst, und die mit `:Labels` markierten Werte fließen nach links in den Knoten ab. Bei `Node <=` erzeugt das Toolkit automatisch einen AST-Knoten, dessen Typ exakt dem Namen der `RULE` entspricht.
-
+### B. Implicit Node Routing (`= Node <=`)
+The `<=` arrow indicates data flow: The PEG pattern on the right is parsed, and values assigned via `:labels` flow leftward into the node. With `Node <=`, the toolkit automatically instantiates an AST node whose type exactly matches the name of the `RULE`.
 ```md
-RULE VarDecl = Node <= "val" name:IDENTIFIER "=" value:Expression ";"
+RULE VarDecl = Node <= `val` name:IDENTIFIER `=` value:Expression `;`
 ```
-
-Dazu passend deklariert die `NODE`-Regel die Struktur des Objekts mittels einfachem `=`:
-
+The corresponding `NODE` block declares the object's memory structure using a standard `=`:
 ```md
 NODE VarDecl = { name, value }
 ```
 
-### C. Explizite Node-Überführung (`= Node "Name" <=`)
-
-Soll das Ergebnis der Regel in einen Knoten fließen, der *anders* heißt als die Regel selbst, wird der Name explizit in Anführungszeichen angegeben.
-
+### C. Explicit Node Routing (`= Node \`Name\` <=`)
+If the result of a rule should be mapped to a node that is named differently than the rule itself, the target node name is explicitly provided in backticks.
 ```md
-RULE FunctionDecl = Node "FunctionDecl" <= ClassicFunctionDecl / ArrowFunctionDecl
+RULE FunctionDecl = Node `FunctionDecl` <= ClassicFunctionDecl / ArrowFunctionDecl
 ```
 
-### D. Rule-Aliasing / Polymorphie (`= Rule "Name" <=`)
-
-Erlaubt es, zwei syntaktisch völlig unterschiedliche Text-Strukturen getrennt zu parsen, dem Toolkit aber mitzuteilen, dass beide am Ende semantisch in derselben Parser-Logik bzw. demselben AST-Reduzierer münden.
-
+### D. Rule Aliasing / Polymorphism (`= Rule \`Name\` <=`)
+Allows parsing two syntactically distinct patterns separately while instructing the toolkit that both ultimately resolve into the same parent rule logic or AST reducer.
 ```md
-RULE ClassicFunctionDecl = Rule "FunctionDecl" <= "fn" identifier:IDENTIFIER "(" args:IdentList? ")" body:Block
-RULE ArrowFunctionDecl   = Rule "FunctionDecl" <= "fn" identifier:IDENTIFIER "=>" body:Statement
+RULE ClassicFunctionDecl = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER `(` args:IdentList? `)` body:Block
+RULE ArrowFunctionDecl   = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER `=>` body:Statement
 ```
 
 ---
 
-## 4. Syntax Highlighting (HL)
+## 4. Code Generation (CODE)
 
-Da das Toolkit durch die `TKN`- und `META`-Blöcke bereits die genauen Positionsdaten (Zeile, Spalte) aller relevanten Sprachelemente kennt, erfolgt die Konfiguration für Editoren (wie VS Code TextMate-Scopes) über ein einfaches Direkt-Mapping mit `=`:
+The `CODE` block describes how an AST node is translated back into text (the final target source code, e.g., Odin). The syntax utilizes backticks for the template string and `${property}` for interpolation of node fields.
 
+If a property holds an array of child AST nodes (such as lists or block statements), an optional separator can be supplied after a comma (`${items, ", "}`):
+
+```md
+# Example: Translating a variable declaration into Odin syntax (using :=)
+CODE VarDecl = `${name} :\= ${value};\n`
+
+# Example: Joining list items with a comma and a space
+CODE ExpressionList = `${items, ", "}`
+```
+
+---
+
+## 5. Syntax Highlighting (HL)
+
+Direct mapping of tokens to standardized editor scopes (e.g., TextMate scopes used by VS Code):
 ```md
 HL KEYWORD = "keyword.control"
 HL LITERAL = "constant.language"
-HL NUMBER  = "constant.numeric"
-HL STRING  = "string.quoted"
-HL COMMENT = "comment.line"
 ```
 
 ---
 
-## 5. Referenz-Implementierung (Beispiel: Sprache 'Poo')
+## 6. Reference Implementation (Example: 'Poo' Language Specification)
 
-Hier ist die vollständige, bereinigte Grammatikdatei für den aktuellen Sprachumfang von *Poo*:
+Below is the complete unified `.lsd` specification for the current feature set of *Poo*:
 
 ```md
 # ======================================================================
-# POO LANGUAGE SPECIFICATION (DSL REFERENCE)
+# POO LANGUAGE SPECIFICATION (poo.lsd)
 # ======================================================================
+
+# //////////// META ////////////////////////////////////////////////////
 
 META LIST keywords = as break continue catch do fn for if in new pkg pnt prop ref return static switch until use while yield
 META LIST literals = false null true undefined
+META LIST symbols  = a-z A-Z 0-9 `_` `$`
 
 META LIST operators = (
   group         is String
   associativity is String
   precedence    is Number
 ) {
-  assign   left   100  ( = += -= *= /= ??= )
-  compare  idk    200  ( ~= == === != !== < > =< >= || && ?? )
+  assign   left   100  ( \= +\= -\= *\= /\= \?\?\= )
+  compare  idk    200  ( ~\= \=\= \=\=\= \!\= \!\=\= < > \=\< \>\= || && \?\? )
   additive left   300  ( + - )
   multi    left   400  ( * / % )
-  pipe     left   500  ( |> ??> )
+  pipe     left   500  ( |> \?\?> )
 }
 
-# --- Tokenizer Rules ---
+# //////////// TOKENIZER ///////////////////////////////////////////////
+
 TKN COMMENT     = /\/\/[^\n]*/y
 TKN WHITESPACE  = /[ \t\n\r]+/y
 
@@ -152,24 +155,25 @@ TKN NUMBER      = /0[xX][0-9a-fA-F_]+|0[bB][01_]+|\d[\d_]*\.\d[\d_]*(?:[eE][+-]?
 TKN STRING      = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`])*`/y
 TKN IDENTIFIER  = /[a-zA-Z_$][a-zA-Z0-9_$]*/y
 
-# --- Parser Rules & Nodes ---
+# //////////// RULES ///////////////////////////////////////////////////
+
 RULE Program = Statement*
 RULE Statement = VarDecl / FunctionDecl / ExpressionStatement
 
 # Variables
-RULE VarDecl = Node <= "val" name:IDENTIFIER "=" value:Expression ";"
+RULE VarDecl = Node <= `val` name:IDENTIFIER `=` value:Expression `;`
 NODE VarDecl = { name, value }
 
 # Functions
-RULE FunctionDecl = Node "FunctionDecl" <= ClassicFunctionDecl / ArrowFunctionDecl
+RULE FunctionDecl = Node `FunctionDecl` <= ClassicFunctionDecl / ArrowFunctionDecl
 NODE FunctionDecl = { identifier, args, body }
 
-RULE ClassicFunctionDecl = Rule "FunctionDecl" <= "fn" identifier:IDENTIFIER "(" args:IdentList? ")" body:Block
-RULE ArrowFunctionDecl   = Rule "FunctionDecl" <= "fn" identifier:IDENTIFIER ( "=" args:FunctionParams? )? "=>" body:Statement
+RULE ClassicFunctionDecl = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER `(` args:IdentList? `)` body:Block
+RULE ArrowFunctionDecl   = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER ( `=` args:FunctionParams? )? `=>` body:Statement
 
-RULE FunctionParams = "(" IdentList? ")" / IdentList
-RULE IdentList      = IDENTIFIER ( ","? IDENTIFIER )*
-RULE Block          = "{" Statement* "}"
+RULE FunctionParams = `(` IdentList? `)` / IdentList
+RULE IdentList      = IDENTIFIER ( `,`? IDENTIFIER )*
+RULE Block          = `{` Statement* `}`
 
 # Expressions & Calls
 RULE Expression = FunctionCall / BinaryExpression / LITERAL / IDENTIFIER / STRING / NUMBER
@@ -180,44 +184,51 @@ NODE BinaryExpression = { left, op, right }
 RULE FunctionCall = Node <= callee:IDENTIFIER ( args:ParenCallArgs / args:SingleBareArg )
 NODE FunctionCall = { callee, args }
 
-RULE ParenCallArgs = "(" CallArgsList? ")"
+RULE ParenCallArgs = `(` CallArgsList? `)`
 RULE SingleBareArg = LITERAL / IDENTIFIER / STRING / NUMBER
 
 RULE CallArgsList = NamedArgsList / ExpressionList
 
-RULE NamedArgsList = Node <= args:NamedArg ( ","? args:NamedArg )*
+RULE NamedArgsList = Node <= args:NamedArg ( `,`? args:NamedArg )*
 NODE NamedArgsList = { args }
 
-RULE NamedArg = Node <= key:IDENTIFIER ":" value:Expression
+RULE NamedArg = Node <= key:IDENTIFIER `:` value:Expression
 NODE NamedArg = { key, value }
 
-RULE ExpressionList = Node <= items:Expression ( ","? items:Expression )*
+RULE ExpressionList = Node <= items:Expression ( `,`? items:Expression )*
 NODE ExpressionList = { items }
 
 # Literals
-RULE ArrayLiteral = Node <= "[" elements:ExpressionList? "]"
+RULE ArrayLiteral = Node <= `[` elements:ExpressionList? `]`
 NODE ArrayLiteral = { elements }
 
-RULE ListLiteral = Node <= "#[" elements:ExpressionList? "]"
+RULE ListLiteral = Node <= `#[` elements:ExpressionList? `]`
 NODE ListLiteral = { elements }
 
-RULE TupleLiteral = Node <= "#(" elements:ExpressionList? ")"
+RULE TupleLiteral = Node <= `#(` elements:ExpressionList? `)`
 NODE TupleLiteral = { elements }
 
-# --- Highlighting ---
+# //////////// CODEGEN (Target: Odin) //////////////////////////////////
+
+CODE BinaryExpression  = `(${left} ${op}${right})`
+CODE Block             = `{\n${statements, "\n"}\n}`
+CODE ExpressionList    = `${items, ", "}`
+CODE FunctionCall      = `${callee}(${args})`
+CODE NamedArg          = `${key} \=${value}`
+CODE NamedArgsList     = `{\n${args, ",\n"}\n}`
+CODE VarDecl           = `${name} :\=${value};\n`
+
+
+# Mapping Poo arrow and classic functions into native Odin procedures
+CODE FunctionDecl      = `${identifier} :\= proc(${args})${body};\n`
+
+# //////////// SYNTAX HIGHLIGHTING /////////////////////////////////////
+
 HL KEYWORD = "keyword.control"
 HL LITERAL = "constant.language"
 HL NUMBER  = "constant.numeric"
 HL STRING  = "string.quoted"
 HL COMMENT = "comment.line"
 ```
-
-
-
-
-
-
-
-
-
-
+```
+`
