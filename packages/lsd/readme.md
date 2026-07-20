@@ -148,7 +148,7 @@ Below is the complete unified `.lsd` specification for the current feature set o
 
 ```md
 # ======================================================================
-# POO LANGUAGE SPECIFICATION (poo.lsd)
+# POO :: LANGUAGE SPECIFICATION DATA :: poo.lsd
 # ======================================================================
 
 # //////////// META ////////////////////////////////////////////////////
@@ -171,8 +171,8 @@ META LIST operators = (
 
 # //////////// TOKENIZER ///////////////////////////////////////////////
 
-TKN COMMENT     = /\/\/[^\n]*/y
-TKN WHITESPACE  = /[ \t\n\r]+/y
+TKN COMMENT     :: /\/\/[^\n]*/y
+TKN WHITESPACE  :: /[ \t\n\r]+/y
 
 TKN KEYWORD     = keywords
 TKN LITERAL     = literals
@@ -184,29 +184,34 @@ TKN IDENTIFIER  = /[a-zA-Z_$][a-zA-Z0-9_$]*/y
 
 # //////////// RULES ///////////////////////////////////////////////////
 
-RULE Program = Statement*
-RULE Statement = VarDecl / FunctionDecl / ExpressionStatement
+# ?  =
+# !1 = many1
+
+RULE Program   :: Statement*
+RULE Statement :: VarDecl | FunctionDecl | ExpressionStatement
 
 # Variables
-RULE VarDecl = Node <= `val` name:IDENTIFIER `=` value:Expression `;`
-NODE VarDecl = { name, value }
+RULE decl-const = `val` `#` IDENTIFIER `=` Expression `;`
+RULE decl-val   = `val`     IDENTIFIER `=` Expression `;`
+RULE decl-var   = Node <= decl-const | decl-var
+NODE decl-var   = { name, value }
 
 # Functions
-RULE FunctionDecl = Node `FunctionDecl` <= ClassicFunctionDecl / ArrowFunctionDecl
-NODE FunctionDecl = { identifier, args, body }
+RULE decl-fn = Node <= decl-fn/classic / decl-fn-arrow
+NODE decl-fn = { identifier, args, body }
 
-RULE ClassicFunctionDecl = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER `(` args:IdentList? `)` body:Block
-RULE ArrowFunctionDecl   = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER ( `=` args:FunctionParams? )? `=>` body:Statement
+RULE decl-fn-classic = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER `(` args:IdentList? `)` body:Block
+RULE decl-fn-arrow   = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER ( `=` args:FunctionParams? )? `=>` body:Statement
 
-RULE FunctionParams = `(` IdentList? `)` / IdentList
-RULE IdentList      = IDENTIFIER ( `,`? IDENTIFIER )*
-RULE Block          = `{` Statement* `}`
+RULE fn-params = `(` IdentList? `)` / IdentList
+RULE IdentList = IDENTIFIER ( `,`? IDENTIFIER )*
+RULE block     = `{` Statement* `}`
 
 # Expressions & Calls
-RULE Expression = FunctionCall / BinaryExpression / LITERAL / IDENTIFIER / STRING / NUMBER
+RULE expr = FunctionCall / expr-binary / LITERAL / IDENTIFIER / STRING / NUMBER
 
-RULE BinaryExpression = Node <= left:Expression op:OPERATOR right:Expression
-NODE BinaryExpression = { left, op, right }
+RULE expr-binary = Node <= left:Expression op:OPERATOR right:Expression
+NODE expr-binary = { left, op, right }
 
 RULE FunctionCall = Node <= callee:IDENTIFIER ( args:ParenCallArgs / args:SingleBareArg )
 NODE FunctionCall = { callee, args }
@@ -216,34 +221,34 @@ RULE SingleBareArg = LITERAL / IDENTIFIER / STRING / NUMBER
 
 RULE CallArgsList = NamedArgsList / ExpressionList
 
-RULE NamedArgsList = Node <= args:NamedArg ( `,`? args:NamedArg )*
-NODE NamedArgsList = { args }
+RULE list-args-named = Node <= args:NamedArg ( `,`? args:NamedArg )*
+NODE list-args-named = { args }
 
-RULE NamedArg = Node <= key:IDENTIFIER `:` value:Expression
-NODE NamedArg = { key, value }
+RULE arg-named = Node <= key:IDENTIFIER `:` value:Expression
+NODE arg-named = { key, value }
 
 RULE ExpressionList = Node <= items:Expression ( `,`? items:Expression )*
 NODE ExpressionList = { items }
 
 # Literals
-RULE ArrayLiteral = Node <= `[` elements:ExpressionList? `]`
-NODE ArrayLiteral = { elements }
+RULE literal-array = Node <= `[` elements:ExpressionList? `]`
+NODE literal-array = { elements }
 
-RULE ListLiteral = Node <= `#[` elements:ExpressionList? `]`
-NODE ListLiteral = { elements }
+RULE literal-list = Node <= `#[` elements:ExpressionList? `]`
+NODE literal-list = { elements }
 
-RULE TupleLiteral = Node <= `#(` elements:ExpressionList? `)`
-NODE TupleLiteral = { elements }
+RULE literal-tuple = Node <= `#(` elements:ExpressionList? `)`
+NODE literal-tuple = { elements }
 
 # //////////// CODEGEN (Target: Odin) //////////////////////////////////
 
-CODE BinaryExpression  = `(${left} ${op}${right})`
-CODE Block             = `{\n${statements, "\n"}\n}`
-CODE ExpressionList    = `${items, ", "}`
-CODE FunctionCall      = `${callee}(${args})`
-CODE NamedArg          = `${key} \=${value}`
-CODE NamedArgsList     = `{\n${args, ",\n"}\n}`
-CODE VarDecl           = `${name} :\=${value};\n`
+CODE expr-binary    = `(${left} ${op}${right})`
+CODE block          = `{\n${statements, "\n"}\n}`
+CODE ExpressionList = `${items, ", "}`
+CODE FunctionCall   = `${callee}(${args})`
+CODE arg-named      = `${key} \=${value}`
+CODE list-arg-named = `{\n${args, ",\n"}\n}`
+CODE decl-var       = `${name} :\=${value};\n`
 
 
 # Mapping Poo arrow and classic functions into native Odin procedures
