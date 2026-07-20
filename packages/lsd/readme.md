@@ -1,4 +1,8 @@
-# Grammar DSL Spezifikation
+# LSD
+
+*(Language Syntax Definition)*
+
+---
 
 Dieses Dokument hält den aktuellen Spezifikationsstand der universellen Language-DSL für das JavaScript Lexer/Parser/Compiler Toolkit fest. Die DSL dient als **Single Source of Truth** für den Tokenizer, Parser, die AST-Generierung und das Syntax-Highlighting.
 
@@ -19,14 +23,17 @@ Die DSL verzichtet bewusst auf redundanten Sonderzeichen-Bloat und nutzt einheit
 ## 2. Tokenizer- & Metadaten (META & TKN)
 
 ### META LIST
+
 Definiert statische Wort- oder Symbollisten, die vom Tokenizer wiederverwendet werden können, um z. B. Keywords von Identifiers zu trennen.
-```grammar
+
+```md
 META LIST keywords = as break continue fn pkg val
 ```
 
 ### META LIST operators
+
 Ein spezialisierter Block, der Operatorgruppen, deren Assoziativität und Priorität (Precedence) definiert. Das Toolkit nutzt diese Tabelle, um intern einen Pratt-Parser für mathematische Ausdrücke zu generieren, ohne dass die PEG-Regeln tief verschachtelt werden müssen.
-```grammar
+```md
 META LIST operators = (
   group         is String
   associativity is String
@@ -38,8 +45,10 @@ META LIST operators = (
 ```
 
 ### TKN Rules
+
 Definiert Tokens mithilfe von JavaScript-RegEx-Literalen. Jedes native RegEx-Literal sollte das Sticky-Flag `/y` besitzen, um eine performante, zeigerbasierte Analyse des Quelltextes zu ermöglichen.
-```grammar
+
+```md
 TKN STRING     = /"(?:\\.|[^"\\])*"/y
 TKN KEYWORD    = keywords
 TKN OPERATOR   = operators
@@ -52,30 +61,40 @@ TKN OPERATOR   = operators
 Die Syntax unterscheidet strikt zwischen reiner Textanalyse (PEG-Muster), der Überführung von gematchten Daten in Datenstrukturen (Knoten) und der Strukturdeklaration selbst.
 
 ### A. Reine Grammatik-Regel (Kein Node)
+
 Wenn ein Ausdruck lediglich eine Struktur gruppiert oder validiert, ohne einen eigenen Speicher-Knoten im Baum zu hinterlassen, wird ein einfaches `=` verwendet.
-```grammar
+
+```md
 RULE Program = Statement*
 ```
 
 ### B. Implizite Node-Überführung (`= Node <=`)
+
 Der Pfeil `<=` signalisiert den Datenfluss: Die rechts stehende PEG-Regel wird geparst, und die mit `:Labels` markierten Werte fließen nach links in den Knoten ab. Bei `Node <=` erzeugt das Toolkit automatisch einen AST-Knoten, dessen Typ exakt dem Namen der `RULE` entspricht.
-```grammar
+
+```md
 RULE VarDecl = Node <= "val" name:IDENTIFIER "=" value:Expression ";"
 ```
+
 Dazu passend deklariert die `NODE`-Regel die Struktur des Objekts mittels einfachem `=`:
-```grammar
+
+```md
 NODE VarDecl = { name, value }
 ```
 
 ### C. Explizite Node-Überführung (`= Node "Name" <=`)
+
 Soll das Ergebnis der Regel in einen Knoten fließen, der *anders* heißt als die Regel selbst, wird der Name explizit in Anführungszeichen angegeben.
-```grammar
+
+```md
 RULE FunctionDecl = Node "FunctionDecl" <= ClassicFunctionDecl / ArrowFunctionDecl
 ```
 
 ### D. Rule-Aliasing / Polymorphie (`= Rule "Name" <=`)
+
 Erlaubt es, zwei syntaktisch völlig unterschiedliche Text-Strukturen getrennt zu parsen, dem Toolkit aber mitzuteilen, dass beide am Ende semantisch in derselben Parser-Logik bzw. demselben AST-Reduzierer münden.
-```grammar
+
+```md
 RULE ClassicFunctionDecl = Rule "FunctionDecl" <= "fn" identifier:IDENTIFIER "(" args:IdentList? ")" body:Block
 RULE ArrowFunctionDecl   = Rule "FunctionDecl" <= "fn" identifier:IDENTIFIER "=>" body:Statement
 ```
@@ -85,7 +104,8 @@ RULE ArrowFunctionDecl   = Rule "FunctionDecl" <= "fn" identifier:IDENTIFIER "=>
 ## 4. Syntax Highlighting (HL)
 
 Da das Toolkit durch die `TKN`- und `META`-Blöcke bereits die genauen Positionsdaten (Zeile, Spalte) aller relevanten Sprachelemente kennt, erfolgt die Konfiguration für Editoren (wie VS Code TextMate-Scopes) über ein einfaches Direkt-Mapping mit `=`:
-```grammar
+
+```md
 HL KEYWORD = "keyword.control"
 HL LITERAL = "constant.language"
 HL NUMBER  = "constant.numeric"
@@ -99,10 +119,10 @@ HL COMMENT = "comment.line"
 
 Hier ist die vollständige, bereinigte Grammatikdatei für den aktuellen Sprachumfang von *Poo*:
 
-```grammar
-# ==============================================================================
+```md
+# ======================================================================
 # POO LANGUAGE SPECIFICATION (DSL REFERENCE)
-# ==============================================================================
+# ======================================================================
 
 META LIST keywords = as break continue catch do fn for if in new pkg pnt prop ref return static switch until use while yield
 META LIST literals = false null true undefined
