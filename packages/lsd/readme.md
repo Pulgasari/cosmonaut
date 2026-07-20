@@ -311,9 +311,15 @@ HL STRING  = "string.quoted"
 
 --- we need
 
+terminate == ende der zeile
+
 many0
 many1
 recursion
+
+{ }  = 0 oder n
+{ }1 = 1 oder n
+{ }5 = 5 oder n
 
 
 --- syntax goals
