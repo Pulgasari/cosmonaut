@@ -69,7 +69,7 @@ META LIST operators = (
 }
 ```
 
-### TKN
+## TKN
 
 Defines tokens using JavaScript regular expression literals, which should include the sticky flag `/y` for high-performance, pointer-based text analysis:
 
