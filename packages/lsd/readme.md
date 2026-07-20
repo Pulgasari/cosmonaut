@@ -28,20 +28,35 @@ It is divided into six functional keywords:
 
 ## META
 
-### META
+To provide meta information for your language the `META` keywordis provided. Her you could define whatever you think is necessary.
+
+### `META`
+
+With the blank `META` keyword a simple constant could defined.
+
+String could be escaped with backticks `\`...\`` or backslash `\\` but in most cases is not necessary.
+
+```md
+META language = `poo`
+META language = poo
+```
 
 ### META LIST
 
-Defines static word or symbol lists. To prevent unnecessary bloat, standard character ranges (e.g., `a-z`, `A-Z`, `0-9`) can be specified. 
+Defines static list of words or symbols.
 
-Since the equals sign `=` and spaces are control characters of the DSL, special symbols can either be escaped with a backslash (`\=`) or entirely wrapped in backticks (`` ` `=` ``) as a template string literal:
+To prevent unnecessary bloat, standard character ranges (e.g., `a-z`, `A-Z`, `0-9`) can be specified. 
+
+Since the equals sign `=` and spaces are control characters of the DSL, special symbols can either be escaped with a backslash (`\=`) or entirely wrapped in backticks (``  `=` ``) as a template string literal:
 
 ```md
-META LIST symbols = a-z A-Z 0-9 `_` `$`
-META LIST puncts  = `{` `}` `(` `)` `[` `]` `,` `;` `.` `:` `?` \=
+META LIST puncts  = { } ( ) [ ] , ; . : ? \=
+META LIST symbols = a-z A-Z 0-9 _ $
+
 ```
 
-### META LIST operators
+### META TABLE
+
 Defines operator groups and their priority (precedence) for the integrated Pratt parser:
 ```md
 META LIST operators = (
