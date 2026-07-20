@@ -24,6 +24,8 @@ It is divided into six functional keywords:
 * **[`CODE`](#code)**: Template definitions for generating target source code from AST nodes.
 * **[`HL`](#hl)**: Mappings for semantic and syntactic code highlighting.
 
+```md
+META TYPE
 ---
 
 ## META
