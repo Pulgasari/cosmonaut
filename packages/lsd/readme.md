@@ -228,9 +228,6 @@ RULE decl-val   == NODE <= `val` id-val  ( `#=`| `=` ) expr `;`
 
 # ------------ Functions -----------------------------------------------
 
-RULE decl-fn         == NODE <= decl-fn-classic | decl-fn-arrow
-RULE decl-fn-classic ==         `fn` IDENTIFIER `(` args:list-id? `)` body:block
-RULE decl-fn-arrow   ==         `fn` IDENTIFIER ( `=` params-fn? )? `=>` body:statement
 
 RULE fn-params == `(` list-id? `)` | list-id
 RULE list-id   == IDENTIFIER ( `,`? IDENTIFIER )*
@@ -246,7 +243,7 @@ RULE arg-bare-single ==         LITERAL | IDENTIFIER | STRING | NUMBER
 RULE list-args-call  ==         list-args-named / list-expr
 RULE list-args-named == NODE <= args:arg-named ( `,`? arg-named )*
 RULE arg-named       == NODE <= key:IDENTIFIER `:` value:expr
-RULE list-expr       == NODE <= expr ( `,`? expr )*
+
 
 RULE expr-new       == `new` IDENTIFIER [ `(` `)` ]
 RULE expr-obj-inner ==
@@ -256,21 +253,24 @@ RULE expr-pattern-obj-inner
 
 # ------------ Literals ------------------------------------------------
 
-RULE literal-array  == NODE <=  `[` { list-expr } `]`
-RULE literal-list   == NODE <= `#[`   list-expr   `]`
-RULE literal-record == NODE <= `#(`   list-expr  `)`
-RULE literal-tuple  == NODE <= `#(`   list-expr  `)`
+RULE decl-val == 
+
+RULE list-expr       == expr ( `,`? expr )*
+RULE literal-array  <= { items: 0, type: 'Array'  } ==  `[` [list-expr] `]`
+RULE literal-list   <= { items: 0, type: 'List'   } == `#[` [list-expr] `]`
+RULE literal-record <= { items: 0, type: 'Record' } == `#{` [list-expr] `}`
+RULE literal-tuple  <= { items: 0, type: 'Tuple'  } == `#(` [list-expr] `)`
 
 # //////////// AST CREATION ////////////////////////////////////////////
 
 NODE arg-named       == { key, value }
 NODE call-fn         == { callee, args }
-NODE decl-fn         == { identifier, args, body }
+
 NODE decl-var        == { name, value }
 NODE expr-binary     == { left, op, right }
-NODE literal-array   == { elements }
-NODE literal-list    == { elements }
-NODE literal-tuple   == { elements }
+NODE literal-array   == { items }
+NODE literal-list    == { items }
+NODE literal-tuple   == { items }
 NODE list-args-named == { args }
 NODE list-expr       == { items }
 
@@ -284,6 +284,12 @@ CODE decl-var       == `${name} :\=${value};\n`
 CODE expr-binary    == `(${left} ${op}${right})`
 CODE list-arg-named == `{\n${args, ",\n"}\n}`
 CODE list-expr      == `${items, ", "}`
+
+
+CreatePooArray
+CODE literal-array  == `make_poo_array (${items});`
+CODE literal-list   == `make_poo_list  (${items});`
+CODE literal-tuple  == `make_poo_tuple (${items});`
 
 # //////////// SYNTAX HIGHLIGHTING /////////////////////////////////////
 
