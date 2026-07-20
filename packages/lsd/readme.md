@@ -180,20 +180,22 @@ Below is the complete unified `.lsd` specification for the current feature set o
 META char  == ( a..z | A..Z )
 META digit == 0..9
 
-META LIST keywords == as break continue catch do fn for if in new pkg pnt prop ref return static switch until use while yield
+META LIST keywords == as and break catch continue cpy do fail fn if kill loop in new obj or pkg ref return static switch use val yield
 META LIST literals == false null true undefined
 META LIST symbols  == a-z A-Z 0-9 `_` `$`
 
-META LIST operators = (
+META TABLE operators = (
   group         is String
   associativity is String
   precedence    is Number
 ) {
-  assign   left   100  ( = += -= *= `\=` ??= )
-  compare  idk    200  ( ~= == === != !== < > =< >= || && ?? )
+  assign   left   100  ( = += -= *= /= ??= #= )
+  compare  idk    200  ( ~= ~== == === != !== < > =< >= <=> || && ?? )
   additive left   300  ( + - )
   multi    left   400  ( * / % )
   pipe     left   500  ( >> >>> )
+  idk      idk    idk  ( |? |> |. )
+  idk      idk    idk  ( >=< )
 }
 
 # //////////// TOKENIZER ///////////////////////////////////////////////
