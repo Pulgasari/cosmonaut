@@ -156,7 +156,17 @@ HL LITERAL = `constant.language`
 
 ---
 
-## 6. Reference Implementation (Example: 'Poo' Language Specification)
+## Zusammenfassung LSD Syntax Rules
+
+- every line must start with `#` or LSD keyword or kept empty
+- comments are introduced by `#`
+- assignment is marked by `==`
+- control flow is marked by `=>` or`<=`
+- escaping is done by `\\` or wrapping inside backticks `\``
+
+---
+
+## Example: Reference Implementation
 
 Below is the complete unified `.lsd` specification for the current feature set of *Poo*:
 
@@ -188,9 +198,9 @@ META LIST operators = (
 TKN COMMENT     :: /\/\/[^\n]*/y
 TKN WHITESPACE  :: /[ \t\n\r]+/y
 
-TKN KEYWORD     = keywords
-TKN LITERAL     = literals
-TKN OPERATOR    = operators
+TKN KEYWORD     == @keywords
+TKN LITERAL     == @literals
+TKN OPERATOR    == @operators
 
 TKN NUMBER      == /0[xX][0-9a-fA-F_]+|0[bB][01_]+|\d[\d_]*\.\d[\d_]*(?:[eE][+-]?\d+)?|\d[\d_]*/y
 TKN STRING      == /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`])*`/y
@@ -198,20 +208,20 @@ TKN IDENTIFIER  == /[a-zA-Z_$][a-zA-Z0-9_$]*/y
 
 # //////////// RULES ///////////////////////////////////////////////////
 
-RULE Program   :: Statement*
-RULE Statement :: VarDecl | FunctionDecl | ExpressionStatement
+RULE program   :: statement*
+RULE statement :: decl-var | decl-fn | statement-expr
 
 # ------------ Variables -----------------------------------------------
 
-RULE decl-const = `val` `#` IDENTIFIER `=` Expression `;`
-RULE decl-val   = `val`     IDENTIFIER `=` Expression `;`
-RULE decl-var   = Node <= decl-const | decl-var
-NODE decl-var   = { name, value }
+RULE decl-const == `val` `#` IDENTIFIER `=` expr `;`
+RULE decl-val   == `val`     IDENTIFIER `=` expr `;`
+RULE decl-var   == NODE <= decl-const | decl-var
+NODE decl-var   == { name, value }
 
 # ------------ Functions -----------------------------------------------
 
-RULE decl-fn = Node <= decl-fn/classic / decl-fn-arrow
-NODE decl-fn = { identifier, args, body }
+RULE decl-fn == NODE <= decl-fn/classic / decl-fn-arrow
+NODE decl-fn == { identifier, args, body }
 
 RULE decl-fn-classic = Rule `decl-fn` <= `fn` identifier:IDENTIFIER `(` args:IdentList? `)` body:Block
 RULE decl-fn-arrow   = Rule `decl-fn` <= `fn` identifier:IDENTIFIER ( `=` args:FunctionParams? )? `=>` body:Statement
