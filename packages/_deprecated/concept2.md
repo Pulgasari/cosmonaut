@@ -86,15 +86,16 @@ TYPE == { left, op, right }
 RULE == Expr OPERATOR Expr => 1 2 3
 CODE == `(${left} ${op}${right})`
 
+#### NamedArgumentsList
 META NamedArgsList
 TYPE == { args }
-RULE == decl-prop-named ( `,`? decl-prop-named )* => 1
+RULE == NamedPropDecl ( `,`? NamedPropDecl )* => 1
 CODE == `{\n${args, ",\n"}\n}`
 
 #### NamedPropDeclaration
 META NamedPropDecl
 TYPE == { key, value }
-RULE == IDENTIFIER `:` Expression => 1 3
+RULE == IDENTIFIER `:` Expr => 1 3
 CODE == `${key} \=${value}`
 
 #### ExpressionArgumentsList
