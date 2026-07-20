@@ -11,9 +11,10 @@ META PROP char  == ( a..z | A..Z )
 META PROP digit == 0..9
 META PROP id    == IDENTIFIER
 
+META LIST builtins == Array Blob Bool Char Color Date Enum Generator List Map Number Queue Pattern Record RegExp Set Stack String Store Symbol Tree Tuple Union
 META LIST keywords == as and break catch continue cpy do fail fn if kill loop in new obj or pkg ref return skip static switch use val yield
 META LIST literals == false null true undefined
-META LIST symbols  == a-z A-Z 0-9 `_` `$`
+META LIST symbols  == a-z A-Z 0-9 _ @ $ & \#
 
 META TABLE operators == (
   group         is String
