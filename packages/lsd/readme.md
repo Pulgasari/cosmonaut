@@ -178,48 +178,47 @@ TKN KEYWORD     = keywords
 TKN LITERAL     = literals
 TKN OPERATOR    = operators
 
-TKN NUMBER      = /0[xX][0-9a-fA-F_]+|0[bB][01_]+|\d[\d_]*\.\d[\d_]*(?:[eE][+-]?\d+)?|\d[\d_]*/y
-TKN STRING      = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`])*`/y
-TKN IDENTIFIER  = /[a-zA-Z_$][a-zA-Z0-9_$]*/y
+TKN NUMBER      == /0[xX][0-9a-fA-F_]+|0[bB][01_]+|\d[\d_]*\.\d[\d_]*(?:[eE][+-]?\d+)?|\d[\d_]*/y
+TKN STRING      == /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`])*`/y
+TKN IDENTIFIER  == /[a-zA-Z_$][a-zA-Z0-9_$]*/y
 
 # //////////// RULES ///////////////////////////////////////////////////
-
-# ?  =
-# !1 = many1
 
 RULE Program   :: Statement*
 RULE Statement :: VarDecl | FunctionDecl | ExpressionStatement
 
-# Variables
+# ------------ Variables -----------------------------------------------
+
 RULE decl-const = `val` `#` IDENTIFIER `=` Expression `;`
 RULE decl-val   = `val`     IDENTIFIER `=` Expression `;`
 RULE decl-var   = Node <= decl-const | decl-var
 NODE decl-var   = { name, value }
 
-# Functions
+# ------------ Functions -----------------------------------------------
 RULE decl-fn = Node <= decl-fn/classic / decl-fn-arrow
 NODE decl-fn = { identifier, args, body }
 
-RULE decl-fn-classic = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER `(` args:IdentList? `)` body:Block
-RULE decl-fn-arrow   = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER ( `=` args:FunctionParams? )? `=>` body:Statement
+RULE decl-fn-classic = Rule `decl-fn` <= `fn` identifier:IDENTIFIER `(` args:IdentList? `)` body:Block
+RULE decl-fn-arrow   = Rule `decl-fn` <= `fn` identifier:IDENTIFIER ( `=` args:FunctionParams? )? `=>` body:Statement
 
-RULE fn-params = `(` IdentList? `)` / IdentList
-RULE IdentList = IDENTIFIER ( `,`? IDENTIFIER )*
-RULE block     = `{` Statement* `}`
+RULE fn-params == `(` IdentList? `)` / IdentList
+RULE IdentList == IDENTIFIER ( `,`? IDENTIFIER )*
+RULE block     => `{` Statement* `}`
 
-# Expressions & Calls
-RULE expr = FunctionCall / expr-binary / LITERAL / IDENTIFIER / STRING / NUMBER
+# ------------ Expressions & Calls -------------------------------------
+
+RULE expr = call-fn / expr-binary / LITERAL / IDENTIFIER / STRING / NUMBER
 
 RULE expr-binary = Node <= left:Expression op:OPERATOR right:Expression
 NODE expr-binary = { left, op, right }
 
-RULE FunctionCall = Node <= callee:IDENTIFIER ( args:ParenCallArgs / args:SingleBareArg )
-NODE FunctionCall = { callee, args }
+RULE call-fn = Node <= callee:IDENTIFIER ( args:ParenCallArgs / args:SingleBareArg )
+NODE call-fn = { callee, args }
 
-RULE ParenCallArgs = `(` CallArgsList? `)`
-RULE SingleBareArg = LITERAL / IDENTIFIER / STRING / NUMBER
+RULE ParenCallArgs = `(` list-args-call? `)`
+RULE SingleBareArg = LITERAL | IDENTIFIER | STRING | NUMBER
 
-RULE CallArgsList = NamedArgsList / ExpressionList
+RULE CallArgsList = list-args-named / list-expr
 
 RULE list-args-named = Node <= args:NamedArg ( `,`? args:NamedArg )*
 NODE list-args-named = { args }
@@ -227,18 +226,19 @@ NODE list-args-named = { args }
 RULE arg-named = Node <= key:IDENTIFIER `:` value:Expression
 NODE arg-named = { key, value }
 
-RULE ExpressionList = Node <= items:Expression ( `,`? items:Expression )*
-NODE ExpressionList = { items }
+RULE list-expr = Node <= items:expr ( `,`? items:expr )*
+NODE list-expr = { items }
 
-# Literals
-RULE literal-array = Node <= `[` elements:ExpressionList? `]`
+# ------------ Literals ------------------------------------------------
+
+RULE literal-array = Node <= `[` { elements: list-expr } `]`
 NODE literal-array = { elements }
 
-RULE literal-list = Node <= `#[` elements:ExpressionList? `]`
+RULE literal-list = Node <= `#[` elements: list-expr `]`
 NODE literal-list = { elements }
 
-RULE literal-tuple = Node <= `#(` elements:ExpressionList? `)`
-NODE literal-tuple = { elements }
+RULE literal-tuple == Node <= `#(` elements:list-expr? `)`
+NODE literal-tuple == { elements }
 
 # //////////// CODEGEN (Target: Odin) //////////////////////////////////
 
@@ -262,5 +262,10 @@ HL NUMBER  = "constant.numeric"
 HL STRING  = "string.quoted"
 HL COMMENT = "comment.line"
 ```
+
+
+```md
+# ?  =
+# !1 = many1
 ```
-`
+
