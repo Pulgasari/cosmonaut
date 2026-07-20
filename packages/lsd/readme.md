@@ -319,7 +319,12 @@ non-terminal = RuleName
   ( ...   ... ) == sequence (alles muss matchen)
   ( ... | ... ) == ordered choice
 
-  A? or [A]  == match 0 or 1 times + greedy if it matches
+  A? or [A]  == match  0 or 1 times  + greedy 
+  A*         == match  0 or infinity + greedy
+  A+         == expect 1 or infinity + greedy
+ &A          == lookahead +1
+ !A          == lookahead -1
+ !.          = eof
 
 --- we need
 
