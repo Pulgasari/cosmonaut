@@ -1,6 +1,6 @@
 
 ```md
-#### FnDecl
+#### FunctionDeclaration
 TYPE == { identifier, args, body }
 RULE == fn IDENT     ArgsList      Block     => 1 3 5
 RULE == fn IDENT `=` ArgsList `=>` Statement => 1 4 7
