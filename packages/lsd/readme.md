@@ -341,6 +341,12 @@ non-terminal = RuleName
 
 --- we need
 
+  A*    == many  + greedy
+  A+    == many1 + greedy
+  A?    == optional
+ !A     lookahead -1
+ &A     lookaheqd +1
+
 terminate == ende der zeile
 
 many0
