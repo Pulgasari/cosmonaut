@@ -1,4 +1,52 @@
 
+
+```md
+TYPE decl-val == switch ( identifier, mode, expr ) {
+  (
+}
+
+NODE decl-fn         == { identifier, args, body }
+RULE decl-fn         == NODE <= decl-fn-classic | decl-fn-arrow
+RULE decl-fn-classic ==         `fn` IDENTIFIER `(` args:list-id? `)` body:block
+RULE decl-fn-arrow   ==         `fn` IDENTIFIER ( `=` params-fn? )? `=>` body:statement
+
+
+RULE decl-fn         == 
+RULE decl-fn-classic == NODE 'FnDeclaration' <= fn IDENTIFIER   ( IdentifierList )      Block     <> 1 3 5    
+RULE decl-fn-arrow   == NODE 'FnDeclaration' <= fn IDENTIFIER = ( IdentifierList ) `=>` Statement <> 1 4 7    
+
+NODE FnDeclaration == { identifier, args, body }
+RULE FnDeclaration => | fn IDENTIFIER   ( IdentifierList )      Block     <> NODE 1 3 5    
+                      | fn IDENTIFIER = ( IdentifierList ) `=>` Statement <> NODE 1 4 7    
+
+
+NODE FnDecl == { identifier, args, body }
+RULE FnDecl => | fn IDENT   ( IdentList )      Block     <> NODE 1 3 5
+               | fn IDENT = ( IdentList ) `=>` Statement <> NODE 1 4 7    
+
+NODE FnDecl == { identifier, args, body }
+RULE FnDecl == fn IDENT     ArgsList      Block     => NODE 1 3 5
+RULE FnDecl == fn IDENT `=` ArgsList `=>` Statement => NODE 1 4 7    
+
+RULE Dispatch == KEYWORD ? fn  : FnDecl
+                         ? val : ValDecl
+
+
+const RULE = {
+  seq(
+    token('fn'),
+    token('IDENTIFIER'),
+    choice(
+      wrapped( IdentifierList, '()').parse('Block').capture('body'),
+      
+    )
+
+  )
+}
+```
+
+
+
 lexer / tokenizer / scanner
 - 1st stage: scan
 
