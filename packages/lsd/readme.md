@@ -180,7 +180,7 @@ Below is the complete unified `.lsd` specification for the current feature set o
 META char  == ( a..z | A..Z )
 META digit == 0..9
 
-META LIST keywords == as and break catch continue cpy do fail fn if kill loop in new obj or pkg ref return static switch use val yield
+META LIST keywords == as and break catch continue cpy do fail fn if kill loop in new obj or pkg ref return skip static switch use val yield
 META LIST literals == false null true undefined
 META LIST symbols  == a-z A-Z 0-9 `_` `$`
 
