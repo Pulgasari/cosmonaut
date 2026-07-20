@@ -248,12 +248,18 @@ RULE list-args-named == NODE <= args:arg-named ( `,`? arg-named )*
 RULE arg-named       == NODE <= key:IDENTIFIER `:` value:expr
 RULE list-expr       == NODE <= expr ( `,`? expr )*
 
+RULE expr-new       == `new` IDENTIFIER [ `(` `)` ]
+RULE expr-obj-inner ==
+
+RULE expr-pattern-list-inner == expr-pattern-list-inner 
+RULE expr-pattern-obj-inner
+
 # ------------ Literals ------------------------------------------------
 
 RULE literal-array  == NODE <=  `[` { list-expr } `]`
 RULE literal-list   == NODE <= `#[`   list-expr   `]`
-RULE literal-record == NODE <= `#(`   list-expr?  `)`
-RULE literal-tuple  == NODE <= `#(`   list-expr?  `)`
+RULE literal-record == NODE <= `#(`   list-expr  `)`
+RULE literal-tuple  == NODE <= `#(`   list-expr  `)`
 
 # //////////// AST CREATION ////////////////////////////////////////////
 
