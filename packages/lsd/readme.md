@@ -211,20 +211,28 @@ TKN IDENTIFIER  == /[a-zA-Z_$][a-zA-Z0-9_$]*/y
 RULE program   :: statement*
 RULE statement :: decl-var | decl-fn | statement-expr
 
+RULE id           == ? Letter { Letter | Digit | "_" } ? ;
+RULE id-const     == "#" id ;
+RULE id-label     == "$" id ;
+RULE id-ref       == "&" id ;
+RULE id-temp      == "@" id ;
+RULE id-qualified == id { "::" id } ;
+
+RULE expr-id == Node <= id-const | id-label | id-ref | id-temp | id-qualified
+
+
 # ------------ Variables -----------------------------------------------
 
 RULE decl-const == `val` `#` IDENTIFIER `=` expr `;`
 RULE decl-val   == `val`     IDENTIFIER `=` expr `;`
 RULE decl-var   == NODE <= decl-const | decl-var
-NODE decl-var   == { name, value }
+
 
 # ------------ Functions -----------------------------------------------
 
-RULE decl-fn == NODE <= decl-fn/classic / decl-fn-arrow
-NODE decl-fn == { identifier, args, body }
-
-RULE decl-fn-classic = Rule `decl-fn` <= `fn` identifier:IDENTIFIER `(` args:IdentList? `)` body:Block
-RULE decl-fn-arrow   = Rule `decl-fn` <= `fn` identifier:IDENTIFIER ( `=` args:FunctionParams? )? `=>` body:Statement
+RULE decl-fn         == NODE <= decl-fn-classic | decl-fn-arrow
+RULE decl-fn-classic == `fn` identifier:IDENTIFIER `(` args:IdentList? `)` body:Block
+RULE decl-fn-arrow   == `fn` identifier:IDENTIFIER ( `=` args:FunctionParams? )? `=>` body:Statement
 
 RULE fn-params == `(` IdentList? `)` / IdentList
 RULE IdentList == IDENTIFIER ( `,`? IDENTIFIER )*
@@ -232,27 +240,15 @@ RULE block     => `{` Statement* `}`
 
 # ------------ Expressions & Calls -------------------------------------
 
-RULE expr = call-fn / expr-binary / LITERAL / IDENTIFIER / STRING / NUMBER
-
-RULE expr-binary = Node <= left:Expression op:OPERATOR right:Expression
-NODE expr-binary = { left, op, right }
-
-RULE call-fn = Node <= callee:IDENTIFIER ( args:ParenCallArgs / args:SingleBareArg )
-NODE call-fn = { callee, args }
-
-RULE ParenCallArgs = `(` list-args-call? `)`
-RULE SingleBareArg = LITERAL | IDENTIFIER | STRING | NUMBER
-
-RULE CallArgsList = list-args-named / list-expr
-
-RULE list-args-named = Node <= args:NamedArg ( `,`? args:NamedArg )*
-NODE list-args-named = { args }
-
-RULE arg-named = Node <= key:IDENTIFIER `:` value:expr
-NODE arg-named = { key, value }
-
-RULE list-expr = Node <= items:expr ( `,`? items:expr )*
-NODE list-expr = { items }
+RULE expr            == call-fn / expr-binary / LITERAL / IDENTIFIER / STRING / NUMBER
+RULE expr-binary     == NODE <= left:Expression op:OPERATOR right:Expression
+RULE call-fn         == NODE <= callee:IDENTIFIER ( args:ParenCallArgs / args:SingleBareArg )
+RULE args-call-paren == `(` list-args-call? `)`
+RULE arg-bare-single == LITERAL | IDENTIFIER | STRING | NUMBER
+RULE list-args-call  == list-args-named / list-expr
+RULE list-args-named == NODE <= args:arg-named ( `,`? args:arg-named )*
+RULE arg-named       == NODE <= key:IDENTIFIER `:` value:expr
+RULE list-expr       == NODE <= items:expr ( `,`? items:expr )*
 
 # ------------ Literals ------------------------------------------------
 
@@ -262,23 +258,27 @@ RULE literal-tuple == Node <= `#(`   elements: list-expr?  `)`
 
 # //////////// AST CREATION ////////////////////////////////////////////
 
-NODE literal-array == { elements }
-NODE literal-list  == { elements }
-NODE literal-tuple == { elements }
+NODE arg-named       == { key, value }
+NODE call-fn         == { callee, args }
+NODE decl-fn         == { identifier, args, body }
+NODE decl-var        == { name, value }
+NODE expr-binary     == { left, op, right }
+NODE literal-array   == { elements }
+NODE literal-list    == { elements }
+NODE literal-tuple   == { elements }
+NODE list-args-named == { args }
+NODE list-expr       == { items }
 
 # //////////// CODEGEN (Target: Odin) //////////////////////////////////
 
-CODE expr-binary    = `(${left} ${op}${right})`
-CODE block          = `{\n${statements, "\n"}\n}`
-CODE ExpressionList = `${items, ", "}`
-CODE FunctionCall   = `${callee}(${args})`
-CODE arg-named      = `${key} \=${value}`
-CODE list-arg-named = `{\n${args, ",\n"}\n}`
-CODE decl-var       = `${name} :\=${value};\n`
-
-
-# Mapping Poo arrow and classic functions into native Odin procedures
-CODE FunctionDecl      = `${identifier} :\= proc(${args})${body};\n`
+CODE arg-named      == `${key} \=${value}`
+CODE block          == `{\n${statements, "\n"}\n}`
+CODE call-fb        == `${callee}(${args})`
+CODE decl-fn        == `${identifier} :\= proc(${args})${body};\n`
+CODE decl-var       == `${name} :\=${value};\n`
+CODE expr-binary    == `(${left} ${op}${right})`
+CODE list-arg-named == `{\n${args, ",\n"}\n}`
+CODE list-expr      == `${items, ", "}`
 
 # //////////// SYNTAX HIGHLIGHTING /////////////////////////////////////
 
