@@ -294,7 +294,9 @@ HL NUMBER  = "constant.numeric"
 HL STRING  = "string.quoted"
 
 ```
-
+[ A ]
+​Wiederholung (0 oder mehr): { A }
+​Wiederholung (1 oder mehr): Nicht nativ als Symbol vorhanden. Muss als A , { A } ausgeschrieben
 
 ```md
 ?  =
@@ -302,12 +304,13 @@ HL STRING  = "string.quoted"
 
 --- ebnf
 
- ,  = concat    =
- ;  = terminate =
- |  = alternate =
-( ) = group     = 
-[ ] = optional  =
-{ } = 0 oder n  = many
+      ,   == concat    =
+      ;   == terminate =
+      |   == alternate =
+    ( A ) == group     = 
+    [ A ] == optional  =
+    { A } == match 0 + infinity
+A , { A } == match 1 + infinity
 
 --- peg
 
