@@ -22,3 +22,8 @@ export const isString = (sth, length) => {
 
 export const isTitleCase = sth => /^[A-Z][a-zA-Z0-9_]*$/.test(sth);
 
+export const toPascalCase = sth => String(sth)
+  .split(/[-_]+/)
+  .filter(Boolean)
+  .map(part => part[0].toUpperCase() + part.slice(1))
+  .join('');
