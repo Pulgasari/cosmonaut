@@ -403,6 +403,7 @@ Many0Strict_M = ( Item ( "," Item )* )?
 Many0Strict ::= [ Item { `,` Item }  ]
 Many0Strict_B = ListOf<Item, ",">
 Many0Strict_B = ListOf<Item `,`>
+Many0Strict_B = ListPattern[Item `,`]
 
 -- opt traling sep but could empty
 Many0Trailing ::= [ Item { "," Item } [ "," ] ]
