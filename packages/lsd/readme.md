@@ -378,6 +378,67 @@ non-terminal = RuleName or name-rule
   KETTE [ `,` | `,` KETTE ]
   KETTE | [ `,` KETTE ]
 
+
+---
+
+--- many1 (Mindestens 1 Element
+-- no traling sep == "A" oder "A, B"
+Many1Strict ::= Item { "," Item }
+Many1Strict  <- Item ( "," Item )*
+Many1Strict_M = Item ( "," Item )*
+
+-- opt traling sep == "A", "A,", "A, B", "A, B,"
+Many1Trailing ::= Item { "," Item } [ "," ]
+Many1Trailing  <- Item ( "," Item )*  ","?
+Many1Trailing   = Item ( "," Item )*  ","?
+
+
+--- many0
+-- no traling sep but could empty
+Many0Strict ::= [ Item { "," Item }  ]
+Many0Strict  <- ( Item ( "," Item )* )?
+Many0Strict_M = ( Item ( "," Item )* )?
+Many0Strict_B = ListOf<Item, ",">
+
+-- opt traling sep but could empty
+Many0Trailing ::= [ Item { "," Item } [ "," ] ]
+Many0Trailing  <- ( Item ( "," Item )*  ","?  )?
+Many0Trailing   = ( Item ( "," Item )*  ","?  )?
+
+
+// --- many0 (0 oder mehr Elemente / Kann komplett leer sein) ---
+
+// 3. Strikt: Kann leer sein, kein Trailing Comma (Manuell)
+
+
+// 3. Strikt: Alternativ über die eingebaute Ohm-Funktion
+
+
+
+// 4. Erlaubt: Kann leer sein, optionales Trailing Comma
+
+
+
+
+# --- many1 (Mindestens 1 Element) ---
+
+# 1. Strikt: Kein Trailing Comma erlaubt
+
+
+# 2. Erlaubt: Trailing Comma ist optional
+
+
+
+# --- many0 (0 oder mehr Elemente / Kann komplett leer sein) ---
+
+# 3. Strikt: Kann leer sein, kein Trailing Comma
+
+
+# 4. Erlaubt: Kann leer sein, optionales Trailing Comma
+
+
+
+
 --- syntax goals
 
 - as less char bloat as possible (separators, escapings etc.)
