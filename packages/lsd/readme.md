@@ -363,17 +363,20 @@ non-terminal = RuleName or name-rule
 ---
   ( A )    == sequenz
   [ A ]    == optional
-  { A }    == match  0 or greedy
-  { A }+   == match  1 or greedy
-  { A }+n  == match  n or greedy
-  { A }*   == expect 1 or greedy
-  { A }*n  == expect 1 or greedy
+  { A }    == match  0 or greedy  |  could match but dont cares
+  { A }*   == match  1 or greedy  |  needs 1 match to be relevant
+  { A }*n  == match  n or greedy
+  { A }+   == expect 1 or greedy
+  { A }+n  == expect n or greedy
   
 
    A!    == lookahead +1
    A!n   == lookahead +n
   !A     == lookahead -1
  n!A     == lookahead -n
+
+  KETTE [ `,` | `,` KETTE ]
+  KETTE | [ `,` KETTE ]
 
 --- syntax goals
 
