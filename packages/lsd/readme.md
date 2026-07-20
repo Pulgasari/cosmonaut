@@ -26,7 +26,7 @@ It is divided into six functional keywords:
 
 ```md
 META TYPE
----
+```
 
 ## META
 
@@ -60,8 +60,9 @@ META LIST symbols = a-z A-Z 0-9 _ $
 ### META TABLE
 
 Defines operator groups and their priority (precedence) for the integrated Pratt parser:
+
 ```md
-META LIST operators = (
+META TABLE operators = (
   group         is String
   associativity is String
   precedence    is Number
@@ -175,11 +176,11 @@ META LIST operators = (
   associativity is String
   precedence    is Number
 ) {
-  assign   left   100  ( \= +\= -\= *\= /\= \?\?\= )
-  compare  idk    200  ( ~\= \=\= \=\=\= \!\= \!\=\= < > \=\< \>\= || && \?\? )
+  assign   left   100  ( = += -= *= `\=` ??= )
+  compare  idk    200  ( ~= == === != !== < > =< >= || && ?? )
   additive left   300  ( + - )
   multi    left   400  ( * / % )
-  pipe     left   500  ( |> \?\?> )
+  pipe     left   500  ( >> >>> )
 }
 
 # //////////// TOKENIZER ///////////////////////////////////////////////
@@ -280,7 +281,15 @@ HL COMMENT = "comment.line"
 
 
 ```md
-# ?  =
-# !1 = many1
+?  =
+!1 = many1
+
+
+--- syntax goals
+
+- as less char bloat as possible (separators, escapings etc.)
+- high or excellent readability
+- the synax does not have to be 100% identical on every level (meta, tokenizing, parsing, ast-building, codegen)
+
 ```
 
