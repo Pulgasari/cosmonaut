@@ -300,6 +300,21 @@ HL STRING  = "string.quoted"
 ?  =
 !1 = many1
 
+--- ebnf
+
+ ,  = concat    =
+ ;  = terminate =
+ |  = alternate =
+( ) = group     = 
+[ ] = optional  =
+{ } = 0 oder n  = many
+
+--- we need
+
+many0
+many1
+recursion
+
 
 --- syntax goals
 
