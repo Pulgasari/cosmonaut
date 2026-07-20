@@ -1,0 +1,10 @@
+{
+  "name": "@cosmonaut/generator",
+  "version": "1.0.0",
+  "exports": "./index.js",
+  "dependencies": [
+    "@cosmonaut/doc",
+    "@cosmonaut/doc-printer",
+    "@cosmonaut/utils"
+  ]
+}
