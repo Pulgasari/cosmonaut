@@ -105,10 +105,10 @@ CODE == `${items, ", "}`
 #### ArrayLikeLiteral
 META ArrayLikeLiteral
 TYPE == { elements, type }
-RULE == `#{` ArgsListExpr? `}` => 2 `Record`
-RULE == `#(` ArgsListExpr? `)` => 2 `Tuple`
-RULE == `#[` ArgsListExpr? `]` => 2 `List`
-RULE ==  `[` ArgsListExpr? `]` => 2 `Array`
+RULE == `#{` ArgsListExpr? `}` => 2 Record
+RULE == `#(` ArgsListExpr? `)` => 2 Tuple
+RULE == `#[` ArgsListExpr? `]` => 2 List
+RULE ==  `[` ArgsListExpr? `]` => 2 Array
 CODE == `${elements}`
 
 META ArrayLiteral
