@@ -86,29 +86,39 @@ TKN OPERATOR   = @operators
 String literals and node identifiers inside parsing rules are strictly wrapped in backticks (`` ` ``).
 
 ### A. Pure Grammar Rule (No Node output)
+
 When an expression merely groups or validates a syntax structure without leaving its own dedicated node in the memory tree, a simple `=` is used.
+
 ```md
 RULE Program = Statement*
 ```
 
 ### B. Implicit Node Routing (`= Node <=`)
+
 The `<=` arrow indicates data flow: The PEG pattern on the right is parsed, and values assigned via `:labels` flow leftward into the node. With `Node <=`, the toolkit automatically instantiates an AST node whose type exactly matches the name of the `RULE`.
+
 ```md
 RULE VarDecl = Node <= `val` name:IDENTIFIER `=` value:Expression `;`
 ```
+
 The corresponding `NODE` block declares the object's memory structure using a standard `=`:
+
 ```md
 NODE VarDecl = { name, value }
 ```
 
 ### C. Explicit Node Routing (`= Node \`Name\` <=`)
+
 If the result of a rule should be mapped to a node that is named differently than the rule itself, the target node name is explicitly provided in backticks.
+
 ```md
 RULE FunctionDecl = Node `FunctionDecl` <= ClassicFunctionDecl / ArrowFunctionDecl
 ```
 
 ### D. Rule Aliasing / Polymorphism (`= Rule \`Name\` <=`)
+
 Allows parsing two syntactically distinct patterns separately while instructing the toolkit that both ultimately resolve into the same parent rule logic or AST reducer.
+
 ```md
 RULE ClassicFunctionDecl = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER `(` args:IdentList? `)` body:Block
 RULE ArrowFunctionDecl   = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER `=>` body:Statement
@@ -135,9 +145,10 @@ CODE ExpressionList = `${items, ", "}`
 ## 5. Syntax Highlighting (HL)
 
 Direct mapping of tokens to standardized editor scopes (e.g., TextMate scopes used by VS Code):
+
 ```md
-HL KEYWORD = "keyword.control"
-HL LITERAL = "constant.language"
+HL KEYWORD = `keyword.control`
+HL LITERAL = `constant.language`
 ```
 
 ---
@@ -195,6 +206,7 @@ RULE decl-var   = Node <= decl-const | decl-var
 NODE decl-var   = { name, value }
 
 # ------------ Functions -----------------------------------------------
+
 RULE decl-fn = Node <= decl-fn/classic / decl-fn-arrow
 NODE decl-fn = { identifier, args, body }
 
@@ -223,7 +235,7 @@ RULE CallArgsList = list-args-named / list-expr
 RULE list-args-named = Node <= args:NamedArg ( `,`? args:NamedArg )*
 NODE list-args-named = { args }
 
-RULE arg-named = Node <= key:IDENTIFIER `:` value:Expression
+RULE arg-named = Node <= key:IDENTIFIER `:` value:expr
 NODE arg-named = { key, value }
 
 RULE list-expr = Node <= items:expr ( `,`? items:expr )*
@@ -231,13 +243,14 @@ NODE list-expr = { items }
 
 # ------------ Literals ------------------------------------------------
 
-RULE literal-array = Node <= `[` { elements: list-expr } `]`
-NODE literal-array = { elements }
+RULE literal-array == Node <=  `[` { elements: list-expr } `]`
+RULE literal-list  == Node <= `#[`   elements: list-expr   `]`
+RULE literal-tuple == Node <= `#(`   elements: list-expr?  `)`
 
-RULE literal-list = Node <= `#[` elements: list-expr `]`
-NODE literal-list = { elements }
+# //////////// AST CREATION ////////////////////////////////////////////
 
-RULE literal-tuple == Node <= `#(` elements:list-expr? `)`
+NODE literal-array == { elements }
+NODE literal-list  == { elements }
 NODE literal-tuple == { elements }
 
 # //////////// CODEGEN (Target: Odin) //////////////////////////////////
