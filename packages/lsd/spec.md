@@ -134,7 +134,7 @@ TKN :: OPERATOR == @operators
 
 ---
 
-## 3. Parser Rules & AST Nodes (RULE & NODE)
+## `RULE` – Parser Rules & AST Nodes (RULE & NODE)
 
 String literals and node identifiers inside parsing rules are strictly wrapped in backticks (`` ` ``).
 
@@ -147,27 +147,6 @@ RULE :: Program == Statement*
 RULE :: DeclStatement == VarDeclStatement | FnDeclStatemenr
 ```
 
-### B. Implicit Node Routing (`= Node <=`)
-
-The `<=` arrow indicates data flow: The PEG pattern on the right is parsed, and values assigned via `:labels` flow leftward into the node. With `Node <=`, the toolkit automatically instantiates an AST node whose type exactly matches the name of the `RULE`.
-
-```md
-RULE VarDecl = Node <= `val` name:IDENTIFIER `=` value:Expression `;`
-```
-
-The corresponding `NODE` block declares the object's memory structure using a standard `=`:
-
-```md
-NODE VarDecl = { name, value }
-```
-
-### C. Explicit Node Routing (`= Node \`Name\` <=`)
-
-If the result of a rule should be mapped to a node that is named differently than the rule itself, the target node name is explicitly provided in backticks.
-
-```md
-RULE FunctionDecl = Node `FunctionDecl` <= ClassicFunctionDecl / ArrowFunctionDecl
-```
 
 ### D. Rule Aliasing / Polymorphism (`= Rule \`Name\` <=`)
 
@@ -180,7 +159,7 @@ RULE ArrowFunctionDecl   = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER `=>
 
 ---
 
-## `CODE` – Code Generation (AST to Code)
+## `CODE` – Code Generation (AST to Final Code)
 
 The `CODE` block describes how an AST node is translated back into code. The syntax utilizes backticks for the template string and `${property}` for interpolation of node fields.
 
@@ -193,6 +172,19 @@ CODE VarDecl = `${name} :\= ${value};\n`
 # Example: Joining list items with a comma and a space
 CODE ExpressionList = `${items, ", "}`
 ```
+
+---
+
+## The Super-Block
+
+```md
+#### FunctionDeclaration
+META :: FnDecl
+TYPE == { identifier, args, body }
+RULE == `fn` IDENTIFIER     FnParams      Block     => 2 3 4
+RULE == `fn` IDENTIFIER `=` FnParams `=>` Statement => 2 4 6
+CODE == `${identifier} :\= proc(${args})${body};\n`
+````
 
 ---
 
@@ -213,7 +205,7 @@ Below is the complete unified `.lsd` specification for the current feature set o
 
 ```md
 # ======================================================================
-# POO :: LANGUAGE SPECIFICATION DATA :: poo.lsd :: Variant 2
+# POO :: LANGUAGE SPECIFICATION DATA :: poo.lsd
 # ======================================================================
 
 # //////////// META ////////////////////////////////////////////////////
