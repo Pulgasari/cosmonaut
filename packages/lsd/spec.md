@@ -11,6 +11,19 @@ A LSD file could serve as the **Single Source of Truth** for the entire lifecycl
 
 ---
 
+[`CODE`](#) ·
+[`META`](#) ·
+[`META LIST`](#) ·
+[`META PROP`](#) ·
+[`META TABLE`](#) ·
+[`RULE`](#) ·
+[`TYPE`](#) ·
+[`##`](#) ·
+[`==`](#) ·
+[`=>`](#) ·
+
+---
+
 ## 1. Core Architecture & Keywords
 
 The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the equals sign (`==`) for declarations and the directional arrow (`=>` / `<=`) for **syntactic data flow**. 
