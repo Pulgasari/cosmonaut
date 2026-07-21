@@ -268,7 +268,7 @@ META :: FnDecl
 TYPE == { identifier, args, body }
 RULE == `fn` IDENTIFIER     FnParams      Block     => 2 3 4
 RULE == `fn` IDENTIFIER `=` FnParams `=>` Statement => 2 4 6
-CODE == `${identifier} :\= proc(${args})${body};\n`
+CODE == `${identifier.value} := proc(${args}) ${body};`
 
 #### ObjectDeclaration
 META :: ObjDecl
@@ -284,15 +284,22 @@ RULE ==  `=` => true
 
 #### ValDeclaration
 META :: ValDecl
-TYPE == { name, value }
-RULE == `val` IDENTIFIER ValDeclOp Expr `;` => 2 4
-CODE == `${name} :\=${value};\n`
+TYPE == { name, mode, value }
+RULE == `val` IDENTIFIER ValDeclOp Expr `;` => 2 3 4
+CODE == `${name} := ${value};`
+
+#### ValDeclaration2
+META :: ValDeclaration2
+TYPE == { name: Token, mode, expr: Expression }
+RULE == `val` IDENTIFIER ValDeclOp ArrayLikeLiteral ';' => 2 3 4
+RULE == `val` IDENTIFIER ValDeclOp Expr             `;` => 2 3 4
+CODE == `${name} := ${expr.code};`
 
 #### NamedPropDeclaration
 META :: NamedPropDecl
 TYPE == { key, value }
 RULE == IDENTIFIER `:` Expr => 1 3
-CODE == `${key} \=${value}`
+CODE == `${key} = ${value}`
 
 # ------------ Expressions ---------------------------------------------
 
@@ -320,7 +327,7 @@ CODE == `${items, ", "}`
 META :: NamedArgsList
 TYPE == { args }
 RULE == NamedPropDecl ( `,`? NamedPropDecl )* => 1
-CODE == `{\n${args, ",\n"}\n}`
+CODE == `{${args, ', '}}`
 
 # ------------ Objects -------------------------------------------------
 
@@ -331,7 +338,7 @@ RULE == `#{` ArgsListExpr? `}` => 2 Record
 RULE == `#(` ArgsListExpr? `)` => 2 Tuple
 RULE == `#[` ArgsListExpr? `]` => 2 List
 RULE ==  `[` ArgsListExpr? `]` => 2 Array
-CODE == `${elements}`
+CODE == `poo_obj(${elements})`
 
 # //////////// SYNTAX HIGHLIGHTING /////////////////////////////////////
 
