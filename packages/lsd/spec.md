@@ -14,18 +14,16 @@ Table of Contents:
 
 ## Introduction
 
-This document defines the current specification of the ***Language Specification Data*** DSL (`.lsd`) created for the **[Cosmonaut Toolkit](/)**. 
+This document defines the current specification of the ***Language Specification Data*** DSL (`.lsd`) created for the **[Cosmonaut Toolkit](/)**.
 
-A LSD file could serve as the **Single Source of Truth** for the entire lifecycle of a language: tokenization, parsing, AST generation, code generation, and syntax highlighting, LSP stuff etc.
+The Goals of **LSD***:
 
-The Goals:
-
-- Having a centralized place when creating a custom language
-- Reduce the need for punctuation bloat when defining grammar rules
+- Having a **Single Source of Truth** for the entire lifecycle of a language: tokenization, parsing, AST generation, code generation, and syntax highlighting, LSP stuff etc.
+- Reduce the need for punctuation bloat when defining grammar rules of a language
 
 ---
 
-## Core Architecture / Keywords & Semantics
+## Semantics of LSD
 
 The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the equals sign (`==`) for declarations and the directional arrow (`=>` / `<=`) for **syntactic data flow**. 
 
@@ -67,6 +65,17 @@ It is divided into six functional keywords:
 [`HL`](#hl)                 | Mappings for semantic and syntactic code highlighting
 `::` | is an **optional** for enhanced readability placed between keyword and name
 
+### Semantics of Grammar Rules
+
+The Grammar Notation follows a EBNF/PEG like syntax while not being idenitcal.
+
+...   | ...
+------|----
+`\|`  |
+`( )` |
+`[ ]` |
+`{ }` |
+
 ---
 
 ## META
@@ -75,9 +84,9 @@ To provide meta information for your language the `META` keyword is provided. He
 
 ### `META PROP`
 
-By `META PROP` a simple constant could defined which then could be referenced by a `@`-prefix.
+By `META PROP` a simple static variable (constant) could defined which then could be referenced by a `@`-prefix.
 
-String could be escaped with backticks `` ` `` or backslash `\` but in most cases is not necessary.
+String could be escaped with backticks `` ` `` or backslash `\` but in most cases is not necessary here.
 
 ```md
 META :: language == `poo`
@@ -100,7 +109,7 @@ META LIST :: symbols == a-z A-Z 0-9 _ $
 
 ### `META TABLE`
 
-Defines operator groups and their priority (precedence) for the integrated Pratt parser:
+**Example:** Defines operator groups and their priority (precedence) for the integrated Pratt parser:
 
 ```md
 META TABLE :: operators == (
@@ -134,8 +143,8 @@ String literals and node identifiers inside parsing rules are strictly wrapped i
 When an expression merely groups or validates a syntax structure without leaving its own dedicated node in the memory tree, a simple `==` is used.
 
 ```md
-RULE Program == Statement*
-RULE DeclStatement == VarDeclStatement | FnDeclStatemenr
+RULE :: Program == Statement*
+RULE :: DeclStatement == VarDeclStatement | FnDeclStatemenr
 ```
 
 ### B. Implicit Node Routing (`= Node <=`)
