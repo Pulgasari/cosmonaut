@@ -229,20 +229,20 @@ RULE :: Statement     == VarDecl | FnDecl | ExprStatement
 RULE :: FnParams      == `(` IdentList? `)` | IdentList
 RULE == IdentList     == IDENTIFIER ( `,`? IDENTIFIER )*
 RULE == Block         == `{` Statement* `}`
-RULE == ParenCallArgs == `(` CallArgsList? `)`
-RULE == SingleBareArg == LITERAL | IDENTiFIER | STRING | NUMBER
-RULE == CallArgsList  == NamedArgsList | ExprArgsList
+RULE ParenCallArgs == `(` CallArgsList? `)`
+RULE SingleBareArg == LITERAL | IDENTiFIER | STRING | NUMBER
+RULE CallArgsList  == NamedArgsList | ExprArgsList
 
 # ------------ Declarations --------------------------------------------
 
 #### ValDeclarationOperator
-META ValDeclOp
+META :: ValDeclOp
 TYPE == { isConst: Bool }
 RULE == `#=` => false
 RULE ==  `=` => true
 
 #### ValDeclaration
-META ValDecl
+META :: ValDecl
 TYPE == { name, value }
 RULE == `val` IDENTIFIER ValDeclOp Expr `;` => 2 4
 CODE == `${name} :\=${value};\n`
