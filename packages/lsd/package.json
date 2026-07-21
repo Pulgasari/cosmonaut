@@ -1,0 +1,13 @@
+{
+  "name": "@cosmonaut/lsd",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./index.js",
+  "dependencies": {
+    "@cosmonaut/lexer": "*",
+    "@cosmonaut/generator": "*",
+    "@cosmonaut/parser": "*",
+    "@cosmonaut/presets": "*",
+    "@cosmonaut/utils": "*"
+  }
+}
