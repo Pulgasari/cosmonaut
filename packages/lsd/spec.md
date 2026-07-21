@@ -50,7 +50,7 @@ The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the
 - there is no special marker for end of statement but the EOF (end of line)
 - assignment is marked by `==`
 - control flow is marked by `=>` or`<=`
-- escaping is done by `\\` or wrapping inside backticks `` ` ``
+- escaping is done by `\` or wrapping inside backticks `` ` ``
 
 It is divided into six functional keywords:
 
