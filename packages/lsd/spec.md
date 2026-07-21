@@ -5,6 +5,15 @@
 
 ---
 
+Table of Contents:
+[Introduction](#introduction) ·
+[Semantics](#) ·
+[Example](#example) ·
+
+---
+
+## Introduction
+
 This document defines the current specification of the ***Language Specification Data*** DSL (`.lsd`) created for the **[Cosmonaut Toolkit](/)**. 
 
 A LSD file could serve as the **Single Source of Truth** for the entire lifecycle of a language: tokenization, parsing, AST generation, code generation, and syntax highlighting, LSP stuff etc.
@@ -17,6 +26,8 @@ The Goals:
 ---
 
 ## Core Architecture / Keywords & Semantics
+
+The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the equals sign (`==`) for declarations and the directional arrow (`=>` / `<=`) for **syntactic data flow**. 
 
 [`CODE`](#) ·
 [`HL`](#) ·
@@ -33,7 +44,12 @@ The Goals:
 [`#`](#) ·
 [`####`](#)
 
-The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the equals sign (`==`) for declarations and the directional arrow (`=>` / `<=`) for **syntactic data flow**. 
+- every line must start with `#` or [LSD keyword](#) or kept empty
+- comments are introduced by `#`
+- meta-superblocks could be introduced by `####`
+- assignment is marked by `==`
+- control flow is marked by `=>` or`<=`
+- escaping is done by `\\` or wrapping inside backticks `\``
 
 It is divided into six functional keywords:
 
@@ -50,12 +66,7 @@ It is divided into six functional keywords:
 [`HL`](#hl)                 | Mappings for semantic and syntactic code highlighting
 `::` | is an **optional** for enhanced readability placed between keyword and name
 
-- every line must start with `#` or [LSD keyword](#) or kept empty
-- comments are introduced by `#`
-- meta-superblocks could be introduced by `####`
-- assignment is marked by `==`
-- control flow is marked by `=>` or`<=`
-- escaping is done by `\\` or wrapping inside backticks `\``
+---
 
 ## META
 
