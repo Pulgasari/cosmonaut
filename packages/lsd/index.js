@@ -23,7 +23,7 @@ export function parseLSD (source) {
     meta:          parseMeta(sections.META),
     tokens:        parseTokens(sections.TKN),
     highlighting:  parseHighlighting(sections.HL),
-    grammar:       parseGrammar({ ruleLines: sections.RULE, blockSections: sections.BLOCKS }),
+    grammar: parseGrammar({ ruleLines: sections.RULE, blocks: sections.BLOCKS }),
   };
 }
 
