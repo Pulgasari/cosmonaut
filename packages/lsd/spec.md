@@ -75,6 +75,9 @@ The Grammar Notation follows a EBNF/PEG like syntax while not being idenitcal.
 `( )` |
 `[ ]` |
 `{ }` |
+`*`   |
+`+`   |
+`?`   |
 
 ---
 
