@@ -47,9 +47,10 @@ The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the
 - every line must start with `#` or [LSD keyword](#) or kept empty
 - comments are introduced by `#`
 - meta-superblocks could be introduced by `####`
+- there is no special marker for end of statement but the EOF (end of line)
 - assignment is marked by `==`
 - control flow is marked by `=>` or`<=`
-- escaping is done by `\\` or wrapping inside backticks `\``
+- escaping is done by `\\` or wrapping inside backticks `` ` ``
 
 It is divided into six functional keywords:
 
@@ -72,15 +73,15 @@ It is divided into six functional keywords:
 
 To provide meta information for your language the `META` keyword is provided. Here you could define whatever you think is necessary.
 
-### `META`
+### `META PROP`
 
-With the blank `META` keyword a simple constant could defined.
+By `META PROP` a simple constant could defined which then could be referenced by a `@`-prefix.
 
-String could be escaped with backticks `\`...\`` or backslash `\\` but in most cases is not necessary.
+String could be escaped with backticks `` ` `` or backslash `\` but in most cases is not necessary.
 
 ```md
-META language = `poo`
-META language = poo
+META :: language == `poo`
+META :: language == poo
 ```
 
 ### `META LIST`
