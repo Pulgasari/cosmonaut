@@ -272,9 +272,9 @@ CODE == `${identifier.value} := proc(${args}) ${body};`
 
 #### ObjectDeclaration
 META :: ObjDecl
-TYPE == { identifier, body }
+TYPE == { name: String, body: Block }
 RULE == `obj` IDENTIFIER `=` Block => 2 4
-CODE == `${identifier} :\= poo_make_obj()${body};\n`
+CODE == `${name} := poo_make_obj() ${body.code};`
 
 #### ValDeclarationOperator
 META :: ValDeclOp
@@ -307,7 +307,7 @@ CODE == `${key} = ${value}`
 META :: BinaryExpr
 TYPE == { left, operator, right }
 RULE == Expr OPERATOR Expr => 1 2 3
-CODE == `(${left} ${op}${right})`
+CODE == `(${left} ${operator}${right})`
 
 # ------------ Functions -----------------------------------------------
 
@@ -321,7 +321,7 @@ CODE == `${callee}(${args})`
 META :: ExprArgsList
 TYPE == { items }
 RULE == Expr ( `,`? Expr )* => 1
-CODE == `${items, ", "}`
+CODE == `${items, ', '}`
 
 #### NamedArgumentsList
 META :: NamedArgsList
