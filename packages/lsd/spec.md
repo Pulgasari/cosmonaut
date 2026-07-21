@@ -12,6 +12,7 @@ A LSD file could serve as the **Single Source of Truth** for the entire lifecycl
 ---
 
 [`CODE`](#) ·
+[`HL`](#) ·
 [`META`](#) ·
 [`META LIST`](#) ·
 [`META PROP`](#) ·
@@ -21,6 +22,7 @@ A LSD file could serve as the **Single Source of Truth** for the entire lifecycl
 [`##`](#) ·
 [`==`](#) ·
 [`=>`](#) ·
+[`@`](#) ·
 
 ---
 
