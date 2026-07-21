@@ -333,12 +333,12 @@ CODE == `{${args, ', '}}`
 
 #### ArrayLikeLiteral
 META :: ArrayLikeLiteral
-TYPE == { elements, type }
-RULE == `#{` ArgsListExpr? `}` => 2 Record
-RULE == `#(` ArgsListExpr? `)` => 2 Tuple
-RULE == `#[` ArgsListExpr? `]` => 2 List
-RULE ==  `[` ArgsListExpr? `]` => 2 Array
-CODE == `poo_obj(${elements})`
+TYPE == { type, elements }
+RULE == `#{` ArgsListExpr? `}` => `Record' 2
+RULE == `#(` ArgsListExpr? `)` => `Tuple`  2
+RULE == `#[` ArgsListExpr? `]` => `List`   2
+RULE ==  `[` ArgsListExpr? `]` => `Array`  2
+CODE == `poo_obj(${type}, ${elements})`
 
 # //////////// SYNTAX HIGHLIGHTING /////////////////////////////////////
 
