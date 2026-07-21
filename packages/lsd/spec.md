@@ -5,11 +5,18 @@
 
 ---
 
-This document defines the current specification of the ***Language Specification Data*** DSL (`.lsd`) created for the ***Cosmonaut Toolkit***. 
+This document defines the current specification of the ***Language Specification Data*** DSL (`.lsd`) created for the **[Cosmonaut Toolkit](/)**. 
 
 A LSD file could serve as the **Single Source of Truth** for the entire lifecycle of a language: tokenization, parsing, AST generation, code generation, and syntax highlighting, LSP stuff etc.
 
+The Goals:
+
+- Having a centralized place when creating a custom language
+- Reduce the need for punctuation bloat when defining grammar rules
+
 ---
+
+## Core Architecture / Keywords & Semantics
 
 [`CODE`](#) ·
 [`HL`](#) ·
@@ -26,10 +33,6 @@ A LSD file could serve as the **Single Source of Truth** for the entire lifecycl
 [`#`](#) ·
 [`####`](#)
 
----
-
-## 1. Core Architecture & Keywords
-
 The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the equals sign (`==`) for declarations and the directional arrow (`=>` / `<=`) for **syntactic data flow**. 
 
 It is divided into six functional keywords:
@@ -45,12 +48,14 @@ It is divided into six functional keywords:
 [`TYPE`](#type)             | Declarative definition of the target structures for the Abstract Syntax Tree (AST).
 [`CODE`](#code)             | Template definitions for generating target source code from AST nodes.
 [`HL`](#hl)                 | Mappings for semantic and syntactic code highlighting
+`::` | is an **optional** for enhanced readability placed between keyword and name
 
-
-
-```md
-META TYPE
-```
+- every line must start with `#` or [LSD keyword](#) or kept empty
+- comments are introduced by `#`
+- meta-superblocks could be introduced by `####`
+- assignment is marked by `==`
+- control flow is marked by `=>` or`<=`
+- escaping is done by `\\` or wrapping inside backticks `\``
 
 ## META
 
@@ -76,8 +81,8 @@ To prevent unnecessary bloat, standard character ranges (e.g., `a-z`, `A-Z`, `0-
 Since the equals sign `=` and spaces are control characters of the DSL, special symbols can either be escaped with a backslash (`\=`) or entirely wrapped in backticks (``  `=` ``) as a template string literal:
 
 ```md
-META LIST puncts  = { } ( ) [ ] , ; . : ? \=
-META LIST symbols = a-z A-Z 0-9 _ $
+META LIST :: puncts  == { } ( ) [ ] , ; . : ? =
+META LIST :: symbols == a-z A-Z 0-9 _ $
 
 ```
 
@@ -86,24 +91,24 @@ META LIST symbols = a-z A-Z 0-9 _ $
 Defines operator groups and their priority (precedence) for the integrated Pratt parser:
 
 ```md
-META TABLE operators = (
+META TABLE :: operators == (
   group         is String
   associativity is String
   precedence    is Number
 ) {
-  assign   left   100  ( \= +\= -\= )
+  assign   left   100  ( = += -= )
   additive left   300  ( + - )
 }
 ```
 
-## `TKN` == Tokenizer (Lexer) Token Rules
+## `TKN` – Tokenizer (Lexer) Token Rules
 
 Defines tokens using JavaScript regular expression literals, which should include the sticky flag `/y` for high-performance, pointer-based text analysis:
 
 ```md
-TKN STRING   == /"(?:\\.|[^"\\])*"/y
-TKN KEYWORD  == @keywords
-TKN OPERATOR == @operators
+TKN :: STRING   == /"(?:\\.|[^"\\])*"/y
+TKN :: KEYWORD  == @keywords
+TKN :: OPERATOR == @operators
 ```
 
 ---
@@ -154,7 +159,7 @@ RULE ArrowFunctionDecl   = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER `=>
 
 ---
 
-## `CODE` :: Code Generation (AST to Code)
+## `CODE` – Code Generation (AST to Code)
 
 The `CODE` block describes how an AST node is translated back into code. The syntax utilizes backticks for the template string and `${property}` for interpolation of node fields.
 
@@ -170,7 +175,7 @@ CODE ExpressionList = `${items, ", "}`
 
 ---
 
-## `HL` :: Syntax Highlighting
+## `HL` – Syntax Highlighting
 
 Direct mapping of tokens to standardized editor scopes (e.g., TextMate scopes used by VS Code):
 
@@ -178,16 +183,6 @@ Direct mapping of tokens to standardized editor scopes (e.g., TextMate scopes us
 HL KEYWORD = `keyword.control`
 HL LITERAL = `constant.language`
 ```
-
----
-
-## Zusammenfassung LSD Syntax Rules
-
-- every line must start with `#` or LSD keyword or kept empty
-- comments are introduced by `#`
-- assignment is marked by `==`
-- control flow is marked by `=>` or`<=`
-- escaping is done by `\\` or wrapping inside backticks `\``
 
 ---
 
