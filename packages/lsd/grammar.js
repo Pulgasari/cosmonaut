@@ -38,33 +38,25 @@
 //      note the "\=" - is that an escaped "=" or a distinct operator
 //      token in the target language's own syntax?).
 
-export function parseGrammar ({ ruleLines, blockSections }) {
-  const productions = ruleLines.map(parseTopLevelRule);
-  const blocks       = blockSections.map(parseBlock);
-  return { productions, blocks };
+
+
+export function parseGrammar ({ ruleLines, blocks }) {
+  const productions    = ruleLines.map(parseTopLevelRule);
+  const compiledBlocks = blocks.map(parseBlock);
+  return { productions, blocks: compiledBlocks };
 }
 
 function parseTopLevelRule (line) {
   const match = line.match(/^RULE\s*==\s*(\S+)\s*==\s*(.+)$/);
   if (!match) throw new Error(`[lsd] Malformed top-level RULE line: "${line}"`);
   const [, name, exprText] = match;
-
-  return {
-    name,
-    exprText: exprText.trim(), // TODO: parse into the shared literal/nonterminal/
-                                //       sequence/choice/optional/repeat/group AST
-                                //       once the concrete syntax (backticks, `?`, `*`)
-                                //       is finalized - see file header.
-  };
+  return { name, exprText: exprText.trim() }; // TODO: see open question #? below
 }
 
-function parseBlock ({ header, lines }) {
+function parseBlock ({ fullName, name, lines }) {
   const text = lines.join('\n');
 
-  const name     = header.trim();
-  const metaName = (text.match(/^META\s+(\S+)/m) ?? [])[1];
   const typeText = (text.match(/^TYPE\s*==\s*\{([^}]*)\}/m) ?? [])[1];
-
   const typeFields = (typeText ?? '')
     .split(',')
     .map(s => s.trim())
@@ -73,14 +65,12 @@ function parseBlock ({ header, lines }) {
 
   const alternatives = [...text.matchAll(/^RULE\s*==\s*(.+?)\s*=>\s*(.+)$/gm)]
     .map(([, patternText, mappingText]) => ({
-      patternText: patternText.trim(), // TODO: same expression parser as parseTopLevelRule
-      mapping: mappingText.trim().split(/\s+/), // strings for now - numeric vs. tag
-                                                  // disambiguation is open question #2
+      patternText: patternText.trim(), // TODO: shared expression parser, see file header
+      mapping: mappingText.trim().split(/\s+/), // numeric index vs. literal tag - open question
     }));
 
-  const codeMatch = text.match(/^CODE\s*==\s*`([\s\S]*?)`\s*$/m);
-  const codeTemplate = codeMatch?.[1] ?? null; // TODO: parse ${field} / ${field, "sep"}
-                                                //       placeholders - open question #3
+  const codeMatch    = text.match(/^CODE\s*==\s*`([\s\S]*?)`\s*$/m);
+  const codeTemplate = codeMatch?.[1] ?? null;
 
-  return { name, metaName, typeFields, alternatives, codeTemplate };
+  return { fullName, name, typeFields, alternatives, codeTemplate };
 }
