@@ -260,6 +260,19 @@ RULE :: CallArgsList  == NamedArgsList | ExprArgsList
 
 # ------------ Declarations --------------------------------------------
 
+#### FunctionDeclaration
+META :: FnDecl
+TYPE == { identifier, args, body }
+RULE == `fn` IDENTIFIER     FnParams      Block     => 2 3 4
+RULE == `fn` IDENTIFIER `=` FnParams `=>` Statement => 2 4 6
+CODE == `${identifier} :\= proc(${args})${body};\n`
+
+#### ObjectDeclaration
+META :: ObjDecl
+TYPE == { identifier, body }
+RULE == `obj` IDENTIFIER `=` Block => 2 4
+CODE == `${identifier} :\= poo_make_obj()${body};\n`
+
 #### ValDeclarationOperator
 META :: ValDeclOp
 TYPE == { isConst: Bool }
@@ -272,24 +285,33 @@ TYPE == { name, value }
 RULE == `val` IDENTIFIER ValDeclOp Expr `;` => 2 4
 CODE == `${name} :\=${value};\n`
 
+#### NamedPropDeclaration
+META :: NamedPropDecl
+TYPE == { key, value }
+RULE == IDENTIFIER `:` Expr => 1 3
+CODE == `${key} \=${value}`
+
+# ------------ Expressions ---------------------------------------------
+
+#### BinaryExpression
+META :: BinaryExpr
+TYPE == { left, operator, right }
+RULE == Expr OPERATOR Expr => 1 2 3
+CODE == `(${left} ${op}${right})`
+
+# ------------ Functions -----------------------------------------------
+
 #### FunctionCall
 META :: FnCall
 TYPE == { callee, args }
 RULE == IDENTIFIER ( ParenCallArgs | SingleBareArg ) => 1 2
 CODE == `${callee}(${args})`
 
-#### FunctionDeclaration
-META :: FnDecl
-TYPE == { identifier, args, body }
-RULE == `fn` IDENTIFIER     FnParams      Block     => 2 3 4
-RULE == `fn` IDENTIFIER `=` FnParams `=>` Statement => 2 4 6
-CODE == `${identifier} :\= proc(${args})${body};\n`
-
-#### BinaryExpression
-META :: BinaryExpr
-TYPE == { left, op, right }
-RULE == Expr OPERATOR Expr => 1 2 3
-CODE == `(${left} ${op}${right})`
+#### ExpressionArgumentsList
+META :: ExprArgsList
+TYPE == { items }
+RULE == Expr ( `,`? Expr )* => 1
+CODE == `${items, ", "}`
 
 #### NamedArgumentsList
 META :: NamedArgsList
@@ -297,17 +319,7 @@ TYPE == { args }
 RULE == NamedPropDecl ( `,`? NamedPropDecl )* => 1
 CODE == `{\n${args, ",\n"}\n}`
 
-#### NamedPropDeclaration
-META :: NamedPropDecl
-TYPE == { key, value }
-RULE == IDENTIFIER `:` Expr => 1 3
-CODE == `${key} \=${value}`
-
-#### ExpressionArgumentsList
-META :: ExprArgsList
-TYPE == { items }
-RULE == Expr ( `,`? Expr )* => 1
-CODE == `${items, ", "}`
+# ------------ Objects -------------------------------------------------
 
 #### ArrayLikeLiteral
 META :: ArrayLikeLiteral
