@@ -284,20 +284,20 @@ RULE ==  `=` => true
 
 #### ValDeclaration
 META :: ValDecl
-TYPE == { name, mode, value }
+TYPE == { name: String, mode, value: Expr }
 RULE == `val` IDENTIFIER ValDeclOp Expr `;` => 2 3 4
 CODE == `${name} := ${value};`
 
 #### ValDeclaration2
 META :: ValDeclaration2
-TYPE == { name: Token, mode, expr: Expression }
+NODE == { name: Token, mode, expr: Expr }
 RULE == `val` IDENTIFIER ValDeclOp ArrayLikeLiteral ';' => 2 3 4
 RULE == `val` IDENTIFIER ValDeclOp Expr             `;` => 2 3 4
 CODE == `${name} := ${expr.code};`
 
 #### NamedPropDeclaration
 META :: NamedPropDecl
-TYPE == { key, value }
+NODE == { key: Token, value }
 RULE == IDENTIFIER `:` Expr => 1 3
 CODE == `${key} = ${value}`
 
@@ -305,7 +305,7 @@ CODE == `${key} = ${value}`
 
 #### BinaryExpression
 META :: BinaryExpr
-TYPE == { left, operator, right }
+TYPE == { left: Token, operator: Token, right: Token }
 RULE == Expr OPERATOR Expr => 1 2 3
 CODE == `(${left} ${operator}${right})`
 
