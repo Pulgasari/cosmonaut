@@ -247,12 +247,12 @@ TKN :: IDENTIFIER  == /[a-zA-Z_$][a-zA-Z0-9_$]*/y
 # //////////// RULES ///////////////////////////////////////////////////
 
 RULE :: Program       == Statement*
-RULE :: Statement     == ValDecl | FnDecl | ExprStatement
+RULE :: Statement     == CpyDecl | RefDecl | ValDecl | FnDecl | ExprStatement
 RULE :: FnParams      == `(` IdentList? `)` | IdentList
 RULE :: IdentList     == IDENTIFIER ( `,`? IDENTIFIER )*
 RULE :: Block         == `{` Statement* `}`
 RULE :: ParenCallArgs == `(` CallArgsList? `)`
-RULE :: SingleBareArg == LITERAL | IDENTiFIER | STRING | NUMBER
+RULE :: SingleBareArg == LITERAL | IDENTIFIER | STRING | NUMBER
 RULE :: CallArgsList  == NamedArgsList | ArgsList
 
 # ------------ Declarations --------------------------------------------
@@ -269,6 +269,18 @@ META :: ObjDecl
 RULE == `obj` IDENTIFIER `=` Block => 2 4
 NODE == { name, body }
 CODE == `${name} := poo_make_obj() ${body};`
+
+#### CpyDeclaration
+META :: CpyDecl
+RULE == `cpy` IDENTIFIER `=` IDENTIFIER `;` => 2 4
+NODE == { name, origName }
+CODE == ???
+
+#### RefDeclaration
+META :: RefDecl
+RULE == `ref` IDENTIFIER `=` IDENTIFIER `;` => 2 4
+NODE == { name, origName }
+CODE == ???
 
 #### ValDeclarationOperator
 META :: ValDeclOp
@@ -333,10 +345,10 @@ CODE == `{${args, ', '}}`
 #### ArrayLikeLiteral
 META :: ArrayLikeLiteral
 TYPE == { type, elements }
-RULE == `#{` ArgsListExpr? `}` => `Record' 2
-RULE == `#(` ArgsListExpr? `)` => `Tuple`  2
-RULE == `#[` ArgsListExpr? `]` => `List`   2
-RULE ==  `[` ArgsListExpr? `]` => `Array`  2
+RULE == `#{` ArgsList? `}` => `Record' 2
+RULE == `#(` ArgsList? `)` => `Tuple`  2
+RULE == `#[` ArgsList? `]` => `List`   2
+RULE ==  `[` ArgsList? `]` => `Array`  2
 CODE == `poo_obj(${type}, ${elements})`
 
 # //////////// SYNTAX HIGHLIGHTING /////////////////////////////////////
