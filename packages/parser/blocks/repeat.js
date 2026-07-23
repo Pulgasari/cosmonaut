@@ -93,6 +93,20 @@ sepBy1 = (item, separator) => decorate (state => {
   return results;
 }),
 
+sepBy1Loose = (item, separator) => decorate (state => {
+  const first = item(state);
+  if (first == null) return null;
+  const results = [first];
+  while (true) {
+    const position = state.save();
+    optional(separator)(state); // konsumieren falls vorhanden, sonst einfach weiter
+    const next = item(state);
+    if (next == null) { state.restore(position); break; }
+    results.push(next);
+  }
+  return results;
+}),
+
 sepEndBy = (item, separator) => decorate (state => {
   const first = backtrack(state, item);
   if (first == null) return [];
