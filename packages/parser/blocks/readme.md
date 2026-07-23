@@ -58,7 +58,9 @@ deno install jsr:@cosmonaut/blocks
 [`manyTill`](#manytill) ·
 [`repeat`](#repeat) ·
 [`sepBy`](#sepby) ·
+[`sepByLoose`](#sepbyloose) ·
 [`sepBy1`](#sepby1) ·
+[`sepBy1Loose`](#sepby1loose) ·
 [`sepEndBy`](#sependby) ·
 [`sepEndBy1`](#sependby1) ·
 [`times`](#times) ·
@@ -382,12 +384,33 @@ Always succeeds.
 sepBy(expression, token(","))
 ```
 
+### sepByLoose
+
+Parses zero or more elements, with an **optional** separator between
+each pair (not required, unlike [`sepBy`](#sepby)).
+
+Always succeeds.
+
+```js
+sepByLoose(identifier, token(","))
+```
+
+Parses `a b c,` and `a, b, c,` and even mixed `a, b c` identically.
+
 ### sepBy1
 
 Parses one or more elements separated by another parser.
 
 ```js
 sepBy1(expression, token(","))
+```
+
+###sepBy1Loose
+
+Like [`sepByLoose`](#sepbyloose), but requires at least one element.
+
+```js
+sepBy1Loose(identifier, token(","))
 ```
 
 ### sepEndBy
