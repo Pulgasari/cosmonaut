@@ -59,8 +59,8 @@ function parseTable (schemaText, rowsText) {
 function parseTableRow (line, fields) {
   // last field is assumed to be the "list of symbols" column,
   // written as "( a b c )" - everything before it is positional scalar values
-  const listMatch = line.match(/\(([^)]*)\)\s*$/);
-  const scalarPart = listMatch ? line.slice(0, listMatch.index).trim() : line;
+  const listMatch    = line.match(/\(([^)]*)\)\s*$/);
+  const scalarPart   = listMatch ? line.slice(0, listMatch.index).trim() : line;
   const scalarValues = scalarPart.split(/\s+/).filter(Boolean);
 
   const row = {};
