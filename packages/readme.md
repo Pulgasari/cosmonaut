@@ -13,5 +13,6 @@
 - [@cosmonaut/lsd](/packages/lsd)
 
 ##
-- [@cosmonaut/utils](/packages/utils)
 - [@cosmonaut/presets](/packages/presets)
+- [@cosmonaut/utils](/packages/utils)
+
