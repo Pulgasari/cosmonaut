@@ -1,44 +1,48 @@
 // @cosmonaut/lsd/grammar.js
-
-// WIP. Parses:
-//   (a) top-level "RULE == Name == Expr" productions
-//   (b) "#### Name" blocks: META <BlockName>, TYPE == {...}, one or more
-//       RULE == Pattern => Mapping alternatives, and a CODE template.
 //
-// The expression algebra used inside RULE patterns (literal, nonterminal,
-// sequence, choice, optional, repeat, group) is the SAME shape already
-// used by @cosmonaut/ebnf's internal AST - only the concrete syntax
-// differs (backtick literals + postfix ?/* here, vs quoted literals +
-// [...]/{...} there). Once the concrete LSD grammar syntax is settled,
-// this file should scan/parse into that same node shape so the existing
-// compileExpr() logic in @cosmonaut/ebnf/compile.js can be reused
-// (or factored out into a shared internal module both packages depend
-// on) rather than reimplemented here.
+// Parses:
+//   (a) top-level "RULE :: Name == Expr" productions
+//   (b) "#### Name" blocks: a "META :: <BlockName>", an optional
+//       "NODE == { fields }" (also accepts the legacy spelling "TYPE"),
+//       one or more "RULE == pattern [=> mapping]" alternatives, and a
+//       "CODE == `template`" for codegen.
 //
-// OPEN QUESTIONS (intentionally not guessed at):
-//   1. Do top-level "RULE == Name == Expr" productions and "#### Name"
-//      blocks live in the same rule namespace, or are top-level RULEs
-//      purely structural (used *inside* patterns, e.g. "IdentList" used
-//      inside "FnParams") while #### blocks are the only ones that
-//      produce actual typed AST nodes?
-//   2. The "=> mapping" list mixes numeric capture indices (positional,
-//      1-based, matching factors in the pattern) with bare identifiers
-//      used as literal tag values (e.g. "=> 2 Record"). Needs a firm
-//      rule for telling the two apart (numeric literal vs. anything
-//      matching /^[A-Z]/ as a tag, most likely) plus a rule for what
-//      happens when the mapping list is shorter than the TYPE fields.
-//   3. CODE templates support at least two placeholder forms:
-//        ${field}              -> a single field's generated Doc
-//        ${field, "separator"} -> a list field, joined with a separator
-//      Both map directly onto @cosmonaut/generator (a field reference
-//      -> generator.genNode(node[field]), a joined list -> genList /
-//      joinMap). Needs deciding whether CODE templates support anything
-//      beyond straight field interpolation (conditionals? nested
-//      literal text with escapes, as seen in "${name} :\=${value};\n" -
-//      note the "\=" - is that an escaped "=" or a distinct operator
-//      token in the target language's own syntax?).
+// Field naming inside a block's alternatives supports three styles, and
+// any mix of them - see bindings.js for the unifying resolver:
+//
+//   (1) positional + NODE:      RULE == ... Block => 2 3 4
+//                                 NODE == { identifier, args, body }
+//   (2) inline pattern labels:  RULE == ... Block:body
+//   (3) named mapping:          RULE == ... Block => identifier:2 args:3 body:4
+//
+// KNOWN LIMITATION: parsePatternFactors() (see bindings.js) currently
+// splits a pattern on whitespace only - it does NOT understand grouping
+// ("(...)"), choice ("|"), or quantifiers attached to a GROUP (only to a
+// single preceding factor). Patterns containing a top-level group, e.g.
+//
+//   IDENTIFIER ( ParenCallArgs | SingleBareArg )
+//
+// get mis-numbered as 6 separate factors instead of the intended 2
+// ("IDENTIFIER" and the whole group as one unit) - so any mapping/NODE
+// referencing positions beyond the first factor will resolve INCORRECTLY
+// for such patterns, WITHOUT raising an error (the resolver only checks
+// that enough positions exist, not what they actually mean). Confirmed
+// with poo.lsd's own FunctionCall/ExpressionArgumentsList/
+// NamedArgumentsList blocks - all three currently pass validation while
+// resolving the wrong raw position. This needs the same expression
+// parser flagged as a TODO since this file's very first version
+// (literal/nonterminal/sequence/choice/optional/repeat/group - the same
+// shape used by @cosmonaut/ebnf's internal AST). Until that exists,
+// patterns with a top-level "(...)" group should either avoid relying on
+// positions past the group, or use inline labels placed on individual
+// factors BEFORE the group only.
 
-
+import {
+  parsePatternFactors,
+  parseMappingTokens,
+  resolveBindings,
+  checkBlockConsistency,
+} from './bindings.js';
 
 export function parseGrammar ({ ruleLines, blocks }) {
   const productions    = ruleLines.map(parseTopLevelRule);
@@ -47,30 +51,71 @@ export function parseGrammar ({ ruleLines, blocks }) {
 }
 
 function parseTopLevelRule (line) {
-  const match = line.match(/^RULE\s*==\s*(\S+)\s*==\s*(.+)$/);
+  const match = line.match(/^RULE\s*::\s*(\S+)\s*==\s*(.+)$/);
   if (!match) throw new Error(`[lsd] Malformed top-level RULE line: "${line}"`);
   const [, name, exprText] = match;
-  return { name, exprText: exprText.trim() }; // TODO: see open question #? below
+
+  return {
+    name,
+    exprText: exprText.trim(), // TODO: parse into the shared literal/nonterminal/
+                                //       sequence/choice/optional/repeat/group AST
+                                //       once the concrete syntax is finalized.
+  };
 }
 
 function parseBlock ({ fullName, name, lines }) {
   const text = lines.join('\n');
 
-  const typeText = (text.match(/^TYPE\s*==\s*\{([^}]*)\}/m) ?? [])[1];
-  const typeFields = (typeText ?? '')
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean)
-    .map(field => field.split(':').map(s => s.trim())[0]); // "name" or "name: Type" -> "name"
+  // NODE is the current spelling; TYPE is accepted as a legacy alias.
+  const nodeMatch  = text.match(/^(?:NODE|TYPE)\s*==\s*\{([^}]*)\}/m);
+  const nodeFields = nodeMatch
+    ? nodeMatch[1].split(',').map(s => s.trim()).filter(Boolean).map(f => f.split(':')[0].trim())
+    : null;
 
-  const alternatives = [...text.matchAll(/^RULE\s*==\s*(.+?)\s*=>\s*(.+)$/gm)]
-    .map(([, patternText, mappingText]) => ({
-      patternText: patternText.trim(), // TODO: shared expression parser, see file header
-      mapping: mappingText.trim().split(/\s+/), // numeric index vs. literal tag - open question
-    }));
+  const ruleLineMatches = [...text.matchAll(/^RULE\s*==\s*(.+)$/gm)];
+
+  const alternatives = ruleLineMatches.map(([, fullText], i) => {
+    const [patternText, mappingText] = splitPatternAndMapping(fullText);
+    const patternFactors = parsePatternFactors(patternText);
+    const mappingTokens  = mappingText ? parseMappingTokens(mappingText) : [];
+
+    let bindings;
+    try {
+      bindings = resolveBindings({ patternFactors, mappingTokens, nodeFields });
+    } catch (err) {
+      throw new Error(
+        `[lsd] In block "${name}"${fullName ? ` (${fullName})` : ''}, alternative ${i + 1}: ${err.message}`
+      );
+    }
+
+    return { patternText, mappingText, patternFactors, mappingTokens, bindings };
+  });
+
+  if (alternatives.length > 0) {
+    checkBlockConsistency(name, alternatives.map(a => a.bindings), nodeFields);
+  }
 
   const codeMatch    = text.match(/^CODE\s*==\s*`([\s\S]*?)`\s*$/m);
   const codeTemplate = codeMatch?.[1] ?? null;
 
-  return { fullName, name, typeFields, alternatives, codeTemplate };
+  return { fullName, name, nodeFields, alternatives, codeTemplate };
+}
+
+// Splits a "RULE == pattern [=> mapping]" line's right-hand side into its
+// pattern and (optional - inline-label-only alternatives have none)
+// mapping parts, respecting backtick-quoted literals so a "=>" occurring
+// inside one (not expected in this grammar today, but cheap to guard) is
+// never mistaken for the pattern/mapping separator.
+function splitPatternAndMapping (fullText) {
+  let inBacktick = false;
+
+  for (let i = 0; i < fullText.length - 1; i++) {
+    const ch = fullText[i];
+    if (ch === '`') inBacktick = !inBacktick;
+    if (!inBacktick && ch === '=' && fullText[i + 1] === '>') {
+      return [fullText.slice(0, i).trim(), fullText.slice(i + 2).trim()];
+    }
+  }
+
+  return [fullText.trim(), null];
 }
