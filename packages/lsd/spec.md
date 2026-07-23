@@ -253,13 +253,13 @@ TKN :: IDENTIFIER  == /[a-zA-Z_$][a-zA-Z0-9_$]*/y
 # //////////// RULES ///////////////////////////////////////////////////
 
 RULE :: Program       == Statement*
-RULE :: Statement     == VarDecl | FnDecl | ExprStatement
+RULE :: Statement     == ValDecl | FnDecl | ExprStatement
 RULE :: FnParams      == `(` IdentList? `)` | IdentList
 RULE :: IdentList     == IDENTIFIER ( `,`? IDENTIFIER )*
 RULE :: Block         == `{` Statement* `}`
 RULE :: ParenCallArgs == `(` CallArgsList? `)`
 RULE :: SingleBareArg == LITERAL | IDENTiFIER | STRING | NUMBER
-RULE :: CallArgsList  == NamedArgsList | ExprArgsList
+RULE :: CallArgsList  == NamedArgsList | ArgsList
 
 # ------------ Declarations --------------------------------------------
 
@@ -322,8 +322,8 @@ RULE == IDENTIFIER ( ParenCallArgs | SingleBareArg ) => 1 2
 NODE == { callee, args }
 CODE == `${callee}(${args})`
 
-#### ExpressionArgumentsList
-META :: ExprArgsList
+#### ArgumentsList
+META :: ArgsList
 RULE == Expr ( `,`? Expr )* => 1
 NODE == { items }
 CODE == `${items, ', '}`
