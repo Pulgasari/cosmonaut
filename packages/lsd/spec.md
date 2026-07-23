@@ -9,6 +9,7 @@ Table of Contents:
 [Introduction](#introduction) ·
 [Semantics](#) ·
 [Example](#example) ·
+[Usage](#usage) ·
 
 ---
 
@@ -151,16 +152,6 @@ When an expression merely groups or validates a syntax structure without leaving
 ```md
 RULE :: Program == Statement*
 RULE :: DeclStatement == VarDeclStatement | FnDeclStatemenr
-```
-
-
-### D. Rule Aliasing / Polymorphism (`= Rule \`Name\` <=`)
-
-Allows parsing two syntactically distinct patterns separately while instructing the toolkit that both ultimately resolve into the same parent rule logic or AST reducer.
-
-```md
-RULE ClassicFunctionDecl = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER `(` args:IdentList? `)` body:Block
-RULE ArrowFunctionDecl   = Rule `FunctionDecl` <= `fn` identifier:IDENTIFIER `=>` body:Statement
 ```
 
 ---
