@@ -331,6 +331,7 @@ CODE == `${callee}(${args})`
 #### ArgumentsList
 META :: ArgsList
 RULE == Expr ( `,`? Expr )* => 1
+RULE == [ Expr `,`? ]* => 1
 NODE == { items }
 CODE == `${items, ', '}`
 
