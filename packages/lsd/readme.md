@@ -249,11 +249,14 @@ TKN :: IDENTIFIER  == /[a-zA-Z_$][a-zA-Z0-9_$]*/y
 RULE :: Program       == Statement*
 RULE :: Statement     == CpyDecl | RefDecl | ValDecl | FnDecl | ExprStatement
 RULE :: FnParams      == `(` IdentList? `)` | IdentList
-RULE :: IdentList     == IDENTIFIER ( `,`? IDENTIFIER )*
+RULE :: IdentList     == [ IDENTIFIER `,` ] `,`?
 RULE :: Block         == `{` Statement* `}`
 RULE :: ParenCallArgs == `(` CallArgsList? `)`
 RULE :: SingleBareArg == LITERAL | IDENTIFIER | STRING | NUMBER
 RULE :: CallArgsList  == NamedArgsList | ArgsList
+
+RULE ::      ArgumentsList == [ Expr          `,` ] `,`? => items
+RULE :: NamedArgumentsList == [ NamedPropDecl `,` ] `,`? => args
 
 # ------------ Declarations --------------------------------------------
 
@@ -313,7 +316,7 @@ CODE == `${key} = ${value}`
 META :: BinaryExpr
 RULE == Expr OPERATOR Expr => 1 2 3
 NODE == { left, operator, right }
-CODE == `(${left} ${operator}${right})`
+CODE == `(${left} ${operator} ${right})`
 
 #### BinaryExpression
 META :: BinaryExpr
@@ -328,27 +331,15 @@ RULE == IDENTIFIER ( ParenCallArgs | SingleBareArg ) => 1 2
 NODE == { callee, args }
 CODE == `${callee}(${args})`
 
-#### ArgumentsList
-META :: ArgsList
-RULE == Expr ( `,`? Expr )* => 1
-RULE == [ Expr `,`? ]* => 1
-NODE == { items }
-CODE == `${items, ', '}`
-
-#### NamedArgumentsList
-META :: NamedArgsList
-RULE == NamedPropDecl ( `,`? NamedPropDecl )* => 1
-NODE == { args }
-CODE == `{${args, ', '}}`
 
 # ------------ Objects -------------------------------------------------
 
 #### ArrayLikeLiteral
 META :: ArrayLikeLiteral
-RULE == `#{` ArgsList? `}` => `Record' 2
-RULE == `#(` ArgsList? `)` => `Tuple`  2
-RULE == `#[` ArgsList? `]` => `List`   2
-RULE ==  `[` ArgsList? `]` => `Array`  2
+RULE == `#{` ArgumentsList? `}` => `Record' 2
+RULE == `#(` ArgumentsList? `)` => `Tuple`  2
+RULE == `#[` ArgumentsList? `]` => `List`   2
+RULE ==  `[` ArgumentsList? `]` => `Array`  2
 NODE == { kind, elements }
 CODE == `poo_obj(${kind}, ${elements})`
 
@@ -381,12 +372,12 @@ const { lexer, parserMethods, genMethods, highlighting } = compileLSD(source);
 ```
 
 ```md
-[ Item        ]       # →  many0       (Item)       -- keine Trennzeichen
-[ Item+       ]       # →  many1       (Item)       -- mind. 1, keine Trennzeichen
-[ Item,  Sep  ]       # →  sepBy       (Item, Sep)  -- Trennzeichen verpflichtend, 0+, kein Trailing
-[ Item+, Sep  ]       # →  sepBy1      (Item, Sep)  -- Trennzeichen verpflichtend, 1+, kein Trailing
-[ Item,  Sep  ] Sep?  # →  sepEndBy    (Item, Sep)  -- Trennzeichen verpflichtend, 0+, Trailing erlaubt
-[ Item+, Sep  ] Sep?  # →  sepEndBy1   (Item, Sep)  -- Trennzeichen verpflichtend, 1+, Trailing erlaubt
-[ Item,  Sep? ]       # →  sepByLoose  (Item, Sep)  -- Trennzeichen optional (jede Lücke), 0+
-[ Item+, Sep? ]       # →  sepBy1Loose (Item, Sep)  -- Trennzeichen optional (jede Lücke), 1+  ← poos Fall
+[ Item       ]       # →  many0       (Item)       -- keine Trennzeichen
+[ Item+      ]       # →  many1       (Item)       -- mind. 1, keine Trennzeichen
+[ Item  Sep  ]       # →  sepBy       (Item, Sep)  -- Trennzeichen verpflichtend, 0+, kein Trailing
+[ Item+ Sep  ]       # →  sepBy1      (Item, Sep)  -- Trennzeichen verpflichtend, 1+, kein Trailing
+[ Item  Sep  ] Sep?  # →  sepEndBy    (Item, Sep)  -- Trennzeichen verpflichtend, 0+, Trailing erlaubt
+[ Item+ Sep  ] Sep?  # →  sepEndBy1   (Item, Sep)  -- Trennzeichen verpflichtend, 1+, Trailing erlaubt
+[ Item  Sep? ]       # →  sepByLoose  (Item, Sep)  -- Trennzeichen optional (jede Lücke), 0+
+[ Item+ Sep? ]       # →  sepBy1Loose (Item, Sep)  -- Trennzeichen optional (jede Lücke), 1+  ← poos Fall
 ```
