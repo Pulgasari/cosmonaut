@@ -20,6 +20,9 @@ The Goals of **LSD***:
 
 - Having a **Single Source of Truth** for the entire lifecycle of a language: tokenization, parsing, AST generation, code generation, and syntax highlighting, LSP stuff etc.
 - Reduce the need for punctuation bloat when defining grammar rules of a language
+- as less char bloat as possible (separators, escapings etc.)
+- high or excellent readability
+- the synax does not have to be 100% identical on every level (meta, tokenizing, parsing, ast-building, codegen)
 
 ---
 
@@ -364,13 +367,12 @@ HL :: STRING  == `string.quoted`
 # ------------ Variables -----------------------------------------------
 ```
 
+## Usage
 
-```md
---- syntax goals
+```javascript
+import { parseLSD, compileLSD } from '@cosmonaut/lsd';
 
-- as less char bloat as possible (separators, escapings etc.)
-- high or excellent readability
-- the synax does not have to be 100% identical on every level (meta, tokenizing, parsing, ast-building, codegen)
-
+const lsd = parseLSD(source);
+const { lexer, parserMethods, genMethods, highlighting } = compileLSD(source);
 ```
 
