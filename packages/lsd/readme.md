@@ -380,3 +380,13 @@ const lsd = parseLSD(source);
 const { lexer, parserMethods, genMethods, highlighting } = compileLSD(source);
 ```
 
+```md
+[ Item        ]       # →  many0       (Item)       -- keine Trennzeichen
+[ Item+       ]       # →  many1       (Item)       -- mind. 1, keine Trennzeichen
+[ Item,  Sep  ]       # →  sepBy       (Item, Sep)  -- Trennzeichen verpflichtend, 0+, kein Trailing
+[ Item+, Sep  ]       # →  sepBy1      (Item, Sep)  -- Trennzeichen verpflichtend, 1+, kein Trailing
+[ Item,  Sep  ] Sep?  # →  sepEndBy    (Item, Sep)  -- Trennzeichen verpflichtend, 0+, Trailing erlaubt
+[ Item+, Sep  ] Sep?  # →  sepEndBy1   (Item, Sep)  -- Trennzeichen verpflichtend, 1+, Trailing erlaubt
+[ Item,  Sep? ]       # →  sepByLoose  (Item, Sep)  -- Trennzeichen optional (jede Lücke), 0+
+[ Item+, Sep? ]       # →  sepBy1Loose (Item, Sep)  -- Trennzeichen optional (jede Lücke), 1+  ← poos Fall
+```
