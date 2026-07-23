@@ -344,12 +344,12 @@ CODE == `{${args, ', '}}`
 
 #### ArrayLikeLiteral
 META :: ArrayLikeLiteral
-TYPE == { type, elements }
 RULE == `#{` ArgsList? `}` => `Record' 2
 RULE == `#(` ArgsList? `)` => `Tuple`  2
 RULE == `#[` ArgsList? `]` => `List`   2
 RULE ==  `[` ArgsList? `]` => `Array`  2
-CODE == `poo_obj(${type}, ${elements})`
+NODE == { kind, elements }
+CODE == `poo_obj(${kind}, ${elements})`
 
 # //////////// SYNTAX HIGHLIGHTING /////////////////////////////////////
 
