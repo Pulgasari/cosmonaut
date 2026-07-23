@@ -1,0 +1,373 @@
+# Syntactic Grammar for ECMAScript
+# originally found here: https://gist.github.com/Chubek/0ab33e40b01a029a7195326e89646ec5
+
+ecma-script-module		::= { top-level | ignorable }
+
+top-level	::= statement
+				 | function-declaration
+				 | class-declaration
+
+function-declaration		::= [ "async" ] "function" identifier function-params-postfix compound-statement
+
+RULE :: class-body			  == '{' { class-member } '}'
+RULE :: class-declaration	== "class" identifier [ "extends" comma-separated-expressions ] class-body
+RULE :: class-member			== [ | "getter" | "private" | "public" | "setter" | "static" ] ( class-method | class-property )
+RULE :: class-method			== [ '#' ] null-join identifier function-params-postfix compound-statement
+RULE :: class-property		== [ '#' ] null-join identifier [ '=' expression ] [ ';' ]
+
+
+
+
+
+compound-statement		::= '{' { statement } '}'
+
+statement			::= expression-statement
+				 | declaration-statement
+				 | if-statement
+				 | switch-statement
+				 | for-statement
+				 | for-in-statement
+				 | for-of-statement
+				 | do-while-statement
+				 | control-flow-statement
+				 | try-catch-finally-statement
+				 | label-statement
+				 | export-statement
+				 | import-statement
+
+
+export-statement		::= "export" [ "default" ] declaration-statement [ ';' ]
+				 | "export" module-element "from" module-element [ ';' ]
+				
+
+import-statement		::= "import" module-element [ ';' ]
+				 | "import" paren-enclosed-string [ ';' ]
+				 | "import" module-element "from" module-element [ ';' ]
+
+label-statement			::= identifier ':' { statement }
+
+with-statement			::= "with" '(' expression ')' compound-statement
+
+try-catch-finally-statemnt	::= "try" compound-statement 
+						[ "catch" [ '(' expression ')' ] compound-statement ]
+						[ "finally" compound-statement ]
+
+control-flow-statement		::= "break"  [ ';' ]
+				 | "continue" [ ';' ]
+				 | "return" expression [ ';' ]
+				 | "throw" expression [ ';' ]
+
+do-while-statement		::= "do" compound-statement "while" '(' expression ')' [ ';' ]
+
+RULE :: for-of-stetement == "for" '(' expression "of" expression ')' compound-statement
+RULE :: for-in-statement == "for" '(' expression "in" expression ')' compound-statement
+RULE :: for-statement    == "for" '(' declaration-statement ';' expression ';' expression ')' compound-statement
+
+switch-statement		::= "switch" '(' expression ')' { case-clause }
+
+case-clause			::= "case" expression ':' { statement }
+				 | "defualt" ':' { statement }
+
+if-statement			::= "if" '(' expression ')' 
+					compound-statement [ { "else" if-statement } | "else" compound-statement ]
+
+declaration-statement		::= ( "var" | "let" | "const" | "static" ) lvalue '=' expression [ ';' ]
+
+lvalue				::= identifier
+				 | destructure-target
+
+destructure-target		::= object-literal
+				 | array-literal
+
+expression-statement		::= expression ';'
+
+expression			::= ternary-expression
+				 | binary-expression
+				 | unary-expression
+				 | primary-expression
+				 | assignment-expression
+
+assignment-expression ::= primary-expression '=' expression
+				 | primary-expression "+="   expression
+				 | primary-expression "-="   expression
+				 | primary-expression "*="   expression
+				 | primary-expression "/="   expression
+				 | primary-expression "%="   expression
+				 | primary-expression "**="  expression
+				 | primary-expression ">>="  expression
+				 | primary-expression "<<="  expression
+				 | primary-expression ">>>=" expression
+				 | primary-expression "&="   expression
+				 | primary-expression "^="   expression
+				 | primary-expression "|="   expression
+				 | primary-expression "&&="  expression
+				 | primary-expression "||="  expression
+				 | primary-expression "??="  expression
+
+ternary-expression		::= binary-expression '?' binary-expression ':' binary-expression
+
+binary-expression		::= nullish-binary-expression
+
+nullish-binary-expression	::= logical-or-binary-expression "??" nullish-binary-expression
+
+logical-or-binary-expression	::= logical-and-binary-expression "||" logical-or-binary-expression
+
+logical-and-binary-expression	::= bitwise-xor-binary-expression "&&" logical-and-binary-expression
+
+bitwise-or-binary-expression	::= bitwise-xor-binary-expression '|' bitwise-or-binary-expression
+
+bitwise-xor-binary-expression	::= bitwise-and-binary-expression '^' bitwise-xor-binary-expression
+
+bitwise-and-binary-expression	::= equality-binary-expression '&' bitwise-and-binary-expression
+
+equality-binary-expression	::= relational-binary-expression "==" equality-binary-expression
+				 | relational-binary-expression "===" equality-binary-expression
+				 | relational-binary-expression "!=" equality-binary-expression
+				 | relational-binary-expression "!==" equality-binary-expression
+
+relational-binary-expression	::= bitwise-shift-binary-expression '<' relational-binary-expression
+				 | bitwise-shift-binary-expressipn "<=" relational-binary-expression
+				 | bitwise-shift-binary-expression '>' relational-binary-expression
+				 | bitwise-shift-binary-expression ">=" relational-binary-exression
+				 | bitwise-shift-binary-expresssion "??" relational-binary-expression
+
+bitwise-shift-binary-expression	::= additive-binary-expression ">>" bitwise-shift-binary-expression
+				 | additive-binary-expression "<<" bitwise-shift-binary-expression
+				 | additive-binary-expression ">>>" bitwise-shift-binary-expression
+
+additive-binary-expression	::= multiplicative-binary-expression '+' additive-binary-expression
+				 | multiplicative-binary-expression '-' additive-binary-expression
+
+multiplicative-binary-expression ::= unary-expression '*' multiplicative-binary-expression
+				 | unary-expression '/' multiplicative-binary-expression
+				 | unary-expression '%' multiplicative-binary-expression
+				 | unary-expression "**" multiplicative-binary-expression
+
+unary-expression		::= prefix-expression | postfix-expression
+
+postfix-expression		::= primary-expression null-join property-access-postifx
+				 | primary-expression function-call-postfix
+				 | primary-expression null-join "++"
+				 | primary-expression null-join "--"
+				 | primary-expression null-join template-literal
+				 | primary-expression null-join '?'
+
+prefix-expression		::= '+' null-join primary-expression
+				 | '-' null-join primary-expression
+				 | "++" null-join primary-expression
+				 | "--" null-join primary-expression
+				 | '!' null-join primary-expression
+				 | '~' null-join primary-expression
+				 | "..." null-join expression
+				 | "typeof" expression
+				 | "void" expression
+				 | "delete" expression
+				 | "await" exprssion
+				 | "new" expression
+
+primary-expression		::= lexical-literal
+				 | syntactic-literal
+				 | paren-enclosed-expression
+				 | class-expression
+				 | function-expression
+				 | arrow-expression
+				 | "this"
+				 | identifier
+				 | typcons-name
+
+arrow-expression		::= [ "async" ] arrow-expression-params "=>" arrow-expression-body
+
+arrow-expression-body		::= compound-statement-block 
+				 | expression
+
+arrow-expression-params		::= function-call-expression
+				 | identifier
+
+class-expression		::= "class" class-body
+
+function-expression		::= [ "async" ] "function" function-params-postfix compound-statement
+
+paren-enclosed-expression	::= '(' [ expression ] ')'
+
+syntactic-literal		::= template-literal
+				 | object-literal
+				 | array-literal
+
+
+template-literal		::= '`' { printable | template-expression } '`'
+
+template-expression		::= "${" [ expression ] '}'
+
+object-literal			::= '{' [ comma-separated-properties ] '}'
+
+comma-separated-properties	::= property { ',' property }
+
+property			::= [ identifier ':' ] expression
+
+array-literal			::= '[' [ comma-separated-expressions ]  ']'
+
+property-access-postfix		::= bracket-notation-property | dot-notation-property
+
+bracket-notation-property	::= { bracket-enclosed-expressions }
+
+bracket-enclosed-expression  	::= '[' expression ']'
+
+dot-notation-property		::= '.' null-join dot-separated-expressions
+
+dot-separated-expressions	::= expression { '.' null-join expression }
+
+function-call-postfix		::= '(' [ comma-separated-expressions ] ')'
+
+comma-separated-expressions 	::= expression { ',' expression }
+
+function-params-postfix		::= '(' [ comma-separated-function-params ] ')'
+
+comma-separated-function-params	::= function-parameter { ',' function-parameter }
+
+function-parameter		::= identifier [ '=' expression ]
+				 | object-literal
+
+module-element			::= module-names
+				 | curly-enclosed-module-names
+
+paren-enclosed-string		::= '(' string-literal ')'
+
+curly-enclosed-module-name	::= '{' comma-separated-module-names '}'
+
+comma-separated-module-names	::= module-names { ',' module-names }
+
+module-names			::= identifier
+				 | identifier-as-another
+				 | string-literal
+
+identifier-as-another		::= identifier "as" identifier
+
+# Lexical Grammar for ECMAScript
+
+identifier			::= underscore-fix-ident
+				 | asterisk-fix-ident
+				 | snakecase-ident
+				 | camelcase-ident
+				 | mixedcase-ident
+
+asterisk-fix-ident		::= '*' [ identifier ]
+
+underscore-fix-ident		::= '_' [ identifier ]
+
+mixedcase-ident			::= letter { letter | digit | '_' }
+
+snakecase-ident			::= lower { lower | digit | '_' }
+
+
+camelcase-ident			::= lower { letter | digit | '_' }
+
+pascalcase-ident		::= upper { letter | digit | '_' }
+
+lexical-literal			::= bigint-literal
+				 | null-literal
+				 | boolean-literal
+				 | float-literal
+				 | integer-literal
+				 | string-literal
+				 | regex-literal
+
+regexp-literal			::= '/' regexp-pattern '/' { regex-flags }
+
+regexp-flags			::= 'g' | 'i' | 'm' | 's' | 'u' | 'y' | 'd'
+
+regexp-pattern			::= ? any valid js regexp pattern ?
+
+bigint-literal			::= { digit } 'n'
+
+null-literal			::= "null" 	| "undefined"
+
+boolean-literal			::= "true" 	| "false"
+
+float-literal			::= scientific-notation | rational-number
+
+integer-literal			::= { digit }
+				 | bin-prefix { bin-digit }
+				 | oct-prefix { oct-digit }
+				 | hex-prefix { hex-digit }
+
+string-literal			::= single-quoted-string
+				 | double-quoted-string
+
+scientific-notation		::= { digit } ( 'e' 	| 'E' ) [ '-' | '+' ] { digit }
+
+rational-number			::= [ { digit } ] '.' { digit }
+
+single-quoted-string		::= "'" { printable } "'"
+
+double-quoted-string		::= '"' { printable } '"'
+
+printable			::= letter | digit | punctuation | whitespace
+
+oct-prefix			::= '0' ( 'o' | 'O' )
+
+hex-prefix			::= '0' ( 'x' | 'X' )
+
+bin-prefix			::= '0' ( 'b' | 'B' )
+
+hex-digit			::= digit | hex-lower | hex-upper
+
+hex-lower			::= 'a' | ... | 'f'
+
+hex-upper			::= 'A' | ... | 'F'
+
+oct-digit			::= '0' | ... | '7'
+
+bin-digit			::= '0' | '1' 
+
+digit				::= '0' | '1' | '2' | ... | '7' | '8' | '9'
+
+punctuation			::= '!'| '"' | '#' | '$' | '%' | '&' | "'" 
+		 		 | '(' | ')' | '*' | '+' | ',' | '-' | '.' | '/' 
+				 | ':' | ';' | '<' | '=' | '>' | '?' | '@' 
+				 | '[' | '\\' | ']' | '^' | '_' | '`' 
+				 | '{' | '|' | '}' | '~'
+
+letter				::= uppper | lower
+
+upper				::= 'A' | 'B' | 'C' | ... | 'X' | 'Y' | 'Z' 
+
+lower				::= 'a' | 'b' | 'c' | ... | 'x' | 'y' | 'z'
+
+escape-sequence			::= '\' char-escape
+				 | '\' unicode-escape
+				 | '\' hex-escape
+				 | '\' unicode-point-escape
+				 | '\' newline
+
+char-escape			::= "'" | '"' | '\' | 'n' | 'r' | 't' | 'b' | 'f' | 'v' | '0'
+
+unicode-escape			::= 'u' { hex-digit }
+
+hex-escape			::= 'x' { hex-digit }
+
+unicode-point-escape		::= 'u' '{' { hex-digit } '}' 
+
+ignorable			::= whitespace
+				 | comment
+
+comment				::= single-line-comment | multi-line-comment
+
+multi-line-comment 		::= "/*" { no-star-slash } "*/"
+
+no-star-slash			::= ? any character except star and forward slash ?
+
+single-line-comment		::= "// " { no-newline } newline
+
+no-newline			::= ? any chacter except newline ?
+
+null-join			::= ? matching nothing, a nil token, used to denote zero-with joins ?
+
+whitespace			::= newline
+				 | space
+				 | tabulator
+
+space				::= ? literal space character ?
+
+tabulator			::= ? literal horizontal tab character ?
+
+newline				::= ? lietal newline character ?
