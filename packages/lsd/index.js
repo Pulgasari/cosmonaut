@@ -44,3 +44,12 @@ export function compileLSD (source) {
 }
 
 export { parseMeta, parseTokens, parseHighlighting, parseGrammar };
+
+
+// :::::: RE-EXPORTS
+export { parseMeta, parseTokens, parseHighlighting, parseGrammar, splitSections };
+export { getMetaPropsFromLSD, createHighlightJsObjectFromLSD } from './highlightjs.js';
+export { buildTypeRegistry, resolveField, resolvePath, interpolateTemplate, makeGenerator } from './resolve.js';
+export { parsePatternFactors, parseMappingTokens, resolveBindings, checkBlockConsistency } from './bindings.js';
+
+
