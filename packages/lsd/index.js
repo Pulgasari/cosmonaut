@@ -20,10 +20,13 @@ export function parseLSD (source) {
   const sections = splitSections(source);
 
   return {
-    meta:          parseMeta(sections.META),
-    tokens:        parseTokens(sections.TKN),
-    highlighting:  parseHighlighting(sections.HL),
-    grammar: parseGrammar({ ruleLines: sections.RULE, blocks: sections.BLOCKS }),
+    meta         : parseMeta         (sections.META),
+    tokens       : parseTokens       (sections.TKN),
+    highlighting : parseHighlighting (sections.HL),
+    grammar      : parseGrammar ({ 
+      ruleLines : sections.RULE, 
+      blocks    : sections.BLOCKS
+    }),
   };
 }
 
@@ -33,10 +36,10 @@ export function compileLSD (source) {
   const lsd = parseLSD(source);
 
   return {
-    lexer:         compileTokenizer(lsd),
-    parserMethods: compileParserMethods(lsd),
-    genMethods:    compileGeneratorMethods(lsd),
-    highlighting:  compileHighlighting(lsd),
+    lexer         : compileTokenizer        (lsd),
+    parserMethods : compileParserMethods    (lsd),
+    genMethods    : compileGeneratorMethods (lsd),
+    highlighting  : compileHighlighting     (lsd),
   };
 }
 
