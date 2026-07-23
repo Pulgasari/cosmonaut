@@ -265,16 +265,16 @@ RULE :: CallArgsList  == NamedArgsList | ExprArgsList
 
 #### FunctionDeclaration
 META :: FnDecl
-TYPE == { identifier, args, body }
 RULE == `fn` IDENTIFIER     FnParams      Block     => 2 3 4
 RULE == `fn` IDENTIFIER `=` FnParams `=>` Statement => 2 4 6
-CODE == `${identifier.value} := proc(${args}) ${body};`
+NODE == { identifier, args, body }
+CODE == `${identifier} := proc(${args}) ${body};`
 
 #### ObjectDeclaration
 META :: ObjDecl
-TYPE == { name: String, body: Block }
 RULE == `obj` IDENTIFIER `=` Block => 2 4
-CODE == `${name} := poo_make_obj() ${body.code};`
+NODE == { name, body }
+CODE == `${name} := poo_make_obj() ${body};`
 
 #### ValDeclarationOperator
 META :: ValDeclOp
@@ -284,49 +284,54 @@ RULE ==  `=` => true
 
 #### ValDeclaration
 META :: ValDecl
-TYPE == { name: String, mode, value: Expr }
 RULE == `val` IDENTIFIER ValDeclOp Expr `;` => 2 3 4
+NODE == { name, mode, value }
 CODE == `${name} := ${value};`
 
 #### ValDeclaration2
 META :: ValDeclaration2
-NODE == { name: Token, mode, expr: Expr }
 RULE == `val` IDENTIFIER ValDeclOp ArrayLikeLiteral ';' => 2 3 4
 RULE == `val` IDENTIFIER ValDeclOp Expr             `;` => 2 3 4
-CODE == `${name} := ${expr.code};`
+NODE == { name, mode, expr }
+CODE == `${name} := ${expr};`
 
 #### NamedPropDeclaration
 META :: NamedPropDecl
-NODE == { key: Token, value }
 RULE == IDENTIFIER `:` Expr => 1 3
+NODE == { key, value }
 CODE == `${key} = ${value}`
 
 # ------------ Expressions ---------------------------------------------
 
 #### BinaryExpression
 META :: BinaryExpr
-TYPE == { left: Token, operator: Token, right: Token }
 RULE == Expr OPERATOR Expr => 1 2 3
+NODE == { left, operator, right }
 CODE == `(${left} ${operator}${right})`
+
+#### BinaryExpression
+META :: BinaryExpr
+RULE == Expr OPERATOR Expr => 1 2 3
+CODE == `(${1} ${2} ${3})`
 
 # ------------ Functions -----------------------------------------------
 
 #### FunctionCall
 META :: FnCall
-TYPE == { callee, args }
 RULE == IDENTIFIER ( ParenCallArgs | SingleBareArg ) => 1 2
+NODE == { callee, args }
 CODE == `${callee}(${args})`
 
 #### ExpressionArgumentsList
 META :: ExprArgsList
-TYPE == { items }
 RULE == Expr ( `,`? Expr )* => 1
+NODE == { items }
 CODE == `${items, ', '}`
 
 #### NamedArgumentsList
 META :: NamedArgsList
-TYPE == { args }
 RULE == NamedPropDecl ( `,`? NamedPropDecl )* => 1
+NODE == { args }
 CODE == `{${args, ', '}}`
 
 # ------------ Objects -------------------------------------------------
