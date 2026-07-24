@@ -4,8 +4,8 @@
   "exports": "./index.js",
   "dependencies": [
     "@cosmonaut/lexer",
-    "@cosmonaut/parser",
     "@cosmonaut/generator",
+    "@cosmonaut/parser",
     "@cosmonaut/presets",
     "@cosmonaut/utils"
   ]
