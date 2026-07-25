@@ -16,8 +16,6 @@
 
 - [LSD (Language Sepecification Data)](lsd.md)
 
-Useful utility blocks for building compiler.
-
 ### Utils
 
 - [Presets](presets.md) = presets for commons and languages
