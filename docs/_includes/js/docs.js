@@ -29,7 +29,7 @@ const menuItems = signal([
   { label: 'Lexer'       , href: app.url + 'lexer'     },
   { label: 'Parser'      , href: app.url + 'parser'    },
   { label: 'LSD'         , href: app.url + 'lsd'       },
-  { label: 'Terminology' , href: app.url + 'lsd'       },
+  { label: 'Terminology' , href: app.url + 'terminology' },
 ]);
 function Menu () {
   const currentUrl = window.location.href.replace(/\/$/, '');
