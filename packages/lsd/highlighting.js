@@ -12,3 +12,13 @@ export function parseHighlighting (hlLines) {
 
   return scopes;
 }
+
+/*
+?????
+
+// vorher:
+function extractLiteralPrefix (regexSource) {
+
+// nachher:
+export function extractLiteralPrefix (regexSource) {
+*/
