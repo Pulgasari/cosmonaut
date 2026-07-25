@@ -12,15 +12,10 @@ export default function (parser, config, minPrecedence = 0) {
   let left = parseOperand();
 
   while (true) {
-
-    const match = matchOperator (parser, operators, excluded, minPrecedence);
-
+    const match = matchOperator (parser, operators, excluded, minPrecedence);   
     if (!match) break;
-
     const right = parseBinaryExpr (parser, config, match.precedence + 1);
-
     left = buildNode (match.operator, left, right);
-
   }
 
   return left;
