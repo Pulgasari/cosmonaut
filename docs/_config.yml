@@ -1,0 +1,3 @@
+# _config.yml
+kramdown:
+  syntax_highlighter: none
