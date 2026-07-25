@@ -249,7 +249,7 @@ RULE :: IdentList     == [ IDENTIFIER `,` ] `,`?
 RULE :: Block         == `{` Statement* `}`
 RULE :: ParenCallArgs == `(` CallArgsList? `)`
 RULE :: SingleBareArg == LITERAL | IDENTIFIER | STRING | NUMBER
-RULE :: CallArgsList  == NamedArgsList | ArgsList
+RULE :: CallArgsList  == NamedArgumentsList | ArgumentsList
 
 RULE ::      ArgumentsList == [ Expr          `,` ] `,`? => items
 RULE :: NamedArgumentsList == [ NamedPropDecl `,` ] `,`? => args
