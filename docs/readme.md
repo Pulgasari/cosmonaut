@@ -6,19 +6,19 @@
 
 ## Packages
 
-- [Lexer](lexer) (tokenizer)
-- [Blocks](blocks)
-- [Parser](parser)
-- [Generator](generator)
-- [Layouter](layouter)
+- [Lexer](lexer.md) (tokenizer)
+- [Blocks](blocks.md)
+- [Parser](parser.md)
+- [Generator](generator.md)
+- [Layouter](layouter.md)
 
 ### LSD
 
-- [LSD (Language Sepecification Data)](lsd)
+- [LSD (Language Sepecification Data)](lsd.md)
 
 Useful utility blocks for building compiler.
 
 ### Utils
 
-- [presets](/packages/presets) = presets for commons and languages
-- [utils](/packages/utils) = these are re-exported in every core-package as well
+- [Presets](presets.md) = presets for commons and languages
+- [Utils](utils.md) = these are re-exported in every core-package as well
