@@ -24,7 +24,6 @@
   - [Building a Binary Expression Parser](#building-a-binary-expression-parser)
   - [Building a Comma-Separated List](#building-a-comma-separated-list)
 - [Available Blocks](#available-blocks)
-- [Coding Style](#coding-style)
 - [Known Limitations / Open Items](#known-limitations--open-items)
 
 ---
