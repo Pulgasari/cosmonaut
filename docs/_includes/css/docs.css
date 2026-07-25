@@ -1,0 +1,155 @@
+@import url('https://cdn.ratcode.dev/css/reset.css');
+/*
+@import url('https://cdn.ratcode.dev/css/default.css');
+*/
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+/* RESET */
+html  { -webkit-tap-highlight-color: transparent; }
+.icon { display: inline; }
+svg   { max-width: 100%; }
+
+
+
+:root {
+  --accent  : red;
+
+  --accent   : #ff79c6;
+  --accent-2 : #f1fa8c;
+  --accent-3 : #50fa7b;
+  --success  : #50fa7b;
+  --bg       : #282a36;
+  --fg       : #f8f8f2;
+  --zebra    : color-mix(in oklch, var(--bg), black 5%);
+  --active   : var(--accent);
+
+  --font      : sans-serif;
+  --font-code : "JetBrains Mono", monospace;
+  --fontSize  : 16px;
+  
+  --accent-5  : hsl(from var(--accent) h s l / 0.05);
+  --accent-10 : hsl(from var(--accent) h s l / 0.10);
+  --accent-25 : hsl(from var(--accent) h s l / 0.25); /* color-mix(in srgb, var(--accent) 20%, transparent */
+  --accent-50 : hsl(from var(--accent) h s l / 0.50);
+  --accent-75 : hsl(from var(--accent) h s l / 0.75);
+  
+  --fg-25 : hsl(from var(--fg) h s l / 0.25);
+  --fg-50 : hsl(from var(--fg) h s l / 0.50);
+  --fg-75 : hsl(from var(--fg) h s l / 0.75);
+
+  --bg-darker-10  : color-mix(in srgb, var(--bg) 90%, black);
+  --bg-darker-20  : color-mix(in srgb, var(--bg) 80%, black);
+  --bg-lighter-10 : color-mix(in srgb, var(--bg) 90%, white);
+
+  --separator    : var(--bg-lighter-10);;
+  --shadow       : 0 0 5px color-mix(in srgb, var(--bg) 90%, black);
+  --shadow-inset : 0 0 5px color-mix(in srgb, var(--bg) 90%, black);
+}
+
+/* FONT */
+
+html, body  { font-family: var(--font);      }
+#app-header { font-family: var(--font-code); }
+#app-footer { font-family: var(--font-code); }
+pre, code   { font-family: var(--font-code); }
+
+html, body  { font-size: var(--fontSize); }
+code        { font-size: 0.8em; }
+#app-header { font-size: 0.8em; }
+#app-footer { font-size: 0.8em; }
+
+/* COLORS & STYLING */
+
+a { color: var(--accent); }
+
+html { background: black; }
+body { background: var(--bg); color: var(--fg); }
+
+.markdown-body { color: color-mix(in oklch, var(--bg) 25%, var(--fg)); }
+
+/* LAYOUT */
+
+html, body { height: 100%; overflow: hidden; }
+body       { height: 100dvh; }
+
+body { display:flex; flex-flow: column; }
+body > #app-header    { flex: 0 0 auto; }
+body > #app-footer    { flex: 0 0 auto; }
+body > .markdown-body {
+  flex: 1;
+  min-height : 0;
+  overflow-y : auto;
+  margin     : 0!important;
+  padding    : 1rem!important;
+}
+
+.shadow { box-shadow: var(--shadow); }
+.zebra > *:nth-child(2n+1) { background: var(--zebra); }
+
+/* CODE-BLOCKS */
+
+pre {
+  max-width     : 100%;
+  overflow-x    : auto;
+  white-space   : pre;
+  padding       : 0.5rem;
+  background    : var(--bg-darker-20)!important;
+  border-radius : 0.5em!important;
+}
+code:not(pre code) {
+  white-space   : nowrap;
+  overflow-wrap : break-word;
+}
+
+code     { background-color: var(--bg-darker-20)!important; }
+pre code { background-color: var(--bg-darker-20)!important; }
+pre code { max-width: 100%; overflow-x: auto; }
+pre      { border: 1px solid var(--separator)!important; box-shadow: var(--shadow-inset); }
+
+/* HEADER & FOOTER */
+
+#app-header,
+#app-footer {
+  align-items      : center;
+  box-shadow       : var(--shadow);
+  background-color : var(--bg-darker-20)!important;
+  opacity          : 0.95;
+  display          : flex;
+  padding          : 0.75rem 1rem;
+}
+
+#app-header .menu { display: flex; gap: 0.5rem; }
+
+#app-header { gap: 0.5rem; justify-content: space-between; }
+#app-footer { gap: 0.5rem; justify-content: space-evenly;  }
+#app-footer { text-transform: uppercase; }
+
+#app-footer a            { color: var(--fg);     opacity: 0.50; }
+#app-footer a.is-parent  { color: var(--accent); opacity: 1.00; }
+#app-footer a.is-current { color: var(--accent); opacity: 1.00; }
+
+/* HEADLINES */
+
+h3:not(h1 + h3):not(h2 + h3) {
+  border-top  : 1px dashed var(--separator);
+  padding-top : 1rem;
+}
+
+hr { background-color: var(--separator)!important; }
+
+/* FIXES */
+
+/* hide template header */
+h1:has(a[href="https://pulgasari.github.io/poo/"]) { display: none; }
+
+/* tables */
+.markdown-body table {
+  max-width : 100%;
+
+  td               { border: 1px solid var(--separator); }
+  tr               { background-color: transparent; }
+  tr:nth-child(2n) { background-color: transparent; }
+}
+
+
+
