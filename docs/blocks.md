@@ -81,7 +81,7 @@ deno install jsr:@cosmonaut/blocks
 
 Consumes and returns the next token, regardless of its type. Fails only at end of input.
 
-```js
+```javascript
 any()
 ```
 
@@ -91,7 +91,7 @@ Parses at least *n* occurrences of a parser.
 
 Fails if fewer than *n* are found.
 
-```js
+```javascript
 atLeast(token("IDENTIFIER"), 2)
 ```
 
@@ -101,7 +101,7 @@ Parses at most *n* occurrences of a parser.
 
 Always succeeds, even with zero matches.
 
-```js
+```javascript
 atMost(token("IDENTIFIER"), 3)
 ```
 
