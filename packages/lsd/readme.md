@@ -38,8 +38,8 @@ The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the
 [`META PROP`](#) ·
 [`META TABLE`](#) ·
 [`RULE`](#) ·
-[`TYPE`](#) ·
-[`##`](#) ·
+[`NODE`](#) ·
+[`::`](#) ·
 [`==`](#) ·
 [`=>`](#) ·
 [`@`](#) ·
@@ -64,7 +64,7 @@ It is divided into six functional keywords:
 [`META-TABLE`](#meta-table) |
 [`TKN`](#tkn)               | Regular expressions for the lexical scanner (tokenizer).
 [`RULE`](#rule)             | Deterministic parsing rules (PEG-based) with optional AST node or rule routing.
-[`TYPE`](#type)             | Declarative definition of the target structures for the Abstract Syntax Tree (AST).
+[`NODE`](#type)             | Declarative definition of the target structures for the Abstract Syntax Tree (AST).
 [`CODE`](#code)             | Template definitions for generating target source code from AST nodes.
 [`HL`](#hl)                 | Mappings for semantic and syntactic code highlighting
 `::` | is an **optional** for enhanced readability placed between keyword and name
@@ -75,12 +75,12 @@ The Grammar Notation follows a EBNF/PEG like syntax while not being idenitcal.
 
 ...   | ...
 ------|----
-`\|`  |
-`( )` |
-`[ ]` |
+`\|`  | ordered choice
+`( )` | 
+`[ ]` | recursive rule (sepBy variants)
 `{ }` |
-`*`   |
-`+`   |
+`*`   | many0
+`+`   | many1
 `?`   |
 
 ---
@@ -154,20 +154,17 @@ RULE :: Program == Statement*
 RULE :: DeclStatement == VarDeclStatement | FnDeclStatemenr
 ```
 
----
-
-## `CODE` – Code Generation (AST to Final Code)
-
-The `CODE` block describes how an AST node is translated back into code. The syntax utilizes backticks for the template string and `${property}` for interpolation of node fields.
-
-If a property holds an array of child AST nodes (such as lists or block statements), an optional separator can be supplied after a comma (`${items, ", "}`):
+### `[ ]`
 
 ```md
-# Example: Translating a variable declaration into Odin syntax (using :=)
-CODE VarDecl = `${name} :\= ${value};\n`
-
-# Example: Joining list items with a comma and a space
-CODE ExpressionList = `${items, ", "}`
+[ Item       ]       # →  many0       (Item)       -- no separator
+[ Item+      ]       # →  many1       (Item)       -- min. 1 match, no separator
+[ Item  Sep  ]       # →  sepBy       (Item, Sep)  -- Trennzeichen verpflichtend, 0+, kein Trailing
+[ Item+ Sep  ]       # →  sepBy1      (Item, Sep)  -- Trennzeichen verpflichtend, 1+, kein Trailing
+[ Item  Sep  ] Sep?  # →  sepEndBy    (Item, Sep)  -- Trennzeichen verpflichtend, 0+, Trailing erlaubt
+[ Item+ Sep  ] Sep?  # →  sepEndBy1   (Item, Sep)  -- Trennzeichen verpflichtend, 1+, Trailing erlaubt
+[ Item  Sep? ]       # →  sepByLoose  (Item, Sep)  -- Trennzeichen optional (jede Lücke), 0+
+[ Item+ Sep? ]       # →  sepBy1Loose (Item, Sep)  -- Trennzeichen optional (jede Lücke), 1+  ← poos Fall
 ```
 
 ---
@@ -177,10 +174,9 @@ CODE ExpressionList = `${items, ", "}`
 ```md
 #### FunctionDeclaration
 META :: FnDecl
-TYPE == { identifier, args, body }
 RULE == `fn` IDENTIFIER     FnParams      Block     => 2 3 4
 RULE == `fn` IDENTIFIER `=` FnParams `=>` Statement => 2 4 6
-CODE == `${identifier} :\= proc(${args})${body};\n`
+NODE == { identifier, args, body }
 ````
 
 ---
@@ -265,50 +261,43 @@ META :: FnDecl
 RULE == `fn` IDENTIFIER     FnParams      Block     => 2 3 4
 RULE == `fn` IDENTIFIER `=` FnParams `=>` Statement => 2 4 6
 NODE == { identifier, args, body }
-CODE == `${identifier} := proc(${args}) ${body};`
 
 #### ObjectDeclaration
 META :: ObjDecl
 RULE == `obj` IDENTIFIER `=` Block => 2 4
 NODE == { name, body }
-CODE == `${name} := poo_make_obj() ${body};`
 
 #### CpyDeclaration
 META :: CpyDecl
 RULE == `cpy` IDENTIFIER `=` IDENTIFIER `;` => 2 4
 NODE == { name, origName }
-CODE == ???
 
 #### RefDeclaration
 META :: RefDecl
 RULE == `ref` IDENTIFIER `=` IDENTIFIER `;` => 2 4
 NODE == { name, origName }
-CODE == ???
 
 #### ValDeclarationOperator
 META :: ValDeclOp
-TYPE == { isConst: Bool }
 RULE == `#=` => false
 RULE ==  `=` => true
+NODE == { isSealed: Bool }
 
 #### ValDeclaration
 META :: ValDecl
 RULE == `val` IDENTIFIER ValDeclOp Expr `;` => 2 3 4
 NODE == { name, mode, value }
-CODE == `${name} := ${value};`
 
 #### ValDeclaration2
 META :: ValDeclaration2
 RULE == `val` IDENTIFIER ValDeclOp ArrayLikeLiteral ';' => 2 3 4
 RULE == `val` IDENTIFIER ValDeclOp Expr             `;` => 2 3 4
 NODE == { name, mode, expr }
-CODE == `${name} := ${expr};`
 
 #### NamedPropDeclaration
 META :: NamedPropDecl
 RULE == IDENTIFIER `:` Expr => 1 3
 NODE == { key, value }
-CODE == `${key} = ${value}`
 
 # ------------ Expressions ---------------------------------------------
 
@@ -316,12 +305,6 @@ CODE == `${key} = ${value}`
 META :: BinaryExpr
 RULE == Expr OPERATOR Expr => 1 2 3
 NODE == { left, operator, right }
-CODE == `(${left} ${operator} ${right})`
-
-#### BinaryExpression
-META :: BinaryExpr
-RULE == Expr OPERATOR Expr => 1 2 3
-CODE == `(${1} ${2} ${3})`
 
 # ------------ Functions -----------------------------------------------
 
@@ -329,8 +312,6 @@ CODE == `(${1} ${2} ${3})`
 META :: FnCall
 RULE == IDENTIFIER ( ParenCallArgs | SingleBareArg ) => 1 2
 NODE == { callee, args }
-CODE == `${callee}(${args})`
-
 
 # ------------ Objects -------------------------------------------------
 
@@ -341,7 +322,6 @@ RULE == `#(` ArgumentsList? `)` => `Tuple`  2
 RULE == `#[` ArgumentsList? `]` => `List`   2
 RULE ==  `[` ArgumentsList? `]` => `Array`  2
 NODE == { kind, elements }
-CODE == `poo_obj(${kind}, ${elements})`
 
 # //////////// SYNTAX HIGHLIGHTING /////////////////////////////////////
 
@@ -369,15 +349,4 @@ import { parseLSD, compileLSD } from '@cosmonaut/lsd';
 
 const lsd = parseLSD(source);
 const { lexer, parserMethods, genMethods, highlighting } = compileLSD(source);
-```
-
-```md
-[ Item       ]       # →  many0       (Item)       -- keine Trennzeichen
-[ Item+      ]       # →  many1       (Item)       -- mind. 1, keine Trennzeichen
-[ Item  Sep  ]       # →  sepBy       (Item, Sep)  -- Trennzeichen verpflichtend, 0+, kein Trailing
-[ Item+ Sep  ]       # →  sepBy1      (Item, Sep)  -- Trennzeichen verpflichtend, 1+, kein Trailing
-[ Item  Sep  ] Sep?  # →  sepEndBy    (Item, Sep)  -- Trennzeichen verpflichtend, 0+, Trailing erlaubt
-[ Item+ Sep  ] Sep?  # →  sepEndBy1   (Item, Sep)  -- Trennzeichen verpflichtend, 1+, Trailing erlaubt
-[ Item  Sep? ]       # →  sepByLoose  (Item, Sep)  -- Trennzeichen optional (jede Lücke), 0+
-[ Item+ Sep? ]       # →  sepBy1Loose (Item, Sep)  -- Trennzeichen optional (jede Lücke), 1+  ← poos Fall
 ```
