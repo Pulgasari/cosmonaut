@@ -12,6 +12,9 @@
   --zombie-gray : #6272a4;
  }
 
+.highlight {
+  background-color: transparent;
+}
 
 .hljs {
   background : #282a36;
