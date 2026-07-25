@@ -17,7 +17,6 @@ div.highlight {
 }
 
 .hljs {
-  background : #282a36;
   background : var(--bg-darker-20);
   display    : block;
   overflow-x : auto;
