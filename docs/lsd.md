@@ -291,7 +291,7 @@ NODE == { name }
 
 #### ValDeclaration
 META :: ValDecl
-RULE == `val` IDENTIFIER `=` ArrayLikeLiteral ';' => 2 4
+RULE == `val` IDENTIFIER `=` ArrayLikeLiteral `;` => 2 4
 RULE == `val` IDENTIFIER `=` Expr             `;` => 2 4
 NODE == { name, expr }
 
