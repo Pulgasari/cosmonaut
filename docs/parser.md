@@ -265,7 +265,7 @@ Here `', ()'` specifies the separator (`,`) and the wrapping punctuation (`(` an
 
 ## Available Blocks
 
-The following combinators are re-exported from `@cosmonaut/blocks` and are accessible via `p.$`:
+The following combinators are re-exported from [`@cosmonaut/blocks`](blocks) and are accessible via `p.$`:
 
 **Atoms:** `any`, `check`, `eof`, `expect`, `fail`, `succeed`, `token`
 
@@ -281,18 +281,8 @@ Refer to `packages/parser/blocks/readme.md` for a full description and usage exa
 
 ---
 
-## Coding Style
-
-- Indentation: 2 spaces
-- Function definitions use a space before the parameter list: `function (args) { ... }`
-- All comments and error messages are written in English
-- Modern JavaScript syntax is preferred, except where it has a significant negative performance impact
-
----
-
 ## Known Limitations / Open Items
 
-- `parseBinaryExpr.js` currently references a `matchOperator(...)` helper that has not yet been implemented.
 - Error messages from `cut()` and `expect()` do not yet include line/column information; only token index.
 - No dedicated `index.d.ts` exists yet for editor/type support.
   
