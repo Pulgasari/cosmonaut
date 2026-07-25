@@ -21,156 +21,22 @@
 // e.g. ArrayLikeLiteral's "kind" tag) works the same way: either named
 // explicitly ("kind:`Record`") or bare ("`Record`"), positionally
 // claiming the next unclaimed NODE field.
-//
-// :::::: List factors - "[...]"
-//
-// A "[...]" factor always counts as exactly ONE position, no matter how
-// many raw tokens it takes to match - this is precisely what fixes the
-// earlier ambiguity of "NamedPropDecl ( `,`? NamedPropDecl )*" looking
-// like it might be 1 or 2 positions. Six shapes are recognized inside
-// the brackets, corresponding 1:1 to the sepBy-family combinators in
-// @cosmonaut/parser/blocks/repeat.js:
-//
-//   [ Item  ]        -> many0(Item)                     (many, in repeat.js)
-//   [ Item+ ]        -> many1(Item)
-//   [ Item  Sep  ]   -> sepBy(Item, Sep)
-//   [ Item+ Sep  ]   -> sepBy1(Item, Sep)
-//   [ Item  Sep? ]   -> sepByLoose(Item, Sep)            (poo's actual case)
-//   [ Item+ Sep? ]   -> sepBy1Loose(Item, Sep)
-//
-// sepEndBy/sepEndBy1 ("trailing separator allowed") aren't a distinct
-// bracket shape - they're written as a list followed by a separate,
-// ordinary trailing-optional factor right after the closing bracket:
-//
-//   [ Item Sep ] Sep?    -> sepEndBy(Item, Sep)
-//   [ Item+ Sep ] Sep?   -> sepEndBy1(Item, Sep)
-//
-// NOTE: this only captures the STRUCTURE of a list factor (item text,
-// separator text, which combinator it corresponds to). It does not yet
-// compile that into an actual parser - that's still pending, same as
-// the rest of the "RULE expression -> AST" pipeline flagged in
-// grammar.js's file header. Quantifiers on ordinary (non-list) factors
-// (e.g. "FnParams?", "Statement*") are likewise still left as
-// unparsed raw text for now, for the same reason - only "[...]"'s
-// internal quantifiers are interpreted at this point, since that's
-// specifically what was being wired in here.
 
-// :::::: Scanning a pattern into atoms
+import { numberTopLevelFactors } from './expression.js';
+
+// :::::: Parsing a RULE pattern's factors
 //
-// A "[...]" list and a "`...`" literal are each captured as ONE atom
-// before any whitespace-splitting happens - critical so a list's
-// internal spaces don't fragment it into multiple factors. A directly
-// (no-space) trailing ":label" or quantifier is swept up as part of the
-// same atom too, e.g. "[ Item Sep? ]:args" or "`,`?".
-
-function scanPatternAtoms (patternText) {
-  const atoms = [];
-  const text  = patternText.trim();
-  let i = 0;
-
-  while (i < text.length) {
-    if (/\s/.test(text[i])) { i++; continue; }
-
-    if (text[i] === '`') {
-      const start = i;
-      i++;
-      while (i < text.length && text[i] !== '`') i++;
-      i++; // consume closing backtick
-      while (i < text.length && !/\s/.test(text[i])) i++; // trailing ?/label, no space
-      atoms.push(text.slice(start, i));
-      continue;
-    }
-
-    if (text[i] === '[') {
-      const start = i;
-      let depth = 0;
-      while (i < text.length) {
-        if (text[i] === '[') depth++;
-        if (text[i] === ']') { depth--; i++; if (depth === 0) break; continue; }
-        i++;
-      }
-      while (i < text.length && !/\s/.test(text[i])) i++; // trailing label, no space
-      atoms.push(text.slice(start, i));
-      continue;
-    }
-
-    const start = i;
-    while (i < text.length && !/\s/.test(text[i])) i++;
-    atoms.push(text.slice(start, i));
-  }
-
-  return atoms;
-}
-
-// :::::: Parsing a RULE pattern's factors (inline labels + list shapes)
-//
-//   `fn` IDENTIFIER:identifier FnParams:args Block:body
-//        ^factor 2  ^label      ^factor 3 ^label
-//
-// KNOWN LIMITATION (unchanged from before): this still does not
-// understand "(...)" grouping/choice - only "[...]" lists are handled
-// as a distinguished shape. A pattern like
-// "IDENTIFIER ( ParenCallArgs | SingleBareArg )" is still mis-split
-// into multiple separate factors instead of the intended 2 - see
-// grammar.js's file header for the full writeup and impact.
+// Delegates to expression.js's real recursive-descent parser, which
+// understands "(...)" grouping/choice, quantifiers, and "[...]" list
+// shapes correctly - see expression.js's file header for the full
+// writeup. Only the top-level factor list (numbered + inline-labeled) is
+// needed here; resolveBindings below only ever reads `.index`/
+// `.inlineLabel` off each factor, so the richer per-factor AST shape
+// (group/choice/list/...) slots in with no further changes needed to the
+// resolver itself.
 
 export function parsePatternFactors (patternText) {
-  return scanPatternAtoms(patternText).map((atom, i) => parseAtomToFactor(atom, i + 1));
-}
-
-function parseAtomToFactor (atom, index) {
-  const labelMatch  = atom.match(/^(.+?):([A-Za-z_][A-Za-z0-9_]*)$/);
-  const body        = labelMatch ? labelMatch[1] : atom;
-  const inlineLabel = labelMatch ? labelMatch[2] : null;
-
-  if (body.startsWith('[')) {
-    return { index, kind: 'list', inlineLabel, ...parseListBody(body) };
-  }
-
-  return {
-    index,
-    kind: body.startsWith('`') ? 'literal' : 'reference',
-    raw: body,
-    inlineLabel,
-  };
-}
-
-// Parses the inside of "[ ... ]" into one of the six sepBy-family shapes
-// (see file header table above).
-function parseListBody (bracketText) {
-  const inner      = bracketText.slice(1, -1).trim(); // strip [ and ]
-  const innerAtoms = scanPatternAtoms(inner);
-
-  if (innerAtoms.length < 1 || innerAtoms.length > 2) {
-    throw new Error(
-      `[lsd] Malformed list expression "${bracketText}": expected "[ Item ]" or ` +
-      `"[ Item Sep ]" (each optionally with a trailing "+" on Item and/or "?" on Sep).`
-    );
-  }
-
-  const itemAtom = innerAtoms[0];
-  const itemPlus = itemAtom.endsWith('+');
-  const item     = itemPlus ? itemAtom.slice(0, -1) : itemAtom;
-
-  if (innerAtoms.length === 1) {
-    return {
-      item,
-      atLeastOne: itemPlus,
-      separator: null,
-      separatorOptional: false,
-      combinator: itemPlus ? 'many1' : 'many0',
-    };
-  }
-
-  const sepAtom     = innerAtoms[1];
-  const sepOptional = sepAtom.endsWith('?');
-  const separator   = sepOptional ? sepAtom.slice(0, -1) : sepAtom;
-
-  const combinator = sepOptional
-    ? (itemPlus ? 'sepBy1Loose' : 'sepByLoose')
-    : (itemPlus ? 'sepBy1'      : 'sepBy');
-
-  return { item, atLeastOne: itemPlus, separator, separatorOptional: sepOptional, combinator };
+  return numberTopLevelFactors(patternText);
 }
 
 // :::::: Parsing a "=>" mapping list
@@ -212,10 +78,7 @@ function parseConstant (text) {
 //
 // Produces the final { name -> { kind: 'capture', index } | { kind: 'constant', value } }
 // bindings for one RULE alternative, from whichever combination of inline
-// labels / mapping tokens / NODE fields was actually provided. Unchanged
-// by the addition of list factors above - a "list" factor still just
-// carries an .index and an optional .inlineLabel like any other factor,
-// so it slots into this resolver with no special-casing needed.
+// labels / mapping tokens / NODE fields was actually provided.
 
 export function resolveBindings ({ patternFactors, mappingTokens, nodeFields }) {
   const bindings = {};
