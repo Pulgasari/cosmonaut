@@ -336,7 +336,7 @@ CODE == `${callee}(${args})`
 
 #### ArrayLikeLiteral
 META :: ArrayLikeLiteral
-RULE == `#{` ArgumentsList? `}` => `Record' 2
+RULE == `#{` ArgumentsList? `}` => `Record` 2
 RULE == `#(` ArgumentsList? `)` => `Tuple`  2
 RULE == `#[` ArgumentsList? `]` => `List`   2
 RULE ==  `[` ArgumentsList? `]` => `Array`  2
