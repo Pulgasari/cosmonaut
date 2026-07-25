@@ -335,3 +335,21 @@ import { parseLSD, compileLSD } from '@cosmonaut/lsd';
 const lsd = parseLSD(source);
 const { lexer, parserMethods, genMethods, highlighting } = compileLSD(source);
 ```
+
+## Concept
+
+```lsd
+# ------------ Statements ---------------------------------------------
+
+META :: Loop
+RULE == ( LoopOver | LoopWhile ) => args
+NODE == { args }
+
+META :: LoopOver
+RULE == `loop` `(` Expression `as` Identifier `)` => 3 5
+RULE == `loop`     Expression `as` Identifier     => 2 4
+
+META :: LoopWhile
+RULE == `loop` `(` Expression  `)` => 3
+RULE == `loop`     Expression      => 2
+```
