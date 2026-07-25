@@ -23,11 +23,11 @@ function Header () {
 
 const menuItems = signal([
   { label: 'Start'       , href: app.url               },
+  { label: 'Lexer'       , href: app.url + 'lexer'     },
   { label: 'Blocks'      , href: app.url + 'blocks'    },
+  { label: 'Parser'      , href: app.url + 'parser'    },
   { label: 'Generator'   , href: app.url + 'generator' },
   { label: 'Layouter'    , href: app.url + 'layouter'  },
-  { label: 'Lexer'       , href: app.url + 'lexer'     },
-  { label: 'Parser'      , href: app.url + 'parser'    },
   { label: 'LSD'         , href: app.url + 'lsd'       },
   { label: 'Terminology' , href: app.url + 'terminology' },
 ]);
