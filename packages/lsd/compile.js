@@ -1,41 +1,188 @@
 // @cosmonaut/lsd/compile.js
 
-// WIP. Plan for turning a parsed LSD document into the four target
-// artifacts. Each function below is a placeholder describing exactly
-// which existing package/API it will eventually call into - filled in
-// once grammar.js's open questions are resolved.
+// Turns a parsed LSD document into the target artifacts. compileTokenizer
+// and compileParserMethods are now real (were previously stubs); codegen
+// is deliberately NOT part of this package - see the readme for why:
+// codegen from AST to a specific target language (JS, later Odin, ...) is
+// the consuming compiler's own job, built with @cosmonaut/generator. LSD
+// only takes source text all the way to AST nodes.
 
-// TKN entries -> a @cosmonaut/lexer options object (comments, puncts,
-// rules), roughly mirroring what packages/ebnf/lexer.js already does by
-// hand for the (much smaller) EBNF token set. TKN entries with kind
-// 'ref' resolve against meta.lists (keywords/literals/etc) or
-// meta.tables (operators) - see makeRulesFromPuncts/makeRulesFromOperators
-// in packages/lexer/utils.js, which already do almost exactly this.
-export function compileTokenizer (lsd) {
-  throw new Error('[lsd] compileTokenizer() not implemented yet.');
+import { Lexer, buildTokenTypes, resolveRules } from '@cosmonaut/lexer';
+import * as PARSER_BLOCKS from '@cosmonaut/parser';
+
+import { buildTypeRegistry } from './resolve.js';
+import { compileExpr }       from './expression.js';
+import { extractLiteralPrefix } from './highlightjs.js';
+
+// :::::: Tokenizer
+
+// TKN entries compile to @cosmonaut/lexer content rules, in DECLARATION
+// ORDER - poo.lsd's own comment ("order and relation of rules is part of
+// the control flow") is honored directly, since Lexer's rule matching
+// already tries rules in array order, first sticky match wins.
+//
+// - kind 'regex': becomes a direct content rule, UNLESS the TKN's own
+//   name is exactly "WHITESPACE" - the Lexer already whitespace-skips by
+//   default (buildWhitespaceScanner, always active via skipWhitespace),
+//   so a redundant content rule for it is simply omitted.
+// - kind 'ref' pointing at a META LIST: becomes one word-boundary content
+//   rule PER WORD in that list (e.g. every keyword gets its own rule) -
+//   UNLESS the word itself isn't "word-shaped" (e.g. punctuation like
+//   "(" or ";"), in which case no word-boundary is used at all, since
+//   "\b" only makes sense adjacent to \w characters and would otherwise
+//   silently fail to match punctuation entirely.
+//   Note @cosmonaut/lexer's Lexer ALSO auto-reclassifies any IDENTIFIER-
+//   shaped match into KEYWORD when it's in options.keywords - that
+//   mechanism is used too (for whichever TKN name's ref list is passed
+//   as `keywords`), as a second line of defense/simpler path; the
+//   explicit per-word rules generated here work for ANY ref'd TKN name
+//   (not just one specifically called "KEYWORD"), which is why they're
+//   generated unconditionally instead of relying on that name-specific
+//   built-in.
+// - kind 'ref' pointing at a META TABLE: becomes one content rule PER
+//   SYMBOL across all of the table's rows (its trailing "( a b c )"
+//   columns), sorted longest-first so e.g. ">=" is tried before ">".
+//
+// LIMITATION (documented, same heuristic already used by highlightjs.js):
+// a COMMENT-named TKN's regex is converted to a line-comment
+// `{ start: <literal prefix> }` via extractLiteralPrefix() - covers "//"/
+// "#" style comments, not block comments ("/* */"), which aren't
+// reliably derivable from an arbitrary regex. Pass `options.extraComments`
+// to add those by hand until LSD gains an explicit line/block distinction.
+//
+// KNOWN LIMITATION (found while testing, not yet fixed): a META TABLE
+// row whose own symbol list itself contains "(" or ")" as literal
+// symbols confuses meta.js's naive "last parenthesized group at end of
+// line" row parser. Keep such punctuation in a separate META LIST for
+// now if you hit this.
+
+export function compileTokenizer (lsd, options = {}) {
+  const { extraComments = [] } = options;
+
+  const tokenTypes = buildTokenTypes(lsd.tokens.map(t => t.name));
+  const rules      = [];
+  const comments   = [...extraComments];
+  let keywordList  = [];
+
+  for (const tkn of lsd.tokens) {
+    const upperName = tkn.name.toUpperCase();
+
+    if (tkn.kind === 'regex') {
+      if (upperName === 'WHITESPACE') continue; // Lexer already skips whitespace by default
+
+      if (upperName === 'COMMENT') {
+        const prefix = extractLiteralPrefix(tkn.pattern.source);
+        if (prefix) { comments.push({ type: 'line', start: prefix }); continue; }
+      }
+
+      rules.push({ id: `tkn:${tkn.name}`, type: tokenTypes[tkn.name], regex: tkn.pattern });
+      continue;
+    }
+
+    if (tkn.kind === 'ref') {
+      const list  = lsd.meta.lists[tkn.ref];
+      const table = lsd.meta.tables[tkn.ref];
+
+      if (list) {
+        if (upperName === 'KEYWORD') keywordList = list; // let Lexer's built-in IDENTIFIER->KEYWORD reclassification apply too
+        for (const word of list) {
+          const isWordShaped = /^\w+$/.test(word); // \b only makes sense around \w-shaped text
+          rules.push({
+            id: `tkn:${tkn.name}:${word}`,
+            type: tokenTypes[tkn.name],
+            regex: isWordShaped
+              ? new RegExp('\\b' + escapeRegExp(word) + '\\b')
+              : new RegExp(escapeRegExp(word)),
+          });
+        }
+        continue;
+      }
+
+      if (table) {
+        const symbols = table.rows.flatMap(row => row.symbols ?? []).sort((a, b) => b.length - a.length);
+        for (const symbol of symbols) {
+          rules.push({
+            id: `tkn:${tkn.name}:${symbol}`,
+            type: tokenTypes[tkn.name],
+            regex: new RegExp(escapeRegExp(symbol)),
+          });
+        }
+        continue;
+      }
+
+      throw new Error(`[lsd] TKN "${tkn.name}" references "@${tkn.ref}", but no META LIST or META TABLE by that name was found.`);
+    }
+  }
+
+  return function createLexer (source) {
+    return new Lexer(source, {
+      tokenTypes,
+      rules: resolveRules(rules),
+      comments,
+      keywords: keywordList,
+    });
+  };
 }
 
-// Top-level productions + #### block alternatives -> an object of
-// parseMethods, shaped exactly like @cosmonaut/ebnf's makeRulesFromEBNF()
-// output, ready for `new Parser(tokens, { methods })`. #### blocks whose
-// alternatives are pure "OPERATOR"-shaped (see BinaryExpression above)
-// should be special-cased to call generator.parseBinaryExpr() with
-// meta.tables.operators instead of being compiled generically.
+function escapeRegExp (str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// :::::: Parser methods
+
+// Compiles every block into one parser method, registered under the
+// block's short META name (e.g. "FnDecl", not the "#### FunctionDeclaration"
+// documentation label) - matching resolve.js's makeGenerator(), which
+// dispatches on this same name via node.type.
+//
+// Each alternative becomes: match its pattern (via expression.js's
+// compileExpr against the type registry), then build
+// `{ type: block.name, ...bindings }` from the raw match array using
+// the block's already-resolved bindings (block.alternatives[i].bindings,
+// as produced by bindings.js/grammar.js). Alternatives within a block are
+// tried in written order (first match wins) via @cosmonaut/parser's own
+// `choice()` semantics.
+
 export function compileParserMethods (lsd) {
-  throw new Error('[lsd] compileParserMethods() not implemented yet.');
+  const registry = buildTypeRegistry(lsd);
+  const methods  = {};
+
+  for (const block of lsd.grammar.blocks) {
+    const alternativeMatchers = block.alternatives.map(alt => {
+      const factorParsers = alt.patternFactors.map(f => compileExpr(f, registry, PARSER_BLOCKS));
+      const matchParser   = factorParsers.length === 1 ? factorParsers[0] : PARSER_BLOCKS.seq(...factorParsers);
+
+      return state => {
+        const position  = state.save();
+        const rawResult = matchParser(state);
+
+        if (rawResult == null) { state.restore(position); return null; }
+
+        const rawArray = factorParsers.length === 1 ? [rawResult] : rawResult;
+        const node     = { type: block.name };
+
+        for (const [name, binding] of Object.entries(alt.bindings)) {
+          node[name] = binding.kind === 'constant' ? binding.value : rawArray[binding.index - 1];
+        }
+
+        return node;
+      };
+    });
+
+    methods[block.name] = state => {
+      for (const matchAlternative of alternativeMatchers) {
+        const result = matchAlternative(state);
+        if (result != null) return result;
+      }
+      return null;
+    };
+  }
+
+  return methods;
 }
 
-// #### block CODE templates -> an object of genMethods for
-// @cosmonaut/generator, each building a Doc from ${field} / ${field,
-// "sep"} placeholders via generator.genNode() / generator.genList().
-// The BinaryExpression block again special-cases to genBinaryExpr()
-// fed by meta.tables.operators, rather than a literal CODE template.
-export function compileGeneratorMethods (lsd) {
-  throw new Error('[lsd] compileGeneratorMethods() not implemented yet.');
-}
+// :::::: Highlighting
 
-// HL section -> as-is, just the parsed { tokenName: scope } map.
-// No further compilation needed - already usable directly.
 export function compileHighlighting (lsd) {
   return lsd.highlighting;
 }
