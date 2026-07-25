@@ -9,7 +9,7 @@ Table of Contents:
 [Introduction](#introduction) ·
 [Semantics](#) ·
 [Example](#example) ·
-[Usage](#usage) ·
+[Usage](#usage)
 
 ---
 
