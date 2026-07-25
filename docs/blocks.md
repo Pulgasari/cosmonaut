@@ -110,7 +110,7 @@ Parses an opening parser, an inner parser, and a closing parser in sequence.
 
 Returns only the inner result.
 
-```js
+```javascript
 between(
   token("("),
   expression,
@@ -122,13 +122,13 @@ between(
 
 Wraps a successful parser result in an object under the given property name.
 
-```js
+```javascript
 capture(identifier, "name")
 ```
 
 ↓
 
-```js
+```javascript
 { name: result }
 ```
 
@@ -136,7 +136,7 @@ capture(identifier, "name")
 
 Runs a parser, then uses its result to build the *next* parser to run. Unlike [`map`](#map), which only transforms the result, `chain` lets the result decide what gets parsed next — the basis for context-sensitive grammars.
 
-```js
+```javascript
 chain(
   token("LENGTH"),
   length => repeat(any(), Number(length.value))
@@ -149,7 +149,7 @@ Like [`chain`](#chain), but repeats the bind step: each result is fed back into 
 
 Requires at least one successful step.
 
-```js
+```javascript
 chain1(
   identifier,
   prev => memberAccessFollowing(prev)
@@ -162,7 +162,7 @@ Parses a left-associative chain of operands separated by an operator, folding th
 
 A common way to build binary-expression parsing without a full precedence-climbing (Pratt) parser.
 
-```js
+```javascript
 chainl1(
   multiplicative,
   choice(token("+"), token("-")),
@@ -172,7 +172,7 @@ chainl1(
 
 Parses:
 
-```
+```javascript
 a + b - c
 ```
 
@@ -184,7 +184,7 @@ Like [`chainl1`](#chainl), but folds right-associatively — the rightmost appli
 
 Used for operators like exponentiation (`^`) or assignment (`=`).
 
-```js
+```javascript
 chainr1(
   unary,
   token("^"),
@@ -194,7 +194,7 @@ chainr1(
 
 Parses:
 
-```js
+```javascript
 a ^ b ^ c
 ```
 
@@ -204,7 +204,7 @@ as `(a ^ (b ^ c))`.
 
 Checks whether the next token matches a type or value without consuming it.
 
-```js
+```javascript
 check("IDENTIFIER")
 check("+")
 ```
@@ -213,7 +213,7 @@ check("+")
 
 Tries multiple parsers in order and returns the first successful result. Automatically backtracks between attempts.
 
-```js
+```javascript
 choice(
   token("let"),
   token("const"),
@@ -229,7 +229,7 @@ Alias for [`cut`](#cut).
 
 Marks a parser as non-backtrackable: if it fails past this point, the failure becomes a hard error instead of a silent `null`, so `choice` won't try another alternative. Used once a grammar rule is unambiguously committed (e.g. after matching a keyword).
 
-```js
+```javascript
 seq(
   token("if"),
   cut(expression, "expected condition after 'if'"),
@@ -243,7 +243,7 @@ Succeeds only if the parser has reached the end of the [token stream](#token-str
 
 Consumes no input.
 
-```js
+```javascript
 seq(expression, eof())
 ```
 
@@ -251,7 +251,7 @@ seq(expression, eof())
 
 Consumes a token matching the given type or value, or throws a syntax error if it doesn't match.
 
-```js
+```javascript
 expect(token("SEMICOLON"))
 ```
 
@@ -261,7 +261,7 @@ A parser that always fails and consumes no input.
 
 Useful as a neutral "zero" element when composing other parsers.
 
-```js
+```javascript
 fail()
 ```
 
@@ -269,7 +269,7 @@ fail()
 
 Accepts a parser result only if it satisfies a predicate.
 
-```js
+```javascript
 filter(number, n => n.value > 0)
 ```
 
@@ -279,7 +279,7 @@ Defers evaluation of a parser until it actually runs.
 
 Needed to reference a rule before it's defined, e.g. for recursive grammars.
 
-```js
+```javascript
 const expression = lazy(() => choice(binary, unary, primary));
 ```
 
@@ -287,7 +287,7 @@ const expression = lazy(() => choice(binary, unary, primary));
 
 Runs a parser and returns its result, but restores the position afterwards, so no input is consumed.
 
-```js
+```javascript
 lookAhead(token("function"))
 ```
 
@@ -297,7 +297,7 @@ Parses zero or more occurrences.
 
 Always succeeds.
 
-```js
+```javascript
 many(token("IDENTIFIER"))
 ```
 
@@ -307,7 +307,7 @@ Parses zero or more occurrences until a [terminator](#terminator) succeeds.
 
 The [terminator](#terminator) is consumed but not included in the returned results.
 
-```js
+```javascript
 manyTill(
   any(),
   token(")")
@@ -320,7 +320,7 @@ Parses one or more occurrences of a parser.
 
 Fails if the first occurrence cannot be parsed.
 
-```js
+```javascript
 many1(token("DIGIT"))
 ```
 
@@ -330,7 +330,7 @@ Parses one or more occurrences of a parser until a [terminator](#terminator) suc
 
 Requires at least one match before the [terminator](#terminator) succeeds. Fails otherwise.
 
-```js
+```javascript
 many1Till(statement, token("}"))
 ```
 
@@ -338,7 +338,7 @@ many1Till(statement, token("}"))
 
 Transforms a parser result using the supplied function.
 
-```js
+```javascript
 map(
   token("NUMBER"),
   t => Number(t.value)
@@ -351,7 +351,7 @@ Succeeds only if the given parser fails.
 
 Consumes no input.
 
-```js
+```javascript
 not(token("EOF"))
 ```
 
@@ -361,7 +361,7 @@ Attempts a parser and returns `null` instead of failing.
 
 Consumes no input on failure.
 
-```js
+```javascript
 optional(token(","))
 ```
 
@@ -369,7 +369,7 @@ optional(token(","))
 
 Parses a parser exactly *n* times.
 
-```js
+```javascript
 repeat(token("DIGIT"), 4)
 ```
 
@@ -379,7 +379,7 @@ Parses zero or more elements separated by another parser.
 
 Always succeeds.
 
-```js
+```javascript
 sepBy(expression, token(","))
 ```
 
@@ -390,7 +390,7 @@ each pair (not required, unlike [`sepBy`](#sepby)).
 
 Always succeeds.
 
-```js
+```javascript
 sepByLoose(identifier, token(","))
 ```
 
@@ -400,7 +400,7 @@ Parses `a b c,` and `a, b, c,` and even mixed `a, b c` identically.
 
 Parses one or more elements separated by another parser.
 
-```js
+```javascript
 sepBy1(expression, token(","))
 ```
 
@@ -408,7 +408,7 @@ sepBy1(expression, token(","))
 
 Like [`sepByLoose`](#sepbyloose), but requires at least one element.
 
-```js
+```javascript
 sepBy1Loose(identifier, token(","))
 ```
 
@@ -416,7 +416,7 @@ sepBy1Loose(identifier, token(","))
 
 Parses zero or more elements separated and optionally terminated by a [separator](#separator).
 
-```js
+```javascript
 sepEndBy(property, token(","))
 ```
 
@@ -424,7 +424,7 @@ sepEndBy(property, token(","))
 
 Parses one or more elements separated and optionally terminated by a [separator](#separator).
 
-```js
+```javascript
 sepEndBy1(property, token(","))
 ```
 
@@ -434,7 +434,7 @@ Runs multiple parsers sequentially.
 
 Succeeds only if every parser succeeds.
 
-```js
+```javascript
 seq(
   token("("),
   expression,
@@ -448,7 +448,7 @@ Runs a parser, then a second parser whose result is discarded.
 
 Returns only the first parser's result.
 
-```js
+```javascript
 skip(expression, token(";"))
 ```
 
@@ -458,7 +458,7 @@ A parser that always succeeds with the given value and consumes no input.
 
 Useful as a neutral "identity" element, e.g. as a default in `choice`.
 
-```js
+```javascript
 choice(identifier, succeed(null))
 ```
 
@@ -468,7 +468,7 @@ Executes a callback with the parser result without modifying it.
 
 Useful for debugging or collecting statistics.
 
-```js
+```javascript
 tap(expression, (result, state) => console.log("parsed:", result))
 ```
 
@@ -478,7 +478,7 @@ Runs a parser whose result is discarded, then a second parser.
 
 Returns only the second parser's result.
 
-```js
+```javascript
 then(token("return"), expression)
 ```
 
@@ -488,7 +488,7 @@ Parses between `min` and `max` occurrences of a parser (inclusive).
 
 [`atLeast`](#atleast) and [`atMost`](#atmost) are convenience wrappers around this.
 
-```js
+```javascript
 times(token("DIGIT"), 2, 5)
 ```
 
@@ -496,7 +496,7 @@ times(token("DIGIT"), 2, 5)
 
 Consumes and returns a token matching the given type or value.
 
-```js
+```javascript
 token("IDENTIFIER")
 ```
 
@@ -504,7 +504,7 @@ token("IDENTIFIER")
 
 Replaces a successful parser result with a constant value.
 
-```js
+```javascript
 value(token("true"), true)
 ```
 
@@ -522,7 +522,7 @@ value(token("true"), true)
 
 ## Parse a Comma-Separated List
 
-```js
+```javascript
 const identifiers = sepBy(
   token("IDENTIFIER"),
   token(",")
@@ -537,13 +537,13 @@ foo, bar, baz
 
 ↓
 
-```js
+```javascript
 [ foo, bar, baz ]
 ```
 
 ## Parse a Parenthesized Argument List
 
-```js
+```javascript
 const arguments =
   seq(
     token("("),
@@ -563,7 +563,7 @@ Parses:
 
 ## Parse a Function Declaration
 
-```js
+```javascript
 const declaration =
   seq(
     token("function"),
@@ -579,13 +579,13 @@ const declaration =
 
 Parses:
 
-```js
+```javascript
 function greet(name, age)
 ```
 
 ## Parse a Block
 
-```js
+```javascript
 const block =
   seq(
     token("{"),
@@ -598,7 +598,7 @@ const block =
 
 ## Parse an Expression
 
-```js
+```javascript
 const expression =
   choice(
     rule.BinaryExpression,
@@ -610,7 +610,7 @@ const expression =
 
 ## Recursive Grammar
 
-```js
+```javascript
 const expression = lazy(() =>
   choice(
     rule.BinaryExpression,
@@ -626,7 +626,7 @@ const expression = lazy(() =>
 
 ## Build an Object
 
-```js
+```javascript
 const property =
   map(
     seq(
