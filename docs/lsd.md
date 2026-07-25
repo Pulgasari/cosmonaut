@@ -29,7 +29,7 @@ The Goals of **LSD***:
 
 ## Semantics of LSD
 
-The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the equals sign (`==`) for declarations and the directional arrow (`=>` / `<=`) for **syntactic data flow**. 
+The DSL deliberately avoids redundant punctuation bloat, uniformly utilizing the equals sign (`==`) for declarations and the directional arrow (`=>`) for **syntactic data flow**. 
 
 [`CODE`](#) ·
 [`HL`](#) ·
