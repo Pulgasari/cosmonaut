@@ -14,7 +14,7 @@
 
 ### LSD
 
-- [LSD (Language Sepecification Data)](lsd.md)
+- [LSD (Language Specification Data)](lsd.md)
 
 ### Utils
 
