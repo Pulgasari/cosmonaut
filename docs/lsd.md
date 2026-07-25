@@ -174,9 +174,9 @@ RULE :: DeclStatement == VarDeclStatement | FnDeclStatemenr
 ```lsd
 #### FunctionDeclaration
 META :: FnDecl
-TYPE == { identifier, args, body }
 RULE == `fn` IDENTIFIER     FnParams      Block     => 2 3 4
 RULE == `fn` IDENTIFIER `=` FnParams `=>` Statement => 2 4 6
+NODE == { identifier, args, body }
 ```
 
 ---
@@ -256,38 +256,44 @@ RULE :: NamedArgumentsList == [ NamedPropDecl `,` ] `,`? => args
 
 # ------------ Declarations --------------------------------------------
 
-#### FunctionDeclaration
+#### FnDeclaration
 META :: FnDecl
 RULE == `fn` IDENTIFIER     FnParams      Block     => 2 3 4
 RULE == `fn` IDENTIFIER `=` FnParams `=>` Statement => 2 4 6
 NODE == { identifier, args, body }
 
-#### ObjectDeclaration
+#### FnClosureDeclaration
+META :: FnClDecl
+RULE == `fn` IDENTIFIER `(` FnParams `)` Block => 2 4 6
+NODE == { identifier, args, body }
+
+#### ObjDeclaration
 META :: ObjDecl
 RULE == `obj` IDENTIFIER `=` Block => 2 4
 NODE == { name, body }
 
 #### CpyDeclaration
 META :: CpyDecl
-RULE == `cpy` IDENTIFIER `=` IDENTIFIER `;` => 2 4
-NODE == { name, origName }
+RULE == `cpy` IDENTIFIER `as` IDENTIFIER `;` => 2 4
+RULE == `cpy` IDENTIFIER                 `;` => 2
+NODE == { name, alias }
 
 #### RefDeclaration
 META :: RefDecl
-RULE == `ref` IDENTIFIER `=` IDENTIFIER `;` => 2 4
-NODE == { name, origName }
+RULE == `ref` IDENTIFIER `as` IDENTIFIER `;` => 2 4
+RULE == `ref` IDENTIFIER                 `;` => 2
+NODE == { name, alias }
 
-#### ValDeclarationOperator
-META :: ValDeclOp
-RULE == `#=` => false
-RULE ==  `=` => true
-NODE == { isSealed: Bool }
+#### UseDeclaration
+META :: UseDecl
+RULE == `use` IDENTIFIER `;` => 2
+NODE == { name }
 
 #### ValDeclaration
 META :: ValDecl
-RULE == `val` IDENTIFIER ValDeclOp ArrayLikeLiteral ';' => 2 3 4
-RULE == `val` IDENTIFIER ValDeclOp Expr             `;` => 2 3 4
-NODE == { name, mode, expr }
+RULE == `val` IDENTIFIER `=` ArrayLikeLiteral ';' => 2 4
+RULE == `val` IDENTIFIER `=` Expr             `;` => 2 4
+NODE == { name, expr }
 
 #### NamedPropDeclaration
 META :: NamedPropDecl
