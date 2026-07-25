@@ -22,13 +22,14 @@ function Header () {
 }
 
 const menuItems = signal([
-  { label: 'Start'     , href: app.url               },
-  { label: 'Blocks'    , href: app.url + 'blocks'    },
-  { label: 'Generator' , href: app.url + 'generator' },
-  { label: 'Layouter'  , href: app.url + 'layouter'  },
-  { label: 'Lexer'     , href: app.url + 'lexer'     },
-  { label: 'Parser'    , href: app.url + 'parser'    },
-  { label: 'LSD'       , href: app.url + 'lsd'       },
+  { label: 'Start'       , href: app.url               },
+  { label: 'Blocks'      , href: app.url + 'blocks'    },
+  { label: 'Generator'   , href: app.url + 'generator' },
+  { label: 'Layouter'    , href: app.url + 'layouter'  },
+  { label: 'Lexer'       , href: app.url + 'lexer'     },
+  { label: 'Parser'      , href: app.url + 'parser'    },
+  { label: 'LSD'         , href: app.url + 'lsd'       },
+  { label: 'Terminology' , href: app.url + 'lsd'       },
 ]);
 function Menu () {
   const currentUrl = window.location.href.replace(/\/$/, '');
