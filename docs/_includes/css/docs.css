@@ -140,7 +140,7 @@ hr { background-color: var(--separator)!important; }
 /* FIXES */
 
 /* hide template header */
-h1:has(a[href="https://pulgasari.github.io/poo/"]) { display: none; }
+h1:has(a[href="https://pulgasari.github.io/cosmonaut/"]) { display: none; }
 
 /* tables */
 .markdown-body table {
