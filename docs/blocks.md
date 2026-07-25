@@ -12,8 +12,7 @@ deno install jsr:@cosmonaut/blocks
 
 [Blocks](#blocks) · 
 [Docs](#docs) ·
-[Examples](#examples) ·
-[Terminology](#terminology)
+[Examples](#examples)
 
 ---
 
