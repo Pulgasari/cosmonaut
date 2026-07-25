@@ -285,11 +285,6 @@ NODE == { isSealed: Bool }
 
 #### ValDeclaration
 META :: ValDecl
-RULE == `val` IDENTIFIER ValDeclOp Expr `;` => 2 3 4
-NODE == { name, mode, value }
-
-#### ValDeclaration2
-META :: ValDeclaration2
 RULE == `val` IDENTIFIER ValDeclOp ArrayLikeLiteral ';' => 2 3 4
 RULE == `val` IDENTIFIER ValDeclOp Expr             `;` => 2 3 4
 NODE == { name, mode, expr }
@@ -317,7 +312,7 @@ NODE == { callee, args }
 
 #### ArrayLikeLiteral
 META :: ArrayLikeLiteral
-RULE == `#{` ArgumentsList? `}` => `Record' 2
+RULE == `#{` ArgumentsList? `}` => `Record` 2
 RULE == `#(` ArgumentsList? `)` => `Tuple`  2
 RULE == `#[` ArgumentsList? `]` => `List`   2
 RULE ==  `[` ArgumentsList? `]` => `Array`  2
