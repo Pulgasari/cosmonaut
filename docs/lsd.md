@@ -95,7 +95,7 @@ By `META PROP` a simple static variable (constant) could defined which then coul
 
 String could be escaped with backticks `` ` `` or backslash `\` but in most cases is not necessary here.
 
-```md
+```poo
 META :: language == `poo`
 META :: language == poo
 ```
@@ -108,7 +108,7 @@ To prevent unnecessary bloat, standard character ranges (e.g., `a-z`, `A-Z`, `0-
 
 Since the equals sign `=` and spaces are control characters of the DSL, special symbols can either be escaped with a backslash (`\=`) or entirely wrapped in backticks (``  `=` ``) as a template string literal:
 
-```md
+```poo
 META LIST :: puncts  == { } ( ) [ ] , ; . : ? =
 META LIST :: symbols == a-z A-Z 0-9 _ $
 
@@ -118,7 +118,7 @@ META LIST :: symbols == a-z A-Z 0-9 _ $
 
 **Example:** Defines operator groups and their priority (precedence) for the integrated Pratt parser:
 
-```md
+```poo
 META TABLE :: operators == (
   group         is String
   associativity is String
@@ -133,7 +133,7 @@ META TABLE :: operators == (
 
 Defines tokens using JavaScript regular expression literals, which should include the sticky flag `/y` for high-performance, pointer-based text analysis:
 
-```md
+```poo
 TKN :: STRING   == /"(?:\\.|[^"\\])*"/y
 TKN :: KEYWORD  == @keywords
 TKN :: OPERATOR == @operators
@@ -149,7 +149,7 @@ String literals and node identifiers inside parsing rules are strictly wrapped i
 
 When an expression merely groups or validates a syntax structure without leaving its own dedicated node in the memory tree, a simple `==` is used.
 
-```md
+```poo
 RULE :: Program == Statement*
 RULE :: DeclStatement == VarDeclStatement | FnDeclStatemenr
 ```
@@ -162,7 +162,7 @@ The `CODE` block describes how an AST node is translated back into code. The syn
 
 If a property holds an array of child AST nodes (such as lists or block statements), an optional separator can be supplied after a comma (`${items, ", "}`):
 
-```md
+```poo
 # Example: Translating a variable declaration into Odin syntax (using :=)
 CODE VarDecl = `${name} :\= ${value};\n`
 
@@ -174,7 +174,7 @@ CODE ExpressionList = `${items, ", "}`
 
 ## The Super-Block
 
-```md
+```poo
 #### FunctionDeclaration
 META :: FnDecl
 TYPE == { identifier, args, body }
@@ -200,7 +200,7 @@ HL LITERAL = `constant.language`
 
 Below is the complete unified `.lsd` specification for the current feature set of *Poo*:
 
-```md
+```poo
 # ======================================================================
 # POO :: LANGUAGE SPECIFICATION DATA :: poo.lsd
 # ======================================================================
