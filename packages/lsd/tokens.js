@@ -7,7 +7,7 @@
 
 export function parseTokens (tknLines) {
   return tknLines.map(line => {
-    const match = line.match(/^TKN\s+(\S+)\s*==\s*(.+)$/);
+    const match = line.match(/^TKN\s*::\s*(\S+)\s*==\s*(.+)$/);
     if (!match) throw new Error(`[lsd] Malformed TKN line: "${line}"`);
 
     const [, name, rhs] = match;
