@@ -1,4 +1,4 @@
-// @cosmonaut/ebnf/_compile.js
+// @cosmonaut/ebnf/compile.js
 
 // Compiles a single EBNF AST node (as produced by grammar.js) into a
 // parser block: a plain (state) => result | null function, built from
