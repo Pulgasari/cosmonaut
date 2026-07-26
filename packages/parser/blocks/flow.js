@@ -5,7 +5,7 @@
 // failure (undefined) into a successful null value - everything else
 // here just propagates undefined-on-failure transparently.
 
-import { backtrack, decorate } from './_internals.js';
+import { backtrack, decorate } from './internals.js';
 
 export const
 lazy     = parser => decorate (state => parser()(state)),
