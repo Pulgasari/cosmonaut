@@ -16,30 +16,49 @@ export function parseLSD (source) {
   const sections = splitSections(source);
 
   return {
-    meta:          parseMeta(sections.META),
-    tokens:        parseTokens(sections.TKN),
-    highlighting:  parseHighlighting(sections.HL),
-    grammar:       parseGrammar({ ruleLines: sections.RULE, blocks: sections.BLOCKS }),
+    meta         : parseMeta         (sections.META),
+    tokens       : parseTokens       (sections.TKN),
+    highlighting : parseHighlighting (sections.HL),
+    grammar      : parseGrammar({ ruleLines: sections.RULE, blocks: sections.BLOCKS }),
   };
 }
 
-// Parses + compiles in one step: source text -> { createLexer, methods, highlighting }.
+// Parses + compiles in one step: 
 //   createLexer(sourceText) -> a ready @cosmonaut/lexer Lexer instance
-//   methods                  -> ready for `new Parser(tokens, { methods })`
-//   highlighting              -> the parsed HL section, as-is
+//   methods                 -> ready for `new Parser(tokens, { methods })`
+//   highlighting            -> the parsed HL section, as-is
 export function compileLSD (source, options = {}) {
   const lsd = parseLSD(source);
 
   return {
-    createLexer:   compileTokenizer(lsd, options.tokenizer),
-    methods:       compileParserMethods(lsd),
-    highlighting:  compileHighlighting(lsd),
+    createLexer  : compileTokenizer     (lsd, options.tokenizer),
+    methods      : compileParserMethods (lsd),
+    highlighting : compileHighlighting  (lsd),
   };
 }
 
-export { parseMeta, parseTokens, parseHighlighting, parseGrammar, splitSections };
+// :::::: RE-EXPORTS
+
+export * from './bindings.js';
+export * from './compile.js';
+export * from './expression.js';
+export * from './grammar.js';
+export * from './highlighting.js';
+export * from './highlightjs.js';
+export * from './meta.js';
+export * from './resolve.js';
+export * from './sections.js';
+export * from './tokens.js';
+
+/*
+export { parseGrammar, parseHighlighting, parseMeta, splitSections, parseTokens };
 export { compileTokenizer, compileParserMethods, compileHighlighting } from './compile.js';
 export { getMetaPropsFromLSD, createHighlightJsObjectFromLSD, extractLiteralPrefix } from './highlightjs.js';
 export { buildTypeRegistry, resolveField, resolvePath, interpolateTemplate, makeGenerator } from './resolve.js';
-export { parsePatternFactors, parseMappingTokens, resolveBindings, checkBlockConsistency } from './bindings.js';
-export { parsePattern, numberTopLevelFactors, compileExpr } from './expression.js';
+export { checkBlockConsistency, parseMappingTokens, parsePatternFactors, resolveBindings } from './bindings.js';
+export { compileExpr, numberTopLevelFactors, parsePattern } from './expression.js';
+*/
+
+
+
+
