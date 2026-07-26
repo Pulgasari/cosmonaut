@@ -8,11 +8,11 @@
 // only takes source text all the way to AST nodes.
 
 import { Lexer, buildTokenTypes, resolveRules } from '@cosmonaut/lexer';
-import * as PARSER_BLOCKS from '@cosmonaut/parser';
+import * as PARSER_BLOCKS                       from '@cosmonaut/parser';
 
-import { buildTypeRegistry } from './resolve.js';
-import { compileExpr }       from './expression.js';
+import { compileExpr }          from './expression.js';
 import { extractLiteralPrefix } from './highlightjs.js';
+import { buildTypeRegistry }    from './resolve.js';
 
 // :::::: Tokenizer
 
@@ -130,22 +130,29 @@ function escapeRegExp (str) {
 
 // :::::: Parser methods
 
-// Compiles every block into one parser method, registered under the
-// block's short META name (e.g. "FnDecl", not the "#### FunctionDeclaration"
-// documentation label) - matching resolve.js's makeGenerator(), which
-// dispatches on this same name via node.type.
-//
-// Each alternative becomes: match its pattern (via expression.js's
-// compileExpr against the type registry), then build
-// `{ type: block.name, ...bindings }` from the raw match array using
-// the block's already-resolved bindings (block.alternatives[i].bindings,
-// as produced by bindings.js/grammar.js). Alternatives within a block are
-// tried in written order (first match wins) via @cosmonaut/parser's own
-// `choice()` semantics.
-
 export function compileParserMethods (lsd) {
   const registry = buildTypeRegistry(lsd);
   const methods  = {};
+
+  // Top-level "RULE :: Name == Expr [=> N]" productions (Program, Statement,
+  // IdentList, Block, ...) are TRANSPARENT dispatch aliases, not their own
+  // distinct node type - they just forward whatever their compiled
+  // pattern matched, unwrapped. An optional trailing "=> N" extracts just
+  // raw position N from a multi-factor pattern instead of forwarding the
+  // whole raw match array - needed whenever the pattern wraps its real
+  // content in delimiter literals (e.g. "Block == `{` Statement* `}` => 2",
+  // where the useful value is just the Statement* array at position 2,
+  // not the 3-element [openBrace, statements, closeBrace] array).
+  for (const production of lsd.grammar.productions) {
+    const matchParser = compileExpr(production.expr, registry, PARSER_BLOCKS);
+
+    methods[production.name] = production.extractIndex == null
+      ? state => matchParser(state)
+      : state => {
+          const result = matchParser(state);
+          return result === undefined ? undefined : result[production.extractIndex - 1];
+        };
+  }
 
   for (const block of lsd.grammar.blocks) {
     const alternativeMatchers = block.alternatives.map(alt => {
@@ -156,7 +163,7 @@ export function compileParserMethods (lsd) {
         const position  = state.save();
         const rawResult = matchParser(state);
 
-        if (rawResult == null) { state.restore(position); return null; }
+        if (rawResult === undefined) { state.restore(position); return undefined; }
 
         const rawArray = factorParsers.length === 1 ? [rawResult] : rawResult;
         const node     = { type: block.name };
@@ -172,9 +179,9 @@ export function compileParserMethods (lsd) {
     methods[block.name] = state => {
       for (const matchAlternative of alternativeMatchers) {
         const result = matchAlternative(state);
-        if (result != null) return result;
+        if (result !== undefined) return result;
       }
-      return null;
+      return undefined;
     };
   }
 
