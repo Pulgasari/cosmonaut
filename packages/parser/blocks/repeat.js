@@ -8,7 +8,7 @@
 // (many1, sepBy1, sepBy1Loose, sepEndBy1, many1Till) can return undefined,
 // when even the first required match fails.
 
-import { backtrack, decorate } from './_internals.js';
+import { backtrack, decorate } from './internals.js';
 
 export const
 atLeast = (parser, min) => times(parser, min, Infinity),
