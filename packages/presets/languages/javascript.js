@@ -1,6 +1,6 @@
 // @cosmonaut/presets/languages/javascript.js
 
-import { cStyleComments } from './../index.js';
+import { cStyleComments } from './../commons.js';
 
 export const builtins = [
   'Array',
