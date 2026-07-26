@@ -1,6 +1,6 @@
 // @cosmonaut/blocks/parser/transform.js
 
-import { decorate } from './_internals.js';
+import { decorate } from './internals.js';
 
 export const
 
