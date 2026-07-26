@@ -2,6 +2,16 @@
 
 // :::::: Export Lexer Utils
 
+import {
+  buildCommentScanners,
+  buildTokenTypes,
+  buildWhitespaceScanner,
+  isKeyword,
+  makeRulesFromPuncts,
+  makeRulesFromOperators,
+  resolveRules,
+} from './utils.js';
+
 export {
   buildCommentScanners,
   buildTokenTypes,
