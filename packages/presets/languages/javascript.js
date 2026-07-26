@@ -127,7 +127,7 @@ export const operators = {
 
 export const puncts = ['{', '}', '(', ')', '[', ']', ',', ';', '.', ':', '?'];
 
-default export {
+export default {
   builtins,
   comments,
   globals,
