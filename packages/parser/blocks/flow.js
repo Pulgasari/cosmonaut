@@ -1,25 +1,37 @@
 // @cosmonaut/parser/blocks/flow.js
 
+// `undefined` is the failure sentinel throughout - see ParserState.js's
+// file header. optional() is the one place that explicitly converts a
+// failure (undefined) into a successful null value - everything else
+// here just propagates undefined-on-failure transparently.
+
 import { backtrack, decorate } from './_internals.js';
 
 export const
 lazy     = parser => decorate (state => parser()(state)),
-not      = parser => decorate (state => lookAhead(parser)(state) ? null : true),
-optional = parser => decorate (state => backtrack(state, parser)),
+not      = parser => decorate (state => lookAhead(parser)(state) === undefined ? true : undefined),
+
+// The ONE place `undefined` (fail) becomes `null` (succeeded, no match) -
+// this is what lets seq()/etc downstream correctly distinguish "this
+// optional part legitimately matched nothing" from "something failed".
+optional = parser => decorate (state => {
+  const result = backtrack(state, parser);
+  return result === undefined ? null : result;
+}),
 
 between = (open, inner, close) => decorate (state => {
   const position = state.save();
 
-  if (open(state) == null) {
+  if (open(state) === undefined) {
     state.restore(position);
-    return null;
+    return undefined;
   }
 
   const result = inner(state);
 
-  if (result == null || close(state) == null) {
+  if (result === undefined || close(state) === undefined) {
     state.restore(position);
-    return null;
+    return undefined;
   }
 
   return result;
@@ -28,14 +40,14 @@ between = (open, inner, close) => decorate (state => {
 choice = (...parsers) => decorate (state => {
   for (const parser of parsers.flat()) {
     const result = backtrack(state, parser);
-    if (result != null) return result;
+    if (result !== undefined) return result;
   }
-  return null;
+  return undefined;
 }),
 
 cut = (parser, message) => decorate (state => {
   const result = parser(state);
-  if (result != null) return result;
+  if (result !== undefined) return result;
 
   message ??= "cut(): expected parser to succeed.";
 
@@ -57,9 +69,9 @@ seq = (...parsers) => decorate (state => {
 
   for (const parser of parsers.flat()) {
     const result = parser(state);
-    if (result == null) {
+    if (result === undefined) {
       state.restore(position);
-      return null;
+      return undefined;
     }
     results.push(result);
   }
@@ -71,9 +83,9 @@ skip = (parser, discarded) => decorate (state => {
   const position = state.save();
   const result   = parser(state);
 
-  if (result == null || discarded(state) == null) {
+  if (result === undefined || discarded(state) === undefined) {
     state.restore(position);
-    return null;
+    return undefined;
   }
 
   return result;
@@ -82,20 +94,19 @@ skip = (parser, discarded) => decorate (state => {
 then = (discarded, parser) => decorate (state => {
   const position = state.save();
 
-  if (discarded(state) == null) {
+  if (discarded(state) === undefined) {
     state.restore(position);
-    return null;
+    return undefined;
   }
 
   const result = parser(state);
 
-  if (result == null) {
+  if (result === undefined) {
     state.restore(position);
-    return null;
+    return undefined;
   }
 
   return result;
 });
 
 export const commit = cut;
-
