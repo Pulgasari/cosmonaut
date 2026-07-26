@@ -1,4 +1,4 @@
-// @cosmonaut/ebnf/_lexer.js
+// @cosmonaut/ebnf/lexer.js
 
 // Token preset for the small EBNF dialect this package understands:
 //
