@@ -1,5 +1,13 @@
 // @cosmonaut/parser/blocks/repeat.js
 
+// `undefined` is the failure sentinel throughout - see ParserState.js's
+// file header. The "always succeeds" combinators (many, sepBy, sepByLoose,
+// sepEndBy, atMost) never return undefined themselves - worst case they
+// return an empty array `[]`, which is a real, distinct value from both
+// `null` and `undefined`. Only the "requires at least one" variants
+// (many1, sepBy1, sepBy1Loose, sepEndBy1, many1Till) can return undefined,
+// when even the first required match fails.
+
 import { backtrack, decorate } from './_internals.js';
 
 export const
@@ -13,12 +21,11 @@ many = parser => decorate (state => {
     const position = state.save();
     const result   = parser(state);
 
-    if (result == null) {
+    if (result === undefined) {
       state.restore(position);
       break;
     }
 
-    // infinite loop guard
     if (state.index === position) {
       throw new Error("many(): parser consumed no input.");
     }
@@ -31,7 +38,7 @@ many = parser => decorate (state => {
 
 many1 = parser => decorate (state => {
   const first = parser(state);
-  if (first == null) return null;
+  if (first === undefined) return undefined;
 
   const results = many(parser)(state);
   results.unshift(first);
@@ -46,9 +53,9 @@ repeat = (parser, count) => decorate (state => {
   for (let i = 0; i < count; i++) {
     const result = parser(state);
 
-    if (result == null) {
+    if (result === undefined) {
       state.restore(position);
-      return null;
+      return undefined;
     }
 
     results.push(result);
@@ -57,19 +64,54 @@ repeat = (parser, count) => decorate (state => {
   return results;
 }),
 
+sepBy = (item, separator) => decorate (state => {
+  const first = backtrack(state, item);
+  if (first === undefined) return [];
+  return sepByRest(state, item, separator, [first]);
+}),
+
+sepBy1 = (item, separator) => decorate (state => {
+  const first = item(state);
+  if (first === undefined) return undefined;
+  return sepByRest(state, item, separator, [first]);
+}),
+
+sepEndBy = (item, separator) => decorate (state => {
+  const first = backtrack(state, item);
+  if (first === undefined) return [];
+  return sepEndByRest(state, item, separator, [first]);
+}),
+
+sepEndBy1 = (item, separator) => decorate (state => {
+  const first = item(state);
+  if (first === undefined) return undefined;
+  return sepEndByRest(state, item, separator, [first]);
+}),
+
+sepByLoose = (item, separator) => decorate (state => {
+  const first = backtrack(state, item);
+  if (first === undefined) return [];
+  return sepByLooseRest(state, item, separator, [first]);
+}),
+
+sepBy1Loose = (item, separator) => decorate (state => {
+  const first = item(state);
+  if (first === undefined) return undefined;
+  return sepByLooseRest(state, item, separator, [first]);
+}),
+
 manyTill = (item, end) => decorate (state => {
   const results = [];
 
   while (true) {
     const position = state.save();
-    if (end(state) != null) break;
+    if (end(state) !== undefined) break;
 
     state.restore(position);
 
     const result = item(state);
-    if (result == null) return null;
+    if (result === undefined) return undefined;
 
-    // infinite loop guard
     if (state.index === position) {
       throw new Error("manyTill(): parser consumed no input.");
     }
@@ -82,61 +124,12 @@ manyTill = (item, end) => decorate (state => {
 
 many1Till = (item, end) => decorate (state => {
   const first = item(state);
-  if (first == null) return null;
+  if (first === undefined) return undefined;
 
   const results = manyTill(item, end)(state);
   results.unshift(first);
 
   return results;
-}),
-
-// sepBy/sepBy1 share a continuation loop (sepByRest) instead of sepBy1
-// delegating to sepBy wholesale. Delegating "wholesale" would make sepBy
-// re-attempt to match a FIRST item at whatever position sepBy1 already
-// advanced past its own first item to (i.e. sitting on the SEPARATOR,
-// not an item) - which fails immediately, silently truncating the result
-// to just the first element. sepByRest never assumes anything about how
-// its caller obtained `results`'s initial contents, so both variants can
-// safely share it regardless of who matched the first item.
-sepBy = (item, separator) => decorate (state => {
-  const first = backtrack(state, item);
-  if (first == null) return [];
-  return sepByRest(state, item, separator, [first]);
-}),
-
-sepBy1 = (item, separator) => decorate (state => {
-  const first = item(state);
-  if (first == null) return null;
-  return sepByRest(state, item, separator, [first]);
-}),
-
-// sepEndBy/sepEndBy1 - same shared-continuation fix as sepBy/sepBy1 above.
-sepEndBy = (item, separator) => decorate (state => {
-  const first = backtrack(state, item);
-  if (first == null) return [];
-  return sepEndByRest(state, item, separator, [first]);
-}),
-
-sepEndBy1 = (item, separator) => decorate (state => {
-  const first = item(state);
-  if (first == null) return null;
-  return sepEndByRest(state, item, separator, [first]);
-}),
-
-// sepByLoose/sepBy1Loose - like sepBy/sepBy1, but the separator between
-// elements is OPTIONAL rather than required (any gap may or may not have
-// one). Same shared-continuation pattern as above, so sepBy1Loose doesn't
-// repeat the sepBy1/sepEndBy1 bug from the start.
-sepByLoose = (item, separator) => decorate (state => {
-  const first = backtrack(state, item);
-  if (first == null) return [];
-  return sepByLooseRest(state, item, separator, [first]);
-}),
-
-sepBy1Loose = (item, separator) => decorate (state => {
-  const first = item(state);
-  if (first == null) return null;
-  return sepByLooseRest(state, item, separator, [first]);
 }),
 
 times = (parser, min, max = Infinity) => decorate (state => {
@@ -146,9 +139,9 @@ times = (parser, min, max = Infinity) => decorate (state => {
   for (let i = 0; i < min; i++) {
     const result = parser(state);
 
-    if (result == null) {
+    if (result === undefined) {
       state.restore(position);
-      return null;
+      return undefined;
     }
 
     results.push(result);
@@ -158,12 +151,11 @@ times = (parser, min, max = Infinity) => decorate (state => {
     const position = state.save();
     const result   = parser(state);
 
-    if (result == null) {
+    if (result === undefined) {
       state.restore(position);
       break;
     }
 
-    // infinite loop guard
     if (state.index === position) {
       throw new Error("times(): parser consumed no input.");
     }
@@ -179,43 +171,57 @@ times = (parser, min, max = Infinity) => decorate (state => {
 function sepByRest (state, item, separator, results) {
   while (true) {
     const position = state.save();
-    if (backtrack(state, separator) == null) {
+
+    if (backtrack(state, separator) === undefined) {
       state.restore(position);
       break;
     }
+
     const next = item(state);
-    if (next == null) {
+
+    if (next === undefined) {
       state.restore(position);
       break;
     }
+
     results.push(next);
   }
+
   return results;
 }
 
 function sepEndByRest (state, item, separator, results) {
   while (true) {
-    if (backtrack(state, separator) == null) break;
+    if (backtrack(state, separator) === undefined) break;
+
     const next = backtrack(state, item);
-    if (next == null) break; // trailing separator allowed
+    if (next === undefined) break; // trailing separator allowed
+
     results.push(next);
   }
+
   return results;
 }
 
 function sepByLooseRest (state, item, separator, results) {
   while (true) {
     const position = state.save();
+
     backtrack(state, separator); // optional: consume if present, no-op otherwise
+
     const next = backtrack(state, item);
-    if (next == null) {
-      state.restore(position); // no item followed - undo any separator consumed speculatively
+
+    if (next === undefined) {
+      state.restore(position);
       break;
     }
+
     if (state.index === position) {
       throw new Error("sepByLoose(): parser consumed no input.");
     }
+
     results.push(next);
   }
+
   return results;
 }
