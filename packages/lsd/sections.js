@@ -2,24 +2,16 @@
 
 // Splits raw LSD source into its top-level areas (META / TKN / RULE / HL)
 // plus the "#### Name" blocks nested inside the RULE area.
-//
-// Block boundaries are marked by a bare "META <Name>" line (NOT
-// "META PROP/LIST/TABLE ..." - those are vocabulary definitions, handled
-// separately by meta.js). A "#### FullName" line, if present, is pure
-// documentation: it always immediately precedes the "META <Name>" line
-// that actually starts the block, and is attached to that block as
-// `fullName` - useful for later error messages / debugging ("error in
-// block ValDeclOp (ValDeclarationOperator)"), but has no effect on
-// where the block actually begins or ends.
 
-const BARE_META_NAME = /^META\s+([A-Za-z_][A-Za-z0-9_]*)$/;
-const META_VOCAB     = /^META\s+(PROP|LIST|TABLE)\b/;
+const BARE_META_NAME  = /^META\s*::\s*(\S+)$/;
+const META_VOCAB      = /^META\s+(PROP|LIST|TABLE)\b/;
+const TOP_LEVEL_RULE  = /^RULE\s*::\s*\S+\s*==/;
 
 export function splitSections (source) {
   const sections = { META: [], TKN: [], RULE: [], HL: [] };
   const blocks   = [];
 
-  let mode         = null; // 'META' | 'TKN' | 'RULE' | 'HL'
+  let mode         = null;
   let currentBlock = null;
   let pendingLabel = null;
 
@@ -42,6 +34,8 @@ export function splitSections (source) {
     if (line.startsWith('TKN ')) { mode = 'TKN'; closeBlock(); sections.TKN.push(rawLine); continue; }
     if (line.startsWith('HL '))  { mode = 'HL';  closeBlock(); sections.HL.push(rawLine); continue; }
 
+    if (TOP_LEVEL_RULE.test(line)) { mode = 'RULE'; closeBlock(); sections.RULE.push(rawLine); continue; }
+
     if (mode !== 'RULE' && (line.startsWith('RULE ') || BARE_META_NAME.test(line))) {
       mode = 'RULE';
     }
@@ -57,7 +51,7 @@ export function splitSections (source) {
       }
 
       if (currentBlock) currentBlock.lines.push(rawLine);
-      else sections.RULE.push(rawLine); // top-level "RULE == Name == Expr"
+      else sections.RULE.push(rawLine);
       continue;
     }
 
@@ -69,8 +63,6 @@ export function splitSections (source) {
   return { ...sections, BLOCKS: blocks };
 }
 
-// Any "#"-comment that ISN'T a "####" label - decorative banners like
-// "# ////// META //////" or "# ------------ Declarations ----" included.
 function isPlainComment (line) {
   return line.startsWith('#') && !line.startsWith('####');
 }
@@ -78,4 +70,3 @@ function isPlainComment (line) {
 function isLabelLine (line) {
   return line.startsWith('####');
 }
-
