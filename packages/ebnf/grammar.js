@@ -1,4 +1,4 @@
-// @cosmonaut/ebnf/_grammar.js
+// @cosmonaut/ebnf/grammar.js
 
 // Grammar for the small EBNF dialect this package understands, expressed
 // with the very same @cosmonaut/parser/blocks combinators used to parse
