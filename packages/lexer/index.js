@@ -194,7 +194,7 @@ export class Lexer {
         type = this._tokenTypes.KEYWORD;
       }
 
-      this.cursor += rawlength;
+      this.cursor += raw.length;
       this._advancePosition(raw);
 
       return { type, value: raw, line: startLine, column: startColumn };
