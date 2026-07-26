@@ -1,7 +1,7 @@
 // @cosmonaut/lsd/grammar.js
-//
+
 // Parses:
-//   (a) top-level "RULE :: Name == Expr" productions
+//   (a) top-level "RULE :: Name == Expr [=> N]" productions
 //   (b) "#### Name" blocks: a "META :: <BlockName>", an optional
 //       "NODE == { fields }" (also accepts the legacy spelling "TYPE"),
 //       one or more "RULE == pattern [=> mapping]" alternatives, and a
@@ -15,27 +15,9 @@
 //   (2) inline pattern labels:  RULE == ... Block:body
 //   (3) named mapping:          RULE == ... Block => identifier:2 args:3 body:4
 //
-// KNOWN LIMITATION: parsePatternFactors() (see bindings.js) currently
-// splits a pattern on whitespace only - it does NOT understand grouping
-// ("(...)"), choice ("|"), or quantifiers attached to a GROUP (only to a
-// single preceding factor). Patterns containing a top-level group, e.g.
-//
-//   IDENTIFIER ( ParenCallArgs | SingleBareArg )
-//
-// get mis-numbered as 6 separate factors instead of the intended 2
-// ("IDENTIFIER" and the whole group as one unit) - so any mapping/NODE
-// referencing positions beyond the first factor will resolve INCORRECTLY
-// for such patterns, WITHOUT raising an error (the resolver only checks
-// that enough positions exist, not what they actually mean). Confirmed
-// with poo.lsd's own FunctionCall/ExpressionArgumentsList/
-// NamedArgumentsList blocks - all three currently pass validation while
-// resolving the wrong raw position. This needs the same expression
-// parser flagged as a TODO since this file's very first version
-// (literal/nonterminal/sequence/choice/optional/repeat/group - the same
-// shape used by @cosmonaut/ebnf's internal AST). Until that exists,
-// patterns with a top-level "(...)" group should either avoid relying on
-// positions past the group, or use inline labels placed on individual
-// factors BEFORE the group only.
+// Top-level productions get a simpler, single "=> N" extraction (see
+// parseTopLevelRule) - needed whenever a multi-factor top-level pattern
+// wraps its real content in delimiter literals (e.g. Block, ParenCallArgs).
 
 import {
   parsePatternFactors,
@@ -43,6 +25,7 @@ import {
   resolveBindings,
   checkBlockConsistency,
 } from './bindings.js';
+import { parsePattern } from './expression.js';
 
 export function parseGrammar ({ ruleLines, blocks }) {
   const productions    = ruleLines.map(parseTopLevelRule);
@@ -53,20 +36,27 @@ export function parseGrammar ({ ruleLines, blocks }) {
 function parseTopLevelRule (line) {
   const match = line.match(/^RULE\s*::\s*(\S+)\s*==\s*(.+)$/);
   if (!match) throw new Error(`[lsd] Malformed top-level RULE line: "${line}"`);
-  const [, name, exprText] = match;
+  const [, name, rest] = match;
 
-  return {
-    name,
-    exprText: exprText.trim(), // TODO: parse into the shared literal/nonterminal/
-                                //       sequence/choice/optional/repeat/group AST
-                                //       once the concrete syntax is finalized.
-  };
+  const [exprText, extractText] = splitPatternAndMapping(rest);
+  let extractIndex = null;
+
+  if (extractText) {
+    if (!/^\d+$/.test(extractText.trim())) {
+      throw new Error(
+        `[lsd] Top-level RULE "${name}": expected a single position number after "=>" ` +
+        `(e.g. "=> 2"), got "${extractText}".`
+      );
+    }
+    extractIndex = Number(extractText.trim());
+  }
+
+  return { name, expr: parsePattern(exprText.trim()), extractIndex };
 }
 
 function parseBlock ({ fullName, name, lines }) {
   const text = lines.join('\n');
 
-  // NODE is the current spelling; TYPE is accepted as a legacy alias.
   const nodeMatch  = text.match(/^(?:NODE|TYPE)\s*==\s*\{([^}]*)\}/m);
   const nodeFields = nodeMatch
     ? nodeMatch[1].split(',').map(s => s.trim()).filter(Boolean).map(f => f.split(':')[0].trim())
@@ -101,11 +91,6 @@ function parseBlock ({ fullName, name, lines }) {
   return { fullName, name, nodeFields, alternatives, codeTemplate };
 }
 
-// Splits a "RULE == pattern [=> mapping]" line's right-hand side into its
-// pattern and (optional - inline-label-only alternatives have none)
-// mapping parts, respecting backtick-quoted literals so a "=>" occurring
-// inside one (not expected in this grammar today, but cheap to guard) is
-// never mistaken for the pattern/mapping separator.
 function splitPatternAndMapping (fullText) {
   let inBacktick = false;
 
