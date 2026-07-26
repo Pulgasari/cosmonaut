@@ -37,7 +37,8 @@ export class Lexer {
   
   // init
   constructor (source = '', options = {}) {
-    this.options = mergeOptions(options, defaultOptions);
+    //this.options = mergeOptions(options, defaultOptions);
+    this.options = Object.assign(defaultOptions, options);
     if (!this.options.tokenTypes) throw new Error('[Lexer] options.tokenTypes fehlt -> siehe buildTokenTypes() aus @cosmonaut/lexer.');
     
     this.source      = String(source);
