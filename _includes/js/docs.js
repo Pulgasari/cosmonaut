@@ -2,7 +2,7 @@
 
 let app = {};
 app.name     = 'Cosmonaut';
-app.url      = 'https://pulgasari.github.io/cosmonaut/';
+app.url      = 'https://pulgasari.github.io/cosmonaut/docs/';
 app.url_repo = 'https://github.com/pulgasari/cosmonaut/';
 
 const headerItems = signal([
