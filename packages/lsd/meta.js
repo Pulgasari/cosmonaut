@@ -14,19 +14,20 @@ export function parseMeta (metaLines) {
 
   // META PROP name == <expr text> (expr text left as a raw string for now -
   // shares the same open questions as grammar.js's RULE expressions)
-  for (const match of source.matchAll(/^META PROP\s+(\S+)\s*==\s*(.+)$/gm)) {
+                                        
+  for (const match of source.matchAll(/^META PROP\s*::\s*(\S+)\s*==\s*(.+)$/gm)) {
     const [, name, exprText] = match;
     props[name] = exprText.trim();
   }
 
   // META LIST name == word word word ...
-  for (const match of source.matchAll(/^META LIST\s+(\S+)\s*==\s*(.+)$/gm)) {
+  for (const match of source.matchAll(/^META LIST\s*::\s*(\S+)\s*==\s*(.+)$/gm)) {
     const [, name, wordsText] = match;
     lists[name] = wordsText.trim().split(/\s+/);
   }
 
   // META TABLE name == ( field is Type ... ) { rows... }
-  for (const match of source.matchAll(/^META TABLE\s+(\S+)\s*==\s*\(([\s\S]*?)\)\s*\{([\s\S]*?)^\}/gm)) {
+  for (const match of source.matchAll(/^META TABLE\s*::\s*(\S+)\s*==\s*\(([\s\S]*?)\)\s*\{([\s\S]*?)^\}/gm)) {
     const [, name, schemaText, rowsText] = match;
     tables[name] = parseTable(schemaText, rowsText);
   }
