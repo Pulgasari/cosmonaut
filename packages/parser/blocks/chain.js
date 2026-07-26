@@ -1,6 +1,6 @@
 // @cosmonaut/parser/blocks/chain.js
 
-import { decorate } from './_internals.js';
+import { decorate } from './internals.js';
 
 export const
 
