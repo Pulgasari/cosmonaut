@@ -1,4 +1,4 @@
-// _internal.js
+// _internals.js
 
 export const
 
