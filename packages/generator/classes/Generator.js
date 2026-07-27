@@ -1,13 +1,12 @@
-// @cosmonaut/generator/classes/Generator.js
+// packages/generator/classes/Generator.js
 
-import { print } from '@cosmonaut/doc-printer';
-import * as docBlocks from '@cosmonaut/doc';
+import { print }       from '@cosmonaut/doc-printer';
+import * as docBlocks  from '@cosmonaut/doc';
+import { isTitleCase } from '@cosmonaut/internals';
 
 import genBinaryExprMethod from '../methods/genBinaryExpr.js';
 import genUnaryExprMethod  from '../methods/genUnaryExpr.js';
 import genListMethod       from '../methods/genList.js';
-
-import { isTitleCase } from '@cosmonaut/utils/internals';
 
 // :::::: Helpers
 
@@ -16,6 +15,9 @@ function normalizeMethodName (key) {
   if (isTitleCase(key)) return key;
   throw new Error(`[Generator] Invalid method name "${key}" (expected "genMethodName" or "MethodName").`);
 }
+
+// core instance surface that node-type registration must never overwrite.
+const RESERVED_CORE_NAMES = new Set(['$', 'addMethod', 'gen', 'generate', 'genNode', 'options', '_methods']);
 
 const defaultOptions = {
   methods      : {},
@@ -28,10 +30,27 @@ export default class Generator {
 
   constructor (options = {}) {
     this.options = { ...defaultOptions, ...options };
-    this.$       = docBlocks;
+
+    // `g.$` mirrors @cosmonaut/parser's `p.$`: a stable toolkit namespace,
+    // deliberately kept SEPARATE from the per-node-type `g.genX()` dispatch
+    // methods registered below. Reusable codegen utilities (precedence-
+    // climbing binary/unary expression rendering, list rendering) live
+    // here - NOT as `g.genBinaryExpr`/`g.genUnaryExpr`/`g.genList` - because
+    // a node type is free to be named "BinaryExpr"/"UnaryExpr"/"List" (very
+    // plausible for a real grammar; poo.lsd itself has a "BinaryExpr"
+    // block). Registering such a node type would otherwise silently shadow
+    // the built-in utility of the same name, turning any internal call to
+    // it into infinite self-recursion instead of a clear error. Routing
+    // through `g.$` avoids the collision entirely, regardless of what node
+    // types get registered - no manual re-importing needed.
+    this.$ = {
+      ...docBlocks,
+      genBinaryExpr : (node, config, parentPrecedence = 0) => genBinaryExprMethod(this, node, config, parentPrecedence),
+      genUnaryExpr  : (node, config)  => genUnaryExprMethod (this, node,  config),
+      genList       : (items, config) => genListMethod      (this, items, config),
+    };
 
     this._methods = {};
-
     this._buildGen();
     this._registerMethods(this.options.methods);
   }
@@ -46,20 +65,6 @@ export default class Generator {
       throw new Error('[Generator] genNode() requires a node with a string "type" property.');
     }
     return this.gen(node.type, node);
-  }
-
-  // :::::: Higher-Level Generating Methods
-
-  genBinaryExpr (node, config, parentPrecedence = 0) {
-    return genBinaryExprMethod(this, node, config, parentPrecedence);
-  }
-
-  genUnaryExpr (node, config) {
-    return genUnaryExprMethod(this, node, config);
-  }
-
-  genList (items, config) {
-    return genListMethod(this, items, config);
   }
 
   // :::::: Run
@@ -95,12 +100,21 @@ export default class Generator {
     for (const [key, fn] of Object.entries(methods)) {
       if (typeof fn !== 'function') continue;
 
-      const name  = normalizeMethodName(key);
+      const name    = normalizeMethodName(key);
+      const genName = 'gen' + name;
+
+      if (RESERVED_CORE_NAMES.has(genName) || RESERVED_CORE_NAMES.has(name)) {
+        throw new Error(
+          `[Generator] Cannot register a method for node type "${name}": "${genName}" collides with a ` +
+          `reserved core Generator property. Rename the node type or the registration key.`
+        );
+      }
+
       const bound = (...args) => fn(this, ...args);
 
       this._methods[name]  = fn;
       this[name]            = bound; // g.MethodName()
-      this['gen' + name]    = bound; // g.genMethodName()
+      this[genName]         = bound; // g.genMethodName()
       this.gen[name]        = bound; // g.gen['MethodName'](), g.gen.MethodName()
     }
   }
