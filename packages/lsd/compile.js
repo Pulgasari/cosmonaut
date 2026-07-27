@@ -14,6 +14,10 @@ import { compileExpr }          from './expression.js';
 import { extractLiteralPrefix } from './highlightjs.js';
 import { buildTypeRegistry }    from './resolve.js';
 
+function escapeRegExp (str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // :::::: Tokenizer
 
 // TKN entries compile to @cosmonaut/lexer content rules, in DECLARATION
@@ -124,9 +128,7 @@ export function compileTokenizer (lsd, options = {}) {
   };
 }
 
-function escapeRegExp (str) {
-  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+
 
 // :::::: Parser methods
 
