@@ -1,12 +1,12 @@
-// @cosmonaut/parser/classes/Parser.js
+// packages/parser/classes/Parser.js
 
+import { isTitleCase }        from '@cosmonaut/utils/internals';
 import ParserState            from './ParserState.js';
 import * as blocks            from './../blocks/index.js';
 import parseBinaryExprMethod  from './../methods/parseBinaryExpr.js';
 import parseListPatternMethod from './../methods/parseListPattern.js';
 import parsePatternMethod     from './../methods/parsePattern.js';
 import parseUnaryExprMethod   from './../methods/parseUnaryExpr.js';
-import { isTitleCase }        from '@cosmonaut/utils/internals';
 
 // :::::: Helpers
 
@@ -15,6 +15,12 @@ function normalizeMethodName (key) {
   if (isTitleCase(key)) return key;
   throw new Error(`[Parser] Invalid method name "${key}" (expected "parseMethodName" or "MethodName").`);
 }
+
+// Core instance surface that grammar-rule registration must never overwrite.
+// (parseBinaryExpr/parseUnaryExpr/parsePattern/parseListPattern are
+// intentionally NOT in this list - they no longer live at the top level
+// at all, see constructor comment.)
+const RESERVED_CORE_NAMES = new Set(['$', 'check', 'match', 'advance', 'expect', 'consume', 'checkSequence', 'matchSequence', 'expectSequence', 'save', 'restore', 'peek', 'next', 'eof', 'dispatch', 'run', 'addMethod', 'parse', 'options', 'state', '_methods']);
 
 const defaultOptions = {
   methods : {},
@@ -28,7 +34,29 @@ export default class Parser {
   constructor (tokens = [], options = {}) {
     this.options = { ...defaultOptions, ...options };
     this.state   = new ParserState(tokens);
-    this.$       = blocks;
+
+    // `p.$` is the toolkit namespace: the low-level @cosmonaut/blocks
+    // combinators PLUS the higher-level parsing utilities below
+    // (parsePattern/parseListPattern/parseBinaryExpr/parseUnaryExpr).
+    // These utilities are deliberately kept OFF the instance's own
+    // top-level `p.parseX()` surface, because that surface is also where
+    // `_registerMethods()` attaches custom grammar rules by name - and a
+    // grammar rule is free to be named "BinaryExpr" or "UnaryExpr" (very
+    // plausible; poo.lsd itself has one). If these utilities lived at
+    // `p.parseBinaryExpr`/`p.parseUnaryExpr` directly, registering such a
+    // rule would silently shadow the built-in utility, and any call to it
+    // from within a custom rule (e.g. implementing precedence climbing)
+    // would recurse into itself instead of the real implementation.
+    // Routing through `p.$` avoids the collision entirely, regardless of
+    // what grammar rule names get registered - no manual re-importing
+    // needed on the implementor's side.
+    this.$ = {
+      ...blocks,
+      parsePattern     : (pattern, strategies, capture) => parsePatternMethod(this, pattern, strategies, capture),
+      parseListPattern : (element, config) => parseListPatternMethod(this, element, config),
+      parseBinaryExpr  : (config, minPrecedence = 0) => parseBinaryExprMethod(this, config, minPrecedence),
+      parseUnaryExpr   : (config) => parseUnaryExprMethod(this, config),
+    };
 
     this._methods = {};
 
@@ -89,24 +117,6 @@ export default class Parser {
     return { or: fallbackName => this.parse(fallbackName) };
   }
 
-  // :::::: Higher-Level Parsing Methods
-
-  parsePattern (pattern, strategies, capture) {
-    return parsePatternMethod(this, pattern, strategies, capture);
-  }
-
-  parseListPattern (element, config) {
-    return parseListPatternMethod(this, element, config);
-  }
-
-  parseBinaryExpr (config, minPrecedence = 0) {
-    return parseBinaryExprMethod(this, config, minPrecedence);
-  }
-
-  parseUnaryExpr (config) {
-    return parseUnaryExprMethod(this, config);
-  }
-
   // :::::: Run
 
   run () {
@@ -138,7 +148,16 @@ export default class Parser {
     for (const [key, fn] of Object.entries(methods)) {
       if (typeof fn !== 'function') continue;
 
-      const name  = normalizeMethodName(key);
+      const name      = normalizeMethodName(key);
+      const parseName = 'parse' + name;
+
+      if (RESERVED_CORE_NAMES.has(parseName) || RESERVED_CORE_NAMES.has(name)) {
+        throw new Error(
+          `[Parser] Cannot register a method for rule "${name}": "${parseName}" collides with a ` +
+          `reserved core Parser property. Rename the rule or the registration key.`
+        );
+      }
+
       const bound = (...args) => fn(this, ...args);
 
       this._methods[name]  = fn;
