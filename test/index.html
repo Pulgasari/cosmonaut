@@ -69,11 +69,8 @@ document.getElementById('nav').innerHTML = KNOWN
 const { fatal, finish } = await import('./harness.js');
 
 for (const name of requested) {
-  try {
-    await import(`./${name}.js`);
-  } catch (err) {
-    fatal(err, `loading ${name}.js`);
-  }
+  try       { await import(`./${name}.js`); }
+  catch (e) { fatal(e, `loading ${name}.js`); }
 }
 
 finish();
