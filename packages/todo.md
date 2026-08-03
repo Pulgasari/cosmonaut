@@ -1,0 +1,1 @@
+Ein Wart, den ich nicht angefasst habe: check(value) gibt bei Nichttreffer false zurück, und false !== undefined heißt „erfolgreich". In choice() schluckt das jede Alternative danach. Das gehört mit dem TokenStream zusammen angeschaut, nicht jetzt einzeln.
