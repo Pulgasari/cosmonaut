@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>cosmonaut · tests</title>
+<style>
+  body   { font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+           max-width: 900px; margin: 2rem auto; padding: 0 1rem;
+           background: #14161a; color: #d6dae0; }
+  h1     { font-size: 1.1rem; letter-spacing: .04em; text-transform: uppercase; color: #8b93a1; }
+  h1 nav { float: right; font-size: .8rem; text-transform: none; letter-spacing: 0; }
+  a      { color: #6b7280; text-decoration: none; margin-left: .75rem; }
+  a:hover, a.on { color: #7ec699; }
+  h2     { font-size: .95rem; margin: 2rem 0 .5rem; color: #8b93a1;
+           border-bottom: 1px solid #262a31; padding-bottom: .3rem; }
+  pre    { background: #1b1e24; border: 1px solid #262a31; border-radius: 4px;
+           padding: .75rem 1rem; overflow-x: auto; white-space: pre; }
+  .ok    { color: #7ec699; }
+  .fail  { color: #e06c75; }
+  .label { color: #6b7280; }
+  #summary { margin-top: 2rem; padding: .75rem 1rem; border-radius: 4px;
+             background: #1b1e24; border: 1px solid #262a31; }
+</style>
+
+<!-- bare specifiers -> relative paths on the pages deployment.
+     this file sits at /cosmonaut/test/, packages at /cosmonaut/packages/ -->
+<script type="importmap">
+{
+  "imports": {
+    "@cosmonaut/parsers":    "../packages/parsers/mod.js",
+    "@cosmonaut/layouter":   "../packages/layouter/mod.js",
+    "@cosmonaut/cosmonaut":  "../packages/cosmonaut/mod.js",
+
+    "@cosmonaut/parsers/":   "../packages/parsers/",
+    "@cosmonaut/layouter/":  "../packages/layouter/",
+    "@cosmonaut/cosmonaut/": "../packages/cosmonaut/",
+
+    "@cosmonaut/utils":      "../packages/cosmonaut/utils/index.js",
+    "@cosmonaut/internals":  "../packages/cosmonaut/internals/index.js",
+    "@cosmonaut/presets":    "../packages/cosmonaut/presets/index.js"
+  }
+}
+</script>
+</head>
+<body>
+
+<h1>
+  cosmonaut · tests
+  <nav id="nav"></nav>
+</h1>
+
+<div id="out"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+
+// which suites to run: ?t=test  ·  ?t=test2  ·  ?t=test,test2
+const KNOWN = ['test'];   // add 'test2' etc. here to get a nav link
+
+const requested = (new URLSearchParams(location.search).get('t') ?? 'test')
+  .split(',')
+  .map(name => name.trim())
+  .filter(Boolean);
+
+// nav
+document.getElementById('nav').innerHTML = KNOWN
+  .map(name => `<a href="?t=${name}"${requested.includes(name) ? ' class="on"' : ''}>${name}</a>`)
+  .join('');
+
+const { fatal, finish } = await import('./harness.js');
+
+for (const name of requested) {
+  try {
+    await import(`./${name}.js`);
+  } catch (err) {
+    fatal(err, `loading ${name}.js`);
+  }
+}
+
+finish();
+
+</script>
+</body>
+</html>
