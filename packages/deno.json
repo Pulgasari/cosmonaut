@@ -1,0 +1,12 @@
+{
+  "workspace": [
+    "./packages/layouter",
+    "./packages/parsers"
+  ],
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 100,
+    "singleQuote": true,
+    "semiColons": true
+  }
+}
