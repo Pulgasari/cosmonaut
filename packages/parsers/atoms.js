@@ -7,7 +7,7 @@ import { decorate } from './_internal.js';
 
 export const
 
-check   = value => decorate (stream => stream.check  (value)),
+check   = value => decorate (stream => stream.check(value) ? true : undefined),
 expect  = value => decorate (stream => stream.consume(value)),
 token   = value => decorate (stream => stream.match  (value)),
 
