@@ -28,4 +28,5 @@ export * as parsers  from '@cosmonaut/parsers';
 
 // :::::: Utils
 
+export * from './rules/index.js';
 export * from './utils/index.js';
