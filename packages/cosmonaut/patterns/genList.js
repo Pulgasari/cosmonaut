@@ -13,7 +13,7 @@
 //   genItem       (generator, item) -> Doc, default generator.genNode
 //   trailingComma 'none' | 'always' | 'ifBreak', default 'none'
 
-import { concat, group, ifBreak, indent, join, line, softline, text } from '@cosmonaut/doc';
+import { concat, group, ifBreak, indent, join, line, softline, text } from '@cosmonaut/layouter';
 
 export default function genList (generator, items, config = {}) {
   const {
