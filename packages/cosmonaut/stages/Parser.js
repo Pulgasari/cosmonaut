@@ -5,13 +5,13 @@
 
 import * as parsers from '@cosmonaut/parsers';
 
-import Machine     from '../machine/Machine.js';
-import TokenStream from '../streams/TokenStream.js';
+import Machine     from './../machine/Machine.js';
+import TokenStream from './../streams/TokenStream.js';
 
-import parseBinaryExpr  from '../patterns/parseBinaryExpr.js';
-import parseListPattern from '../patterns/parseListPattern.js';
-import parsePattern     from '../patterns/parsePattern.js';
-import parseUnaryExpr   from '../patterns/parseUnaryExpr.js';
+import parseBinaryExpr  from './../patterns/parseBinaryExpr.js';
+import parseListPattern from './../patterns/parseListPattern.js';
+import parsePattern     from './../patterns/parsePattern.js';
+import parseUnaryExpr   from './../patterns/parseUnaryExpr.js';
 
 export default class Parser extends Machine {
 
@@ -42,19 +42,21 @@ export default class Parser extends Machine {
   // Pure delegation, no logic of its own - blocks always receive the stream
   // itself, so there is exactly one implementation of the contract.
 
-  check         (value)     { return this.stream.check(value); }
-  match         (value)     { return this.stream.match(value); }
-  expect        (value)     { return this.stream.consume(value); }
-  consume       (value)     { return this.stream.consume(value); }
-  advance       ()          { return this.stream.next(); }
-  peek          (offset)    { return this.stream.peek(offset); }
-  eof           ()          { return this.stream.eof(); }
-  save          ()          { return this.stream.save(); }
-  restore       (position)  { return this.stream.restore(position); }
+  check         (value)    { return this.stream.check   (value); }
+  consume       (value)    { return this.stream.consume (value); }
+  match         (value)    { return this.stream.match   (value); }
+  expect        (value)    { return this.stream.consume (value); }
+  next          ()         { return this.stream.next    (); }
+  
+  advance       ()         { return this.stream.next    (); }
+  peek          (offset)   { return this.stream.peek    (offset); }
+  eof           ()         { return this.stream.eof     (); }
+  save          ()         { return this.stream.save    (); }
+  restore       (position) { return this.stream.restore (position); }
 
-  checkSequence   (...values) { return this.stream.checkSequence(...values); }
-  matchSequence   (...values) { return this.stream.matchSequence(...values); }
-  expectSequence  (...values) { return this.stream.consumeSequence(...values); }
+  checkSequence   (...values) { return this.stream.checkSequence   (...values); }
+  matchSequence   (...values) { return this.stream.matchSequence   (...values); }
+  expectSequence  (...values) { return this.stream.consumeSequence (...values); }
 
   // :::::: Dispatch on the current token
 
