@@ -28,8 +28,8 @@ export function buildTypeRegistry (lsd) {
   const tokenTypeNames = new Set(lsd.tokens.map(t => t.name));
 
   const nodeTypeNames = new Set([
+    ...lsd.grammar.blocks     .map(b => b.name),
     ...lsd.grammar.productions.map(p => p.name),
-    ...lsd.grammar.blocks.map(b => b.name),
   ]);
 
   return { tokenTypeNames, nodeTypeNames };
@@ -46,12 +46,10 @@ export function resolveField (value, registry, generate, { fieldPathForErrors } 
     );
   }
 
-  if (value === null || value === undefined) return '';
-  if (typeof value !== 'object') return String(value); // raw literal tag / primitive
-
+  if (value == null)                           return '';
+  if (typeof value !== 'object')               return String(value); // raw literal tag / primitive
   if (registry.tokenTypeNames.has(value.type)) return value.value ?? '';
-
-  if (registry.nodeTypeNames.has(value.type)) return generate(value);
+  if (registry. nodeTypeNames.has(value.type)) return generate(value);
 
   throw new Error(`[lsd] Cannot resolve field of unrecognized shape: ${JSON.stringify(value)}`);
 }
