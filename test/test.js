@@ -1,7 +1,7 @@
 // suite 1 - phase 2 smoke test: every package standalone, then the pipeline.
 
 import Cosmonaut, {
-  buildTokenTypes, Parser, Lexer, TokenStream, CharStream,
+  buildTokenTypes, CharStream, Generator, Lexer, Parser, TokenStream,
 } from '@cosmonaut/cosmonaut';
 
 import * as parsers  from '@cosmonaut/parsers';
@@ -146,7 +146,14 @@ y;`;
     `${t.type.padEnd(11)} ${JSON.stringify(t.value).padEnd(12)} ${t.line}:${t.column}`).join('\n'));
 
   check('keyword reclassified from IDENTIFIER', tokens[0].type, 'KEYWORD');
-  check('positions tracked across lines',       `${tokens[6].line}:${tokens[6].column}`, '2:1');
+  //check('positions tracked across lines',       `${tokens[6].line}:${tokens[6].column}`, '2:1');
+  
+  const [, secondVal] = tokens.filter (t => t.value === 'val');
+  const y             = tokens.find   (t => t.value ===   'y');
+
+  check('line 2 starts at column 1', `${secondVal.line}:${secondVal.column}`, '2:1');
+  check('column within line 2',      `${tokens[6].line}:${tokens[6].column}`, '2:5');
+  check('line 3 starts at column 1', `${y.line}:${y.column}`,                 '3:1');
 
   const ast = cosmo.parse(source);
   show('ast', JSON.stringify(ast, null, 2));
@@ -175,8 +182,22 @@ suite('4 · Machine', () => {
   check('p.parse.Thing()', p.parse.Thing(),  'thing!');
 
   // reserved-name guard, derived from the instance rather than a hand list
-  throws('registering "Dispatch" collides with p.dispatch',
-         () => new Parser({ methods: { parseDispatch: () => 0 } }));
+  throws(
+    'registering "Dispatch" collides with p.dispatch',
+    () => new Parser({ methods: { parseDispatch: () => 0 } })
+  );
+
+  // a node type named "Node" would overwrite g.genNode - the dispatch entry point
+  throws(
+    '"Node" collides with g.genNode',
+    () => new Generator({ methods: { genNode: () => 0 } })
+  );
+
+  // lowercase keys are almost always a helper that slipped into the methods object
+  throws(
+    'lowercase method names are rejected',
+    () => new Parser({ methods: { thing: () => 0 } })
+  );
 
   // the old Lexer mutated its shared defaults object
   new Lexer('', { tokenTypes, puncts: [';'] });
