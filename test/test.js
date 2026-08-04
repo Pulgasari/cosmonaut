@@ -4,8 +4,9 @@ import Cosmonaut, {
   buildTokenTypes, CharStream, Generator, Lexer, Parser, TokenStream,
 } from '@cosmonaut/cosmonaut';
 
-import * as parsers  from '@cosmonaut/parsers';
+
 import * as layouter from '@cosmonaut/layouter';
+import * as parsers  from '@cosmonaut/parsers';
 
 import { check, show, suite, throws } from './harness.js';
 
@@ -130,8 +131,7 @@ y;`;
   const generator = {
     methods : {
       genProgram       : (g, n) => g.$.join(n.body.map(s => g.genNode(s)), g.$.hardline),
-      genVarDecl       : (g, n) => g.$.concat(g.$.text('const '), g.$.text(n.name),
-                                              g.$.text(' = '), g.genNode(n.value), g.$.text(';')),
+      genVarDecl       : (g, n) => g.$.concat(g.$.text('const '), g.$.text(n.name), g.$.text(' = '), g.genNode(n.value), g.$.text(';')),
       genExprStatement : (g, n) => g.$.concat(g.genNode(n.expression), g.$.text(';')),
       genNumberLiteral : (g, n) => g.$.text(n.value),
       genIdentifier    : (g, n) => g.$.text(n.name),
