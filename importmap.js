@@ -21,7 +21,7 @@ const map = { imports: {
 }};
 
   const mapURL = document.currentScript?.src;
-  if (!mapURL) throw new Error('[aufbau] importmap injector must be a classic script');
+  if (!mapURL) throw new Error('[cosmonaut] importmap injector must be a classic script');
 
   // rebase relative urls against this file, not the host page
   const rebase = m => { for (const k in m) m[k] = new URL(m[k], mapURL).href; return m; };
