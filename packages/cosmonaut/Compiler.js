@@ -1,12 +1,13 @@
 // @cosmonaut/cosmonaut/Compiler.js
 
-// The allrounder: one object, one options tree, one import. Owns a
-// configured instance of each stage and wires them into a pipeline, while
-// leaving every stage individually callable.
-//
-//   source -> tokenize -> tokens
-//   tokens -> parse    -> AST
-//   AST    -> generate -> string
+// The allrounder: one object, one options tree, one import.
+// Owns a configured instance of each stage 
+// and wires them into a pipeline, 
+// while leaving every stage individually callable.
+
+// [Lexer]     source -> tokenize -> tokens
+// [Parser]    tokens -> parse    -> AST
+// [Generator] AST    -> generate -> string
 
 import Lexer     from './stages/Lexer.js';
 import Parser    from './stages/Parser.js';
@@ -28,11 +29,14 @@ export default class Cosmonaut {
     this.parser    = new Parser(this.config.parser);
     this.generator = new Generator({
       ...this.config.generator,
-      printOptions: { ...this.config.layout, ...this.config.generator.printOptions },
+      printOptions: { 
+        ...this.config.layout, 
+        ...this.config.generator.printOptions 
+      },
     });
   }
 
-  // :::::: Stages
+  // :::::: Stages (via the Machines)
 
   tokenize (source) {
     this.lexer.setSource(source);
@@ -40,7 +44,9 @@ export default class Cosmonaut {
   }
 
   parse (source) {
-    return this.parser.run(this.tokenize(source));
+    const tokenized = this.tokenize(source);
+    const parsed    = this.parser.run(tokenized);
+    return parsed;
   }
 
   generate (node, printOptions) {
@@ -50,7 +56,10 @@ export default class Cosmonaut {
   // :::::: Pipeline
 
   compile (source) {
-    return this.generate(this.parse(source));
+    const parsed    = this.parse(source);
+    const generated = this.generate(parsed);
+    
+    return generated;
   }
 
 }
