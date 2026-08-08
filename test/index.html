@@ -54,7 +54,7 @@
 <script type="module">
 
 // which suites to run: ?t=test  ·  ?t=test2  ·  ?t=test,test2
-const KNOWN = ['test'];   // add 'test2' etc. here to get a nav link
+const KNOWN = ['test', 'test2'];   // add 'test2' etc. here to get a nav link
 
 const requested = (new URLSearchParams(location.search).get('t') ?? 'test')
   .split(',')
