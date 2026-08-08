@@ -2,7 +2,7 @@
 
 import Cosmonaut, {
   buildTokenTypes, CharStream, Generator, Lexer, Parser, TokenStream,
-} from '@cosmonaut/cosmonaut';
+} from '@cosmonaut/compiler';
 
 
 import * as layouter from '@cosmonaut/layouter';
