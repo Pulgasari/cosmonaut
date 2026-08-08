@@ -21,9 +21,17 @@ export { default as CharStream }  from './streams/CharStream.js';
 export { default as Machine }     from './machine/Machine.js';
 export { default as TokenStream } from './streams/TokenStream.js';
 
+// :::::: Grammar
+// The namespace keeps the node constructors together, since names like
+// `choice` and `group` only read clearly as grammar.choice / grammar.group.
+// The two compile functions are ALSO exported flat, because every frontend
+// calls them and grammar.compileGrammar() reads worse than compileGrammar().
+
+export * as grammar from './grammar/index.js';
+export { compileExpr, compileGrammar } from './grammar/compile.js';
+
 // :::::: Toolkit Re-Exports
 
-export * as grammar  from './grammar/index.js';
 export * as presets  from './presets/index.js';
 
 export * as layouter from '@cosmonaut/layouter';
@@ -33,3 +41,7 @@ export * as parsers  from '@cosmonaut/parsers';
 
 export * from './rules/index.js';
 export * from './utils/index.js';
+
+// name normalization, needed by any frontend that maps its own naming
+// convention onto the Machine registry's TitleCase requirement
+export { toPascalCase } from './internals/index.js';
