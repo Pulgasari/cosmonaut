@@ -3,19 +3,12 @@
 // Splits raw LSD source into its top-level areas (META / TKN / RULE / HL)
 // plus the "#### Name" blocks nested inside the RULE area.
 
-const BARE_META_NAME  = /^META\s*::\s*(\S+)$/;
-const META_VOCAB      = /^META\s+(PROP|LIST|TABLE)\b/;
-const TOP_LEVEL_RULE  = /^RULE\s*::\s*\S+\s*==/;
+const BARE_META_NAME = /^META\s*::\s*(\S+)$/;
+const META_VOCAB     = /^META\s+(PROP|LIST|TABLE)\b/;
+const TOP_LEVEL_RULE = /^RULE\s*::\s*\S+\s*==/;
 
-// checks
 const isLabelLine    = line => line.startsWith('####');
-const isPlainComment = line => line.startsWith('#') && !line.startsWith('####');   
-
-// checks
-//const isLineOfComment = line => line.startsWith('#') && !line.startsWith('####');   
-//const isLineOfLabel   = line => line.startsWith('####');
-//const isLineOfHL      = line => line.startsWith('HL ');
-//const isLineOfTKN     = line => line.startsWith('TKN ');
+const isPlainComment = line => line.startsWith('#') && !line.startsWith('####');
 
 export function splitSections (source) {
   const sections = { HL: [], META: [], RULE: [], TKN: [] };
@@ -41,8 +34,8 @@ export function splitSections (source) {
     }
 
     if (META_VOCAB.test(line))   { mode = 'META'; closeBlock(); sections.META.push(rawLine); continue; }
-    if (line.startsWith('TKN ')) { mode =  'TKN'; closeBlock(); sections. TKN.push(rawLine); continue; }
-    if (line.startsWith('HL '))  { mode =   'HL'; closeBlock(); sections.  HL.push(rawLine); continue; }
+    if (line.startsWith('TKN ')) { mode = 'TKN';  closeBlock(); sections.TKN .push(rawLine); continue; }
+    if (line.startsWith('HL '))  { mode = 'HL';   closeBlock(); sections.HL  .push(rawLine); continue; }
 
     if (TOP_LEVEL_RULE.test(line)) { mode = 'RULE'; closeBlock(); sections.RULE.push(rawLine); continue; }
 
@@ -60,10 +53,9 @@ export function splitSections (source) {
         continue;
       }
 
-      currentBlock 
-        ? currentBlock.lines.push(rawLine);
-        : sections.RULE.push(rawLine);
-      
+      if (currentBlock) currentBlock.lines.push(rawLine);
+      else              sections.RULE.push(rawLine);
+
       continue;
     }
 
@@ -74,4 +66,3 @@ export function splitSections (source) {
 
   return { ...sections, BLOCKS: blocks };
 }
-
