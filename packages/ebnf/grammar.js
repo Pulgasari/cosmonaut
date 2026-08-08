@@ -21,7 +21,11 @@
 import { TokenStream } from '@cosmonaut/compiler';
 import { choice, lazy, many1, map, seq, sepBy1, token } from '@cosmonaut/parsers';
 
-const literal   = map(token('STRING'),     t => ({ type: 'literal',   value: t.value }));
+// STRING tokens still carry their delimiters, but a grammar literal is the
+// text between them - `"val"` has to compile to a match against `val`.
+const unquote = text => text.slice(1, -1).replace(/\\(["'\\])/g, '$1');
+
+const literal   = map(token('STRING'),     t => ({ type: 'literal',   value: unquote(t.value) }));
 const reference = map(token('IDENTIFIER'), t => ({ type: 'reference', name:  t.value }));
 
 const optionalExpr = map(
