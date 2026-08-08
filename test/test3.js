@@ -5,11 +5,10 @@
 // sections -> meta -> tokens -> grammar -> spec in order, so the first
 // section that fails tells you where the chain breaks.
 
-import Cosmonaut, { Lexer, buildTokenTypes } from '@cosmonaut/compiler';
-import { readEBNF, compileEBNF }             from '@cosmonaut/ebnf';
+import Cosmonaut, { Lexer, buildTokenTypes }    from '@cosmonaut/compiler';
+import { readEBNF, compileEBNF }                from '@cosmonaut/ebnf';
 import { readDocument, readLSD, splitSections } from '@cosmonaut/lsd';
-
-import { check, show, suite, throws } from './harness.js';
+import { check, show, suite, throws }           from './harness.js';
 
 
 // ==============================================================================
@@ -115,7 +114,7 @@ suite('2 · compileEBNF -> Parser', () => {
 // LSD
 // ==============================================================================
 
-const LSD_SOURCE = await fetch('../examples/poo/poo.lsd').then(r => {
+const LSD_SOURCE = await fetch('./poo.lsd').then(r => {
   if (!r.ok) throw new Error(`poo.lsd not found (${r.status}) - expected at /examples/poo/poo.lsd`);
   return r.text();
 });
