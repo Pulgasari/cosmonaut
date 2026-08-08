@@ -1,0 +1,10 @@
+{
+  "name": "@cosmonaut/lsd",
+  "version": "1.0.0",
+  "license": "MIT",
+  "exports": "./index.js",
+  "imports": {
+    "@cosmonaut/compiler" : "jsr:@cosmonaut/compiler@^1.0.0",
+    "@cosmonaut/parsers"  : "jsr:@cosmonaut/parsers@^1.0.0"
+  }
+}
