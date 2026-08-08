@@ -1,4 +1,4 @@
-// @cosmonaut/cosmonaut
+// @cosmonaut/compiler
 
 // The compiler toolkit. Everything a language implementation needs, in one
 // package: the three stages, the machine they share, the streams they read,
