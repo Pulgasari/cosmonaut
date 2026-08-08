@@ -23,7 +23,9 @@ export { default as TokenStream } from './streams/TokenStream.js';
 
 // :::::: Toolkit Re-Exports
 
-export * as grammar from './grammar/index.js';
+export * as grammar  from './grammar/index.js';
+export * as presets  from './presets/index.js';
+
 export * as layouter from '@cosmonaut/layouter';
 export * as parsers  from '@cosmonaut/parsers';
 
