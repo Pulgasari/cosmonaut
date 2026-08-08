@@ -5,9 +5,7 @@
 
 import * as layouter from '@cosmonaut/layouter';
 import { print }     from '@cosmonaut/layouter';
-
-import Machine from '../machine/Machine.js';
-
+import Machine       from '../machine/Machine.js';
 import genBinaryExpr from '../patterns/genBinaryExpr.js';
 import genList       from '../patterns/genList.js';
 import genUnaryExpr  from '../patterns/genUnaryExpr.js';
