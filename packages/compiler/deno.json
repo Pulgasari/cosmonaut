@@ -1,10 +1,10 @@
 {
-  "name": "@cosmonaut/cosmonaut",
-  "version": "0.1.0",
+  "name": "@cosmonaut/compiler",
+  "version": "1.0.0",
   "license": "MIT",
   "exports": "./index.js",
   "imports": {
-    "@cosmonaut/parsers": "jsr:@cosmonaut/parsers@^0.1.0",
-    "@cosmonaut/layouter": "jsr:@cosmonaut/layouter@^0.1.0"
+    "@cosmonaut/layouter" : "jsr:@cosmonaut/layouter@^1.0.0",
+    "@cosmonaut/parsers"  : "jsr:@cosmonaut/parsers@^1.0.0"
   }
 }
