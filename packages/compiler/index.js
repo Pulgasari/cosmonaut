@@ -17,12 +17,13 @@ export { default as Generator } from './stages/Generator.js';
 
 // :::::: Machine + Streams
 
+export { default as CharStream }  from './streams/CharStream.js';
 export { default as Machine }     from './machine/Machine.js';
 export { default as TokenStream } from './streams/TokenStream.js';
-export { default as CharStream }  from './streams/CharStream.js';
 
 // :::::: Toolkit Re-Exports
 
+export * as grammar from './grammar/index.js';
 export * as layouter from '@cosmonaut/layouter';
 export * as parsers  from '@cosmonaut/parsers';
 
