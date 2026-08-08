@@ -33,7 +33,7 @@ suite('1 · readEBNF · source -> grammar AST', () => {
 
   check('rule names are PascalCased',
         Object.keys(rules).sort().join(','),
-        'ExpressionStatement,Program,Statement,VarDeclaration');
+        'Expression,ExpressionStatement,Program,Statement,VarDeclaration');
 
   check('{ x } is a zero-or-more repeat',
         `${rules.Program.type}:${rules.Program.atLeastOne}`, 'repeat:false');
@@ -129,7 +129,7 @@ suite('3 · splitSections', () => {
   check('META lines found',       sections.META.length > 0, 'true');
   check('TKN lines found',        sections.TKN.length,      9);
   check('top-level RULE lines',   sections.RULE.length,     10);
-  check('blocks found',           sections.BLOCKS.length,   11);
+  check('blocks found', sections.BLOCKS.length, 10);
 
   const names = sections.BLOCKS.map(b => b.name);
   check('block names come from "META :: X"',
@@ -156,7 +156,7 @@ suite('4 · readDocument', () => {
   check('ref tokens',      doc.tokens.filter(t => t.kind === 'ref').length,   4);
 
   check('top-level productions', doc.grammar.productions.length, 10);
-  check('blocks',                doc.grammar.blocks.length,      11);
+  check('blocks', doc.grammar.blocks.length, 10);
 
   // "RULE :: Block == `{` Statement* `}` => 2" extracts factor 2
   const block = doc.grammar.productions.find(p => p.name === 'Block');
