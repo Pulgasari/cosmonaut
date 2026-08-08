@@ -1,56 +1,24 @@
-/* @aufbau/importmap.js
-classic script. must be loaded before any module script.
-usage: <script src="https://pulgasari.github.io/aufbau/importmap.js"></script>
-*/
+// @cosmonaut/importmap.js
 (() => {
 
 const pkg = [
-  'builders/docs',
-  'cache',
-  'elements',
-  'import',
-  'kits',
-  'kits/preact-htm',
-  'patterns',
-  'plugins',
-  'plugins/client',
-  'plugins/vite',
-  'plugins/worker',
-  'shaders',
-  'stylesheet',
-  'utils',
+  'compiler',
+  'parsers',
 ];
 
 const map = { imports: {
-      "htm"              : "https://esm.sh/htm@3.1.1",
-      "preact"           : "https://esm.sh/preact@10.20.1",
-      "preact/hooks"     : "https://esm.sh/preact@10.20.1/hooks",
-      "@preact/signals"  : "https://esm.sh/@preact/signals@1.2.2?external=preact",
-  
-    "@aufbau/builders/docs"   : "./builders/docs/index.js",
-    "@aufbau/builders/docs/"  : "./builders/docs/",
-    "@aufbau/cache"           : "./cache/index.js",
-    "@aufbau/elements"        : "./elements/index.js",
-    "@aufbau/elements/"       : "./elements/",
-    "@aufbau/import"          : "./import/index.js",
-    "@aufbau/js"              : "./js/index.js",
-    "@aufbau/kits"            : "./kits/aufbau.js",
-    "@aufbau/kits/preact-htm" : "./kits/preact-htm.js",
-    "@aufbau/patterns"        : "./patterns/index.js",
-    "@aufbau/plugins"         : "./plugins/index.js",
-    "@aufbau/plugins/client"  : "./plugins/client/index.js",
-    "@aufbau/plugins/vite"    : "./plugins/vite/index.js",
-    "@aufbau/plugins/worker"  : "./plugins/worker/index.js",
-    "@aufbau/shaders"         : "./shaders/index.js",
-    "@aufbau/stylesheet"      : "./stylesheet/index.js",
-    "@aufbau/stylesheet/"     : "./stylesheet/",
-    "@aufbau/utils"           : "./js/index.js",
-
-    "@domina/core" : "https://pulgasari.github.io/domina/core/index.js",
-    
-    "hljs" : "https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/+esm"
-    }
-  };
+  "@cosmonaut/blocks"      : "https://pulgasari.github.io/cosmonaut/packages/parser/blocks/index.js",
+  "@cosmonaut/doc"         : "https://pulgasari.github.io/cosmonaut/packages/generator/doc/index.js",     
+  "@cosmonaut/doc-printer" : "https://pulgasari.github.io/cosmonaut/packages/generator/doc-printer/index.js",   
+  "@cosmonaut/generator"   : "https://pulgasari.github.io/cosmonaut/packages/generator/index.js",     
+  "@cosmonaut/internals"   : "https://pulgasari.github.io/cosmonaut/packages/internals/index.js",
+  "@cosmonaut/lexer"       : "https://pulgasari.github.io/cosmonaut/packages/lexer/index.js",
+  "@cosmonaut/lsd"         : "https://pulgasari.github.io/cosmonaut/packages/lsd/index.js",
+  "@cosmonaut/parser"      : "https://pulgasari.github.io/cosmonaut/packages/parser/index.js",
+  "@cosmonaut/presets"     : "https://pulgasari.github.io/cosmonaut/packages/presets/index.js",
+  "@cosmonaut/utils"       : "https://pulgasari.github.io/cosmonaut/packages/utils/index.js",
+  "@cosmonaut/utils/internals" : "https://pulgasari.github.io/cosmonaut/packages/utils/internals.js",
+}};
 
   const mapURL = document.currentScript?.src;
   if (!mapURL) throw new Error('[aufbau] importmap injector must be a classic script');
