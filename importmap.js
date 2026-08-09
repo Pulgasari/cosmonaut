@@ -7,17 +7,15 @@ const pkg = [
 ];
 
 const map = { imports: {
-  "@cosmonaut/blocks"      : "./packages/parser/blocks/index.js",
-  "@cosmonaut/doc"         : "./packages/generator/doc/index.js",     
-  "@cosmonaut/doc-printer" : "./packages/generator/doc-printer/index.js",   
-  "@cosmonaut/generator"   : "./packages/generator/index.js",     
-  "@cosmonaut/internals"   : "./packages/internals/index.js",
-  "@cosmonaut/lexer"       : "./packages/lexer/index.js",
-  "@cosmonaut/lsd"         : "./packages/lsd/index.js",
-  "@cosmonaut/parser"      : "./packages/parser/index.js",
-  "@cosmonaut/presets"     : "./packages/presets/index.js",
-  "@cosmonaut/utils"       : "./packages/utils/index.js",
-  "@cosmonaut/utils/internals" : "./packages/utils/internals.js",
+  "@cosmonaut/compiler" : "./packages/compiler/index.js",
+  "@cosmonaut/ebnf"     : "./packages/ebnf/index.js",
+  "@cosmonaut/layouter" : "./packages/layouter/index.js",
+  "@cosmonaut/lsd"      : "./packages/lsd/index.js",
+  "@cosmonaut/parsers"  : "./packages/parsers/index.js",
+
+  "@cosmonaut/parsers/"  : "./packages/parsers/",
+  "@cosmonaut/layouter/" : "./packages/layouter/",
+  "@cosmonaut/compiler/" : "./packages/compiler/"
 }};
 
   const mapURL = document.currentScript?.src;
