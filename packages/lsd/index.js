@@ -28,13 +28,18 @@ export function readDocument (source) {
 }
 
 // The whole way: LSD source -> a spec ready for `new Cosmonaut({ spec })`.
+//
+// The FIRST top-level RULE is taken as the entry point, by convention -
+// "RULE :: Program == Statement*" being the first line is what makes
+// Program the root. Override with `parser: { entry }` if that is wrong.
 export function readLSD (source, options = {}) {
   const document = readDocument(source);
+  const entry    = document.grammar.productions[0]?.name;
 
   return {
-    lexer        : compileTokenizer     (document, options.tokenizer),
-    parser       : { methods: compileParserMethods(document) },
-    highlighting : compileHighlighting  (document),
+    lexer        : compileTokenizer(document, options.tokenizer),
+    parser       : { methods: compileParserMethods(document), entry },
+    highlighting : compileHighlighting(document),
     document,
   };
 }
